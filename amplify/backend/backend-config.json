@@ -13,5 +13,10 @@
 			}
 		}
 	},
-	"storage": {}
+	"storage": {
+		"MobiusEvoDynamo": {
+			"service": "DynamoDB",
+			"providerPlugin": "awscloudformation"
+		}
+	}
 }
