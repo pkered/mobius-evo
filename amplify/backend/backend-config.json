@@ -22,5 +22,29 @@
 			"service": "DynamoDB",
 			"providerPlugin": "awscloudformation"
 		}
+	},
+	"auth": {
+		"mobiusevoe7b26413": {
+			"service": "Cognito",
+			"providerPlugin": "awscloudformation",
+			"dependsOn": []
+		}
+	},
+	"function": {
+		"cognitoNewUser": {
+			"build": true,
+			"providerPlugin": "awscloudformation",
+			"service": "Lambda",
+			"dependsOn": [
+				{
+					"category": "api",
+					"resourceName": "MobiusEvoGraphQL",
+					"attributes": [
+						"GraphQLAPIIdOutput",
+						"GraphQLAPIEndpointOutput"
+					]
+				}
+			]
+		}
 	}
 }

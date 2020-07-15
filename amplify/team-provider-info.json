@@ -10,6 +10,11 @@
             "StackName": "amplify-mobiusevo-dev-131353",
             "StackId": "arn:aws:cloudformation:us-east-1:114056409474:stack/amplify-mobiusevo-dev-131353/acef7960-bf47-11ea-b8da-0a392ab5a299",
             "AmplifyAppId": "d3i0dy0fnq65q5"
+        },
+        "categories": {
+            "auth": {
+                "mobiusevoe7b26413": {}
+            }
         }
     }
 }

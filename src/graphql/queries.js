@@ -1,28 +1,158 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
-export const getTodo = /* GraphQL */ `
-  query GetTodo($id: ID!) {
-    getTodo(id: $id) {
+export const getUser = /* GraphQL */ `
+  query GetUser($id: ID!) {
+    getUser(id: $id) {
       id
-      name
-      description
+      email
+      jobs {
+        id
+        userID
+        evalUrl
+        genUrl
+        expiration
+        description
+        settings
+        createdAt
+        endedAt
+        status
+        updatedAt
+      }
+      status
       createdAt
       updatedAt
     }
   }
 `;
-export const listTodos = /* GraphQL */ `
-  query ListTodos(
-    $filter: ModelTodoFilterInput
+export const listUsers = /* GraphQL */ `
+  query ListUsers(
+    $filter: ModelUserFilterInput
     $limit: Int
     $nextToken: String
   ) {
-    listTodos(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    listUsers(filter: $filter, limit: $limit, nextToken: $nextToken) {
       items {
         id
-        name
+        email
+        jobs {
+          id
+          userID
+          evalUrl
+          genUrl
+          expiration
+          description
+          settings
+          createdAt
+          endedAt
+          status
+          updatedAt
+        }
+        status
+        createdAt
+        updatedAt
+      }
+      nextToken
+    }
+  }
+`;
+export const getJob = /* GraphQL */ `
+  query GetJob($id: ID!) {
+    getJob(id: $id) {
+      id
+      userID
+      evalUrl
+      genUrl
+      expiration
+      description
+      settings
+      createdAt
+      endedAt
+      status
+      updatedAt
+    }
+  }
+`;
+export const listJobs = /* GraphQL */ `
+  query ListJobs(
+    $filter: ModelJobFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listJobs(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        userID
+        evalUrl
+        genUrl
+        expiration
         description
+        settings
+        createdAt
+        endedAt
+        status
+        updatedAt
+      }
+      nextToken
+    }
+  }
+`;
+export const getGenEvalParam = /* GraphQL */ `
+  query GetGenEvalParam($id: ID!) {
+    getGenEvalParam(id: $id) {
+      id
+      jobID {
+        id
+        userID
+        evalUrl
+        genUrl
+        expiration
+        description
+        settings
+        createdAt
+        endedAt
+        status
+        updatedAt
+      }
+      genID
+      evalResult
+      live
+      model
+      params
+      score
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const listGenEvalParams = /* GraphQL */ `
+  query ListGenEvalParams(
+    $filter: ModelGenEvalParamFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listGenEvalParams(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        jobID {
+          id
+          userID
+          evalUrl
+          genUrl
+          expiration
+          description
+          settings
+          createdAt
+          endedAt
+          status
+          updatedAt
+        }
+        genID
+        evalResult
+        live
+        model
+        params
+        score
         createdAt
         updatedAt
       }

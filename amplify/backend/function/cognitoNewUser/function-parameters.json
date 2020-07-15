@@ -1,0 +1,14 @@
+{
+  "mutableParametersState": {
+    "permissions": {
+      "api": {
+        "MobiusEvoGraphQL": [
+          "create",
+          "read",
+          "update"
+        ]
+      }
+    }
+  },
+  "lambdaLayers": []
+}
