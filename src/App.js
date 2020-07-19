@@ -1,42 +1,26 @@
-import React from 'react';
-import './App.css';
-import { AmplifyAuthenticator, AmplifySignUp, AmplifySignIn } from '@aws-amplify/ui-react';
-import Landing from './components/Landing'
+import React, { useState, useEffect } from 'react';
 
-const App = () => (
-  <AmplifyAuthenticator usernameAlias="email">
-    <AmplifySignUp
-      slot="sign-up"
-      usernameAlias="email"
-      headerText="Create a Mobius-exo Account"
-      formFields={[
-        {
-          type: "email",
-          label: "E-mail",
-          placeholder: "email@email.mail",
-          required: true
-        },
-        {
-          type: "password",
-          label: "Password",
-          placeholder: "********",
-          required: true
-        },
-        {
-          type: "nickname",
-          label: "How should we address you?",
-          placeholder: "nickname",
-          required: true
-        }
-      ]}
-    />
-    <AmplifySignIn
-      slot="sign-in"
-      usernameAlias="email"
-      headerText="Sign-in to Mobius-evo"
-    />
-    <Landing />
-  </AmplifyAuthenticator>
-);
+import './App.css';
+import { AuthContext, MenuContext} from './Contexts';
+import HeaderComponent from './components/HeaderComponent';
+import MainSection from './components/MainSection';
+
+function App(){
+  const [ menuState, setMenuState ] =  useState("landing");
+  const [ cognitoPayload, setCognitoPayload ] = useState(null);
+
+  return(
+    <AuthContext.Provider value={{ cognitoPayload, setCognitoPayload }}>
+      <MenuContext.Provider value={{ menuState, setMenuState }}>
+        <div id="app-body">
+          <HeaderComponent />
+          <main>
+            <MainSection />
+          </main>
+        </div>
+      </MenuContext.Provider>
+    </AuthContext.Provider>
+  );
+};
 
 export default App;

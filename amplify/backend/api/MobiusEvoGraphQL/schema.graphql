@@ -41,3 +41,10 @@ type GenEvalParam @model {
   params: String
   score: Float
 }
+
+type File @model {
+  id: ID!
+  filename: String!
+  s3url: String!
+  uploadedAt: String!
+}
