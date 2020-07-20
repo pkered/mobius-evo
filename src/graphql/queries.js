@@ -160,3 +160,34 @@ export const listGenEvalParams = /* GraphQL */ `
     }
   }
 `;
+export const getFile = /* GraphQL */ `
+  query GetFile($id: ID!) {
+    getFile(id: $id) {
+      id
+      filename
+      s3url
+      uploadedAt
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const listFiles = /* GraphQL */ `
+  query ListFiles(
+    $filter: ModelFileFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listFiles(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        filename
+        s3url
+        uploadedAt
+        createdAt
+        updatedAt
+      }
+      nextToken
+    }
+  }
+`;

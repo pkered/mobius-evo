@@ -1,49 +1,33 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
+import { uploadS3, listS3, getS3 } from '../../amplify-apis/userFiles';
+import { UploadOutlined } from '@ant-design/icons';
 import { MenuContext } from '../../Contexts'
-import { Form, Input, InputNumber , Button, Steps, Table, Radio} from 'antd'
+import { Form, Input, InputNumber , Button, Steps, Table, Radio, Upload, message } from 'antd'
 const { Step } = Steps;
-
-const testData = [
-  {
-    id:"19b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-    filename:"test_file_1.mob",
-    s3url: "www.filepath.path",
-    uploadedAt: "123456"
-  },
-  {
-    id:"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-    filename:"test_file_2.mob",
-    s3url: "www.filepath.path",
-    uploadedAt: "123456"
-  },
-  {
-    id:"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-    filename:"test_file_3.mob",
-    s3url: "www.filepath.path",
-    uploadedAt: "123456"
-  }
-]
 
 function FileSelection({ nextStep, formValuesState}) {
   const { formValues, setFormValues } =  formValuesState;
   const [ genFile, setGenFile ] = useState(null);
   const [ evalFile, setEvalFile ] = useState(null);
+  const [ s3Files, setS3Files ] = useState([]);
+  const [ uploadedFiles, setUploadedFiles ] = useState([]);
+  const [ isTableLoading, setIsTableLoading ] = useState(true);
   const columns = [
-    {
-      title: "ID",
-      dataIndex: "id",
-      key: "id",
-      render: (text, record, index) => index + 1
-    },
     {
       title: "File",
       dataIndex: "filename",
-      key:"filename"
+      key:"filename",
+      sorter: true,
+      sortDirections: [ "ascend", "descend" ]
     },
     {
       title: "Uploaded",
-      dataIndex: "uploadedAt",
-      key:"uploadedAt"
+      dataIndex: "lastModified",
+      key:"lastModified",
+      sorter: true,
+      sortDirections: [ "ascend", "descend" ],
+      defaultSortOrder: "descend",
+      render: (text, record, index)=>text.toLocaleString() // Date Object
     },
     {
       title: "Gen File",
@@ -67,18 +51,89 @@ function FileSelection({ nextStep, formValuesState}) {
     }
   ];
 
-  const dataSource = testData;
+  const listS3files = () => {
+    const prepS3files = files => {
+      const fileList = files.map(({key, lastModified}, index) => {
+        return {
+          key: index,
+          filename: key.split('/').pop(),
+          lastModified
+        }
+      });
+      fileList.sort((a,b) => b.lastModified - a.lastModified); // Default descending order
+      setS3Files([...fileList]);
+      setIsTableLoading(false);
+    };
+    listS3(prepS3files, ()=>{});
+  };
+  useEffect(listS3files,[uploadedFiles]); // Updates when new files are uploaded
+  function FileUpload() {
+    function handleUpload({ file, onSuccess, onError, onProgress }) {
+      uploadS3(`files/${file.name}`,file, onSuccess, onError, onProgress);
+    }
+    function handleChange(event) {
+      if (event.file.status === "done") {
+        message.success(`${event.file.name} file uploaded successfully`);
+        setUploadedFiles([...uploadedFiles, event.file.name]);
+      } else if (event.file.status === "error") {
+        message.error(`${event.file.name} file upload failed.`);
+      }
+    }
+    return (
+      <div className="upload-topbar">
+        <Upload 
+          accept=".js"
+          multiple={true}
+          customRequest={handleUpload}
+          onChange={handleChange}
+          showUploadList={false}
+        >
+          <Button>
+            <UploadOutlined /> Upload
+          </Button>
+        </Upload>
+        {/* <span>{uploadedFiles.length>0 ? `Uploaded: ${uploadedFiles.join(", ")}` : null}</span> */}
+      </div>
+    )
+  };
 
-  const handleClick = () => {
-    setFormValues({ ...formValues, genUrl: dataSource[genFile].s3url, evalUrl: dataSource[evalFile].s3url });
+  const handleTableChange = ( pagination, filters, sorter ) => {
+    const compareAscend = (a,b) => {
+      if ( a < b ) { return -1; }
+      else if ( a > b) { return 1;}
+      else { return 0; }
+    };
+    const compareDescend = (a,b) => {
+      if ( a > b ) { return -1; }
+      else if ( a < b) { return 1;}
+      else { return 0; }
+    };
+    const [ field, order ] = [ sorter.field, sorter.order ];
+    const _s3Files = [...s3Files];
+    if (order === "ascend") {
+      _s3Files.sort((a,b) => compareAscend(a[field], b[field]));
+    } else {
+      _s3Files.sort((a,b) => compareDescend(a[field], b[field]));
+    };
+    setS3Files(_s3Files);
+  };
+  const handleClick = async() => {
+    const _formValues = { genUrl: null, evalUrl: null };
+    await getS3(`files/${s3Files[genFile].filename}`, s3Url => _formValues.genUrl = s3Url.split('?')[0], ()=>{});
+    await getS3(`files/${s3Files[evalFile].filename}`, s3Url => _formValues.evalUrl = s3Url.split('?')[0], ()=>{});
+    setFormValues({ ...formValues, ..._formValues });
     nextStep();
-  }
+  };
 
   return(
     <div>
+      <FileUpload />
       <Table 
-        dataSource={dataSource}
+        dataSource={s3Files}
         columns={columns}
+        loading={isTableLoading}
+        onChange={handleTableChange}
+        showSorterTooltip={false}
       ></Table>
       <Button 
         onClick={handleClick}
@@ -214,7 +269,7 @@ function JobForm() {
     <div className="jobForm-container">
       <h1>Start an Evolution Job</h1>
       <Steps progressDot current={ currentStep }>
-        {steps.map(step => <Step title={step} />)}
+        {steps.map((step, index) => <Step title={step} key={index}/>)}
       </Steps>
       <FormToRender />
     </div>

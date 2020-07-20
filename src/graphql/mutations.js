@@ -235,3 +235,48 @@ export const deleteGenEvalParam = /* GraphQL */ `
     }
   }
 `;
+export const createFile = /* GraphQL */ `
+  mutation CreateFile(
+    $input: CreateFileInput!
+    $condition: ModelFileConditionInput
+  ) {
+    createFile(input: $input, condition: $condition) {
+      id
+      filename
+      s3url
+      uploadedAt
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const updateFile = /* GraphQL */ `
+  mutation UpdateFile(
+    $input: UpdateFileInput!
+    $condition: ModelFileConditionInput
+  ) {
+    updateFile(input: $input, condition: $condition) {
+      id
+      filename
+      s3url
+      uploadedAt
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const deleteFile = /* GraphQL */ `
+  mutation DeleteFile(
+    $input: DeleteFileInput!
+    $condition: ModelFileConditionInput
+  ) {
+    deleteFile(input: $input, condition: $condition) {
+      id
+      filename
+      s3url
+      uploadedAt
+      createdAt
+      updatedAt
+    }
+  }
+`;

@@ -208,3 +208,39 @@ export const onDeleteGenEvalParam = /* GraphQL */ `
     }
   }
 `;
+export const onCreateFile = /* GraphQL */ `
+  subscription OnCreateFile {
+    onCreateFile {
+      id
+      filename
+      s3url
+      uploadedAt
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const onUpdateFile = /* GraphQL */ `
+  subscription OnUpdateFile {
+    onUpdateFile {
+      id
+      filename
+      s3url
+      uploadedAt
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const onDeleteFile = /* GraphQL */ `
+  subscription OnDeleteFile {
+    onDeleteFile {
+      id
+      filename
+      s3url
+      uploadedAt
+      createdAt
+      updatedAt
+    }
+  }
+`;
