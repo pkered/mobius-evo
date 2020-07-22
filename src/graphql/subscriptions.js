@@ -13,11 +13,15 @@ export const onCreateUser = /* GraphQL */ `
         genUrl
         expiration
         description
-        settings
+        maxDesigns
+        population_size
+        tournament_size
+        survival_size
         createdAt
         endedAt
         status
         updatedAt
+        owner
       }
       status
       createdAt
@@ -37,11 +41,15 @@ export const onUpdateUser = /* GraphQL */ `
         genUrl
         expiration
         description
-        settings
+        maxDesigns
+        population_size
+        tournament_size
+        survival_size
         createdAt
         endedAt
         status
         updatedAt
+        owner
       }
       status
       createdAt
@@ -61,11 +69,15 @@ export const onDeleteUser = /* GraphQL */ `
         genUrl
         expiration
         description
-        settings
+        maxDesigns
+        population_size
+        tournament_size
+        survival_size
         createdAt
         endedAt
         status
         updatedAt
+        owner
       }
       status
       createdAt
@@ -74,73 +86,73 @@ export const onDeleteUser = /* GraphQL */ `
   }
 `;
 export const onCreateJob = /* GraphQL */ `
-  subscription OnCreateJob {
-    onCreateJob {
+  subscription OnCreateJob($owner: String!) {
+    onCreateJob(owner: $owner) {
       id
       userID
       evalUrl
       genUrl
       expiration
       description
-      settings
+      maxDesigns
+      population_size
+      tournament_size
+      survival_size
       createdAt
       endedAt
       status
       updatedAt
+      owner
     }
   }
 `;
 export const onUpdateJob = /* GraphQL */ `
-  subscription OnUpdateJob {
-    onUpdateJob {
+  subscription OnUpdateJob($owner: String!) {
+    onUpdateJob(owner: $owner) {
       id
       userID
       evalUrl
       genUrl
       expiration
       description
-      settings
+      maxDesigns
+      population_size
+      tournament_size
+      survival_size
       createdAt
       endedAt
       status
       updatedAt
+      owner
     }
   }
 `;
 export const onDeleteJob = /* GraphQL */ `
-  subscription OnDeleteJob {
-    onDeleteJob {
+  subscription OnDeleteJob($owner: String!) {
+    onDeleteJob(owner: $owner) {
       id
       userID
       evalUrl
       genUrl
       expiration
       description
-      settings
+      maxDesigns
+      population_size
+      tournament_size
+      survival_size
       createdAt
       endedAt
       status
       updatedAt
+      owner
     }
   }
 `;
 export const onCreateGenEvalParam = /* GraphQL */ `
-  subscription OnCreateGenEvalParam {
-    onCreateGenEvalParam {
+  subscription OnCreateGenEvalParam($owner: String!) {
+    onCreateGenEvalParam(owner: $owner) {
       id
-      jobID {
-        id
-        userID
-        evalUrl
-        genUrl
-        expiration
-        description
-        settings
-        createdAt
-        endedAt
-        status
-        updatedAt
-      }
+      jobID
       genID
       evalResult
       live
@@ -149,26 +161,15 @@ export const onCreateGenEvalParam = /* GraphQL */ `
       score
       createdAt
       updatedAt
+      owner
     }
   }
 `;
 export const onUpdateGenEvalParam = /* GraphQL */ `
-  subscription OnUpdateGenEvalParam {
-    onUpdateGenEvalParam {
+  subscription OnUpdateGenEvalParam($owner: String!) {
+    onUpdateGenEvalParam(owner: $owner) {
       id
-      jobID {
-        id
-        userID
-        evalUrl
-        genUrl
-        expiration
-        description
-        settings
-        createdAt
-        endedAt
-        status
-        updatedAt
-      }
+      jobID
       genID
       evalResult
       live
@@ -177,26 +178,15 @@ export const onUpdateGenEvalParam = /* GraphQL */ `
       score
       createdAt
       updatedAt
+      owner
     }
   }
 `;
 export const onDeleteGenEvalParam = /* GraphQL */ `
-  subscription OnDeleteGenEvalParam {
-    onDeleteGenEvalParam {
+  subscription OnDeleteGenEvalParam($owner: String!) {
+    onDeleteGenEvalParam(owner: $owner) {
       id
-      jobID {
-        id
-        userID
-        evalUrl
-        genUrl
-        expiration
-        description
-        settings
-        createdAt
-        endedAt
-        status
-        updatedAt
-      }
+      jobID
       genID
       evalResult
       live
@@ -205,42 +195,7 @@ export const onDeleteGenEvalParam = /* GraphQL */ `
       score
       createdAt
       updatedAt
-    }
-  }
-`;
-export const onCreateFile = /* GraphQL */ `
-  subscription OnCreateFile {
-    onCreateFile {
-      id
-      filename
-      s3url
-      uploadedAt
-      createdAt
-      updatedAt
-    }
-  }
-`;
-export const onUpdateFile = /* GraphQL */ `
-  subscription OnUpdateFile {
-    onUpdateFile {
-      id
-      filename
-      s3url
-      uploadedAt
-      createdAt
-      updatedAt
-    }
-  }
-`;
-export const onDeleteFile = /* GraphQL */ `
-  subscription OnDeleteFile {
-    onDeleteFile {
-      id
-      filename
-      s3url
-      uploadedAt
-      createdAt
-      updatedAt
+      owner
     }
   }
 `;

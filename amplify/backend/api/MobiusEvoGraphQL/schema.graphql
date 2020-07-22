@@ -11,14 +11,19 @@ enum UserStatus {
   disabled
 }
 
-type Job @model {
+type Job @model 
+  @auth(rules:[{ allow: owner }])
+  @key(name: "jobsByStatus", fields: ["status"], queryField: "jobsByStatus") {
   id: ID!
   userID: ID!
   evalUrl: String! #s3 key
   genUrl: String! #s3 key
   expiration: Int
   description: String
-  settings: String
+  maxDesigns: Int
+  population_size: Int
+  tournament_size: Int
+  survival_size: Int
   createdAt: String
   endedAt: String
   status: JobStatus
@@ -31,20 +36,15 @@ enum JobStatus {
   cancelled
 }
 
-type GenEvalParam @model {
+type GenEvalParam @model 
+  @auth(rules: [{ allow: owner }])
+  @key(name: "evalByJobID", fields: ["jobID"], queryField: "evalByJobID") {
   id: ID!
-  jobID: Job!
-  genID: String!
+  jobID: ID!
+  genID: ID!
   evalResult: String
   live: Boolean
   model: String
   params: String
   score: Float
-}
-
-type File @model {
-  id: ID!
-  filename: String!
-  s3url: String!
-  uploadedAt: String!
 }

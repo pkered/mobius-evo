@@ -16,7 +16,7 @@ function HeaderComponent() {
         selectedKeys={[menuState]} 
         mode="horizontal">
         <Menu.Item key="jobForm" icon={<FormOutlined/>}>New Job</Menu.Item>
-        <Menu.Item key="charts" icon={<LineChartOutlined/>}>View Results</Menu.Item>
+        <Menu.Item key="results" icon={<LineChartOutlined/>}>View Results</Menu.Item>
       </Menu>
     );
 

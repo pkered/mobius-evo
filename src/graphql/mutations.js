@@ -16,11 +16,15 @@ export const createUser = /* GraphQL */ `
         genUrl
         expiration
         description
-        settings
+        maxDesigns
+        population_size
+        tournament_size
+        survival_size
         createdAt
         endedAt
         status
         updatedAt
+        owner
       }
       status
       createdAt
@@ -43,11 +47,15 @@ export const updateUser = /* GraphQL */ `
         genUrl
         expiration
         description
-        settings
+        maxDesigns
+        population_size
+        tournament_size
+        survival_size
         createdAt
         endedAt
         status
         updatedAt
+        owner
       }
       status
       createdAt
@@ -70,11 +78,15 @@ export const deleteUser = /* GraphQL */ `
         genUrl
         expiration
         description
-        settings
+        maxDesigns
+        population_size
+        tournament_size
+        survival_size
         createdAt
         endedAt
         status
         updatedAt
+        owner
       }
       status
       createdAt
@@ -94,11 +106,15 @@ export const createJob = /* GraphQL */ `
       genUrl
       expiration
       description
-      settings
+      maxDesigns
+      population_size
+      tournament_size
+      survival_size
       createdAt
       endedAt
       status
       updatedAt
+      owner
     }
   }
 `;
@@ -114,11 +130,15 @@ export const updateJob = /* GraphQL */ `
       genUrl
       expiration
       description
-      settings
+      maxDesigns
+      population_size
+      tournament_size
+      survival_size
       createdAt
       endedAt
       status
       updatedAt
+      owner
     }
   }
 `;
@@ -134,11 +154,15 @@ export const deleteJob = /* GraphQL */ `
       genUrl
       expiration
       description
-      settings
+      maxDesigns
+      population_size
+      tournament_size
+      survival_size
       createdAt
       endedAt
       status
       updatedAt
+      owner
     }
   }
 `;
@@ -149,19 +173,7 @@ export const createGenEvalParam = /* GraphQL */ `
   ) {
     createGenEvalParam(input: $input, condition: $condition) {
       id
-      jobID {
-        id
-        userID
-        evalUrl
-        genUrl
-        expiration
-        description
-        settings
-        createdAt
-        endedAt
-        status
-        updatedAt
-      }
+      jobID
       genID
       evalResult
       live
@@ -170,6 +182,7 @@ export const createGenEvalParam = /* GraphQL */ `
       score
       createdAt
       updatedAt
+      owner
     }
   }
 `;
@@ -180,19 +193,7 @@ export const updateGenEvalParam = /* GraphQL */ `
   ) {
     updateGenEvalParam(input: $input, condition: $condition) {
       id
-      jobID {
-        id
-        userID
-        evalUrl
-        genUrl
-        expiration
-        description
-        settings
-        createdAt
-        endedAt
-        status
-        updatedAt
-      }
+      jobID
       genID
       evalResult
       live
@@ -201,6 +202,7 @@ export const updateGenEvalParam = /* GraphQL */ `
       score
       createdAt
       updatedAt
+      owner
     }
   }
 `;
@@ -211,19 +213,7 @@ export const deleteGenEvalParam = /* GraphQL */ `
   ) {
     deleteGenEvalParam(input: $input, condition: $condition) {
       id
-      jobID {
-        id
-        userID
-        evalUrl
-        genUrl
-        expiration
-        description
-        settings
-        createdAt
-        endedAt
-        status
-        updatedAt
-      }
+      jobID
       genID
       evalResult
       live
@@ -232,51 +222,7 @@ export const deleteGenEvalParam = /* GraphQL */ `
       score
       createdAt
       updatedAt
-    }
-  }
-`;
-export const createFile = /* GraphQL */ `
-  mutation CreateFile(
-    $input: CreateFileInput!
-    $condition: ModelFileConditionInput
-  ) {
-    createFile(input: $input, condition: $condition) {
-      id
-      filename
-      s3url
-      uploadedAt
-      createdAt
-      updatedAt
-    }
-  }
-`;
-export const updateFile = /* GraphQL */ `
-  mutation UpdateFile(
-    $input: UpdateFileInput!
-    $condition: ModelFileConditionInput
-  ) {
-    updateFile(input: $input, condition: $condition) {
-      id
-      filename
-      s3url
-      uploadedAt
-      createdAt
-      updatedAt
-    }
-  }
-`;
-export const deleteFile = /* GraphQL */ `
-  mutation DeleteFile(
-    $input: DeleteFileInput!
-    $condition: ModelFileConditionInput
-  ) {
-    deleteFile(input: $input, condition: $condition) {
-      id
-      filename
-      s3url
-      uploadedAt
-      createdAt
-      updatedAt
+      owner
     }
   }
 `;

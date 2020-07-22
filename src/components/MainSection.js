@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { MenuContext } from '../Contexts';
-import Charts from './main/Charts';
+import Results from './main/Results';
 import JobForm from './main/JobForm';
 import Landing from './main/Landing';
 import User from './main/User';
@@ -9,8 +9,8 @@ function MainSection() {
   const menuContext  = useContext(MenuContext);
   let toRender = null;
   switch (menuContext.menuState) {
-    case "charts":
-      toRender = <Charts/>
+    case "results":
+      toRender = <Results/>
       break;
     case "jobForm":
       toRender = <JobForm/>

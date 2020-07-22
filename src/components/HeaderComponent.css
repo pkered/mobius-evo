@@ -1,0 +1,19 @@
+header {
+  padding: 0 2em;
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+  border-bottom: 1px solid #E6E6E6;
+}
+
+nav {
+  display: flex;
+  flex-flow: row nowrap;
+}
+
+#mobius-evo {
+  margin: 0 2em 0 0;
+  vertical-align: middle;
+  line-height: 2em;
+  cursor: pointer;
+}

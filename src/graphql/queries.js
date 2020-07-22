@@ -13,11 +13,15 @@ export const getUser = /* GraphQL */ `
         genUrl
         expiration
         description
-        settings
+        maxDesigns
+        population_size
+        tournament_size
+        survival_size
         createdAt
         endedAt
         status
         updatedAt
+        owner
       }
       status
       createdAt
@@ -42,11 +46,15 @@ export const listUsers = /* GraphQL */ `
           genUrl
           expiration
           description
-          settings
+          maxDesigns
+          population_size
+          tournament_size
+          survival_size
           createdAt
           endedAt
           status
           updatedAt
+          owner
         }
         status
         createdAt
@@ -65,11 +73,15 @@ export const getJob = /* GraphQL */ `
       genUrl
       expiration
       description
-      settings
+      maxDesigns
+      population_size
+      tournament_size
+      survival_size
       createdAt
       endedAt
       status
       updatedAt
+      owner
     }
   }
 `;
@@ -87,11 +99,15 @@ export const listJobs = /* GraphQL */ `
         genUrl
         expiration
         description
-        settings
+        maxDesigns
+        population_size
+        tournament_size
+        survival_size
         createdAt
         endedAt
         status
         updatedAt
+        owner
       }
       nextToken
     }
@@ -101,19 +117,7 @@ export const getGenEvalParam = /* GraphQL */ `
   query GetGenEvalParam($id: ID!) {
     getGenEvalParam(id: $id) {
       id
-      jobID {
-        id
-        userID
-        evalUrl
-        genUrl
-        expiration
-        description
-        settings
-        createdAt
-        endedAt
-        status
-        updatedAt
-      }
+      jobID
       genID
       evalResult
       live
@@ -122,6 +126,7 @@ export const getGenEvalParam = /* GraphQL */ `
       score
       createdAt
       updatedAt
+      owner
     }
   }
 `;
@@ -134,19 +139,7 @@ export const listGenEvalParams = /* GraphQL */ `
     listGenEvalParams(filter: $filter, limit: $limit, nextToken: $nextToken) {
       items {
         id
-        jobID {
-          id
-          userID
-          evalUrl
-          genUrl
-          expiration
-          description
-          settings
-          createdAt
-          endedAt
-          status
-          updatedAt
-        }
+        jobID
         genID
         evalResult
         live
@@ -155,37 +148,75 @@ export const listGenEvalParams = /* GraphQL */ `
         score
         createdAt
         updatedAt
+        owner
       }
       nextToken
     }
   }
 `;
-export const getFile = /* GraphQL */ `
-  query GetFile($id: ID!) {
-    getFile(id: $id) {
-      id
-      filename
-      s3url
-      uploadedAt
-      createdAt
-      updatedAt
-    }
-  }
-`;
-export const listFiles = /* GraphQL */ `
-  query ListFiles(
-    $filter: ModelFileFilterInput
+export const jobsByStatus = /* GraphQL */ `
+  query JobsByStatus(
+    $status: JobStatus
+    $sortDirection: ModelSortDirection
+    $filter: ModelJobFilterInput
     $limit: Int
     $nextToken: String
   ) {
-    listFiles(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    jobsByStatus(
+      status: $status
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
       items {
         id
-        filename
-        s3url
-        uploadedAt
+        userID
+        evalUrl
+        genUrl
+        expiration
+        description
+        maxDesigns
+        population_size
+        tournament_size
+        survival_size
+        createdAt
+        endedAt
+        status
+        updatedAt
+        owner
+      }
+      nextToken
+    }
+  }
+`;
+export const evalByJobId = /* GraphQL */ `
+  query EvalByJobId(
+    $jobID: ID
+    $sortDirection: ModelSortDirection
+    $filter: ModelGenEvalParamFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    evalByJobID(
+      jobID: $jobID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        jobID
+        genID
+        evalResult
+        live
+        model
+        params
+        score
         createdAt
         updatedAt
+        owner
       }
       nextToken
     }

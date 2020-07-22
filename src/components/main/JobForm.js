@@ -1,8 +1,12 @@
 import React, { useState, useContext, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import { API, graphqlOperation } from 'aws-amplify';
+import { createJob } from '../../graphql/mutations';
 import { uploadS3, listS3, getS3 } from '../../amplify-apis/userFiles';
 import { UploadOutlined } from '@ant-design/icons';
-import { MenuContext } from '../../Contexts'
-import { Form, Input, InputNumber , Button, Steps, Table, Radio, Upload, message } from 'antd'
+import { MenuContext, AuthContext } from '../../Contexts'
+import { Form, Input, InputNumber , Button, Steps, Table, Radio, Upload, message, Tag, Space, Spin, Row, Descriptions } from 'antd'
+import DescriptionsItem from 'antd/lib/descriptions/Item';
 const { Step } = Steps;
 
 function FileSelection({ nextStep, formValuesState}) {
@@ -12,6 +16,7 @@ function FileSelection({ nextStep, formValuesState}) {
   const [ s3Files, setS3Files ] = useState([]);
   const [ uploadedFiles, setUploadedFiles ] = useState([]);
   const [ isTableLoading, setIsTableLoading ] = useState(true);
+  const onRadioCell = () => ({ style: { textAlign: "center" } });
   const columns = [
     {
       title: "File",
@@ -27,44 +32,58 @@ function FileSelection({ nextStep, formValuesState}) {
       sorter: true,
       sortDirections: [ "ascend", "descend" ],
       defaultSortOrder: "descend",
-      render: (text, record, index)=>text.toLocaleString() // Date Object
+      render: (text, record, index) => (
+        <Space>
+          { text.toLocaleString() }
+          { record.tag ? <Tag color='green' key={record.tag}>{record.tag.toUpperCase()}</Tag> : null }
+        </Space>
+      )
     },
     {
       title: "Gen File",
       key: "genfile",
+      onCell: onRadioCell,
+      width: "8em",
       render: (text, record, index) => 
         <Radio 
-          value={index}
-          checked={index===genFile}
+          value={record.filename}
+          checked={record.filename===genFile}
           onChange={(event)=>setGenFile(event.target.value)}
         ></Radio>
     },
     {
       title: "Eval File",
       key: "evalfile",
+      onCell: onRadioCell,
+      width: "8em",
       render: (text, record, index) =>
         <Radio 
-          value={index}
-          checked={index===evalFile}
+          value={record.filename}
+          checked={record.filename===evalFile}
           onChange={(event)=>{setEvalFile(event.target.value)}}
         ></Radio>
     }
   ];
-
   const listS3files = () => {
+    const uploadedSet = new Set(uploadedFiles);
+    let isSubscribed = true; // prevents memory leak on unmount
     const prepS3files = files => {
-      const fileList = files.map(({key, lastModified}, index) => {
-        return {
-          key: index,
-          filename: key.split('/').pop(),
-          lastModified
-        }
-      });
-      fileList.sort((a,b) => b.lastModified - a.lastModified); // Default descending order
-      setS3Files([...fileList]);
-      setIsTableLoading(false);
-    };
+      if (isSubscribed) {
+        const fileList = files.map(({key, lastModified}, index) => {
+          return {
+            key: index,
+            filename: key.split('/').pop(),
+            lastModified,
+            tag: uploadedSet.has(key.split('/').pop()) ? 'new' : null
+          }
+        });
+        fileList.sort((a,b) => b.lastModified - a.lastModified); // Default descending order
+        setS3Files([...fileList]);
+        setIsTableLoading(false);
+      }
+    }; // changes state if still subscribed
     listS3(prepS3files, ()=>{});
+    return () => isSubscribed = false;
   };
   useEffect(listS3files,[uploadedFiles]); // Updates when new files are uploaded
   function FileUpload() {
@@ -74,7 +93,7 @@ function FileSelection({ nextStep, formValuesState}) {
     function handleChange(event) {
       if (event.file.status === "done") {
         message.success(`${event.file.name} file uploaded successfully`);
-        setUploadedFiles([...uploadedFiles, event.file.name]);
+        setUploadedFiles([...uploadedFiles, ...event.fileList.map(file => file.name)]);
       } else if (event.file.status === "error") {
         message.error(`${event.file.name} file upload failed.`);
       }
@@ -119,14 +138,18 @@ function FileSelection({ nextStep, formValuesState}) {
   };
   const handleClick = async() => {
     const _formValues = { genUrl: null, evalUrl: null };
-    await getS3(`files/${s3Files[genFile].filename}`, s3Url => _formValues.genUrl = s3Url.split('?')[0], ()=>{});
-    await getS3(`files/${s3Files[evalFile].filename}`, s3Url => _formValues.evalUrl = s3Url.split('?')[0], ()=>{});
+    await getS3(`files/${genFile}`, s3Url => _formValues.genUrl = s3Url.split('?')[0], ()=>{});
+    await getS3(`files/${evalFile}`, s3Url => _formValues.evalUrl = s3Url.split('?')[0], ()=>{});
     setFormValues({ ...formValues, ..._formValues });
     nextStep();
   };
 
   return(
-    <div>
+    <Space
+      direction="vertical"
+      size="middle"
+      style={{width:"100%"}}    
+    >
       <FileUpload />
       <Table 
         dataSource={s3Files}
@@ -134,109 +157,172 @@ function FileSelection({ nextStep, formValuesState}) {
         loading={isTableLoading}
         onChange={handleTableChange}
         showSorterTooltip={false}
+        pagination={{
+          total:s3Files.length,
+          showSizeChanger: true,
+          showQuickJumper: true,
+          showTotal: total => `${total} files`
+        }}
       ></Table>
-      <Button 
-        onClick={handleClick}
-        disabled={genFile===null || evalFile===null}
-      >Continue</Button>
-    </div>
+      <Row justify="end">
+        <Button 
+          onClick={handleClick}
+          disabled={genFile===null || evalFile===null}
+        >Continue</Button>
+      </Row>
+    </Space>
   );
 };
 
 function SettingsForm( { nextStep, formValuesState }) {
+  const { cognitoPayload } = useContext(AuthContext);
   const [form] = Form.useForm();
   const { formValues, setFormValues } = formValuesState;
+  const [ isSubmitting, setIsSubmitting ] =  useState(false);
   function handleFinish() {
-    setFormValues({...formValues, ...form.getFieldValue()});
-    nextStep();
+    setIsSubmitting(true);
+    const jobID = uuidv4();
+    const jobSettings = {...formValues, ...form.getFieldsValue()};
+    API.graphql(
+      graphqlOperation(
+        createJob,
+        {
+          input: {
+            id: jobID,
+            userID: cognitoPayload.sub,
+            status: "inprogress",
+            ...jobSettings
+          }
+        }
+      )
+    ).then(
+      () => {
+        setIsSubmitting(false);
+        setFormValues(jobSettings);
+        nextStep();
+      }
+    );
   };
 
   return (
-    <Form 
-      name="jobSettings"
-      onFinish={handleFinish} 
-      form={form}
-      initialValues={{
-        description: "",
-        maxDesigns: 80,
-        population_size: 20,
-        tournament_size: 5,
-        survival_size: 2,
-        expiration: 86400
-      }}
+    <Spin 
+      spinning = {isSubmitting}
+      tip="Starting Job..."
     >
-      <Form.Item
-        label="Job Description"
-        name="description"
+      <Form 
+        name="jobSettings"
+        onFinish={handleFinish} 
+        form={form}
+        labelCol={{ span: 5 }}
+        wrapperCol={{ span: 18 }}
+        layout="horizontal"
+        initialValues={{
+          description: "",
+          maxDesigns: 80,
+          population_size: 20,
+          tournament_size: 5,
+          survival_size: 2,
+          expiration: 86400
+        }}
       >
-        <Input />
-      </Form.Item>
-      <Form.Item
-        label="Number of Designs"
-        name="maxDesigns"
-        rules={[{required: true}]}
-      >
-        <InputNumber />
-      </Form.Item>
-      <Form.Item
-        label="Population Size"
-        name="population_size"
-      >
-        <InputNumber />
-      </Form.Item>
-      <Form.Item
-        label="Tournament Size"
-        name="tournament_size"
-      >
-        <InputNumber />
-      </Form.Item>
-      <Form.Item
-        label="Survival Size"
-        name="survival_size"
-      >
-        <InputNumber />
-      </Form.Item>
-      <Form.Item
-        label="Expiration"
-        name="expiration"
-      >
-        <InputNumber />
-      </Form.Item>
-      <Form.Item>
-        <Button 
-          type="primary"
-          htmlType="submit"
-        >Start Job</Button>
-      </Form.Item>
-    </Form>
+        <Form.Item
+          label="Job Description"
+          name="description"
+        >
+          <Input />
+        </Form.Item>
+        <Form.Item
+          label="Number of Designs"
+          name="maxDesigns"
+          rules={[{required: true}]}
+        >
+          <InputNumber />
+        </Form.Item>
+        <Form.Item
+          label="Population Size"
+          name="population_size"
+        >
+          <InputNumber />
+        </Form.Item>
+        <Form.Item
+          label="Tournament Size"
+          name="tournament_size"
+        >
+          <InputNumber />
+        </Form.Item>
+        <Form.Item
+          label="Survival Size"
+          name="survival_size"
+        >
+          <InputNumber />
+        </Form.Item>
+        <Form.Item
+          label="Expiration"
+          name="expiration"
+        >
+          <InputNumber />
+        </Form.Item>
+        <Row justify="center">
+          <Button 
+            type="primary"
+            htmlType="submit"
+          >
+            Start Job
+          </Button>
+        </Row>
+      </Form>
+    </Spin>
   )
 }
 
 function FinishedForm({ setCurrentStep, formValuesState }) {
   const { formValues, setFormValues } = formValuesState;
   const { setMenuState } = useContext(MenuContext);
+
   return (
-    <div>
-      { Object.keys(formValues).map(currKey => <div>{`${currKey}: ${formValues[currKey]}`}</div>) }
-      <Button 
-        type="primary"
-        onClick={()=>{
-          setMenuState('charts');
-          setFormValues(null);
-        }}
-      >View Results</Button>
-      <Button 
-        onClick={()=>{
-          setCurrentStep(0);
-          setFormValues(null);
-        }}
-      >Start New Job</Button>
-    </div>
+    <Space
+      direction="vertical"
+      size="large"
+      style={{ width: "100%" }}
+    >
+      <Descriptions
+        title="Your Job has been submitted"
+        bordered={true}
+        column={2}
+      >
+        <Descriptions.Item label="Gen File">{formValues.genUrl.split("/").pop()}</Descriptions.Item>
+        <Descriptions.Item label="Eval File">{formValues.evalUrl.split("/").pop()}</Descriptions.Item>
+        <Descriptions.Item label="Description">{formValues.description}</Descriptions.Item>
+        <Descriptions.Item label="Number of Designs">{formValues.maxDesigns}</Descriptions.Item>
+        <Descriptions.Item label="Population Size">{formValues.population_size}</Descriptions.Item>
+        <Descriptions.Item label="Tournament Size">{formValues.tournament_size}</Descriptions.Item>
+        <Descriptions.Item label="Survival Size">{formValues.survival_size}</Descriptions.Item>
+        <Descriptions.Item label="Expiration">{formValues.expiration}</Descriptions.Item>
+      </Descriptions>
+      <Row 
+        justify="center"
+      >
+        <Space>
+          <Button 
+            type="primary"
+            onClick={()=>{
+              setMenuState('results');
+              setFormValues(null);
+            }}
+          >View Results</Button>
+          <Button 
+            onClick={()=>{
+              setCurrentStep(0);
+              setFormValues(null);
+            }}
+          >Start New Job</Button>
+        </Space>
+      </Row>
+    </Space>
   );
 };
 
 function JobForm() {
-  // const [ formValues, dispatch ] = useReducer(reducer, {})
   const [ formValues, setFormValues ] = useState({});
   const [ currentStep, setCurrentStep ] = useState(0);
   const steps = ["1. Select Files", "2. Job Settings", "3. Finished"];
@@ -267,11 +353,17 @@ function JobForm() {
 
   return (
     <div className="jobForm-container">
-      <h1>Start an Evolution Job</h1>
-      <Steps progressDot current={ currentStep }>
-        {steps.map((step, index) => <Step title={step} key={index}/>)}
-      </Steps>
-      <FormToRender />
+      <Space
+        direction="vertical"
+        size = "large"
+        style = {{width:"inherit"}}
+      >
+        <h1>Start an Evolution Job</h1>
+        <Steps progressDot current={ currentStep }>
+          {steps.map((step, index) => <Step title={step} key={index}/>)}
+        </Steps>
+        <FormToRender />
+      </Space>
     </div>
   )
 }
