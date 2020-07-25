@@ -36,19 +36,16 @@ function App(){
       spinning={isLoading}
       tip="loading..."    
     >
-      {cognitoPayload !== null ?
-        <AuthContext.Provider value={{ cognitoPayload, setCognitoPayload }}>
-          <BrowserRouter>
-            <div id="app-body">
-              <HeaderComponent />
-              <main>
-                <MainSection />
-              </main>
-            </div>
-          </BrowserRouter>
-        </AuthContext.Provider>
-      : <Spin />
-      }
+      <AuthContext.Provider value={{ cognitoPayload, setCognitoPayload, isLoading }}>
+        <BrowserRouter>
+          <div id="app-body">
+            <HeaderComponent />
+            <main>
+              <MainSection />
+            </main>
+          </div>
+        </BrowserRouter>
+      </AuthContext.Provider>
     </Spin>
   );
 };

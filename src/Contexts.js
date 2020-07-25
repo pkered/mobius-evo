@@ -3,6 +3,7 @@ import { createContext } from 'react';
 export const AuthContext = createContext(
   {
     cognitoPayload: null,
-    setCognitoPayload: ()=>{}
+    setCognitoPayload: ()=>{},
+    isLoading: true
   }
 );

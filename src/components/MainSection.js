@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useContext }from 'react';
+import { AuthContext } from '../Contexts';
 import { Route, Switch, Redirect } from 'react-router-dom';
 import Results from './main/Results';
 import JobForm from './main/JobForm';
@@ -6,13 +7,16 @@ import Landing from './main/Landing';
 import User from './main/User';
 
 function PrivateRoute({ component: Component, ...rest}) {
+  const { cognitoPayload, isLoading } = useContext(AuthContext);
   return (
+    !isLoading ?
     <Route 
       {...rest}
       render={
-        props => true ? <Component {...props}/> : <Redirect to={{ pathname:"/", state: { from: props.location } }} />
+        props => cognitoPayload ? <Component {...props}/> : <Redirect to={{ pathname:"/", state: { from: props.location } }} />
       }
     />
+    : null
   )
 }
 
