@@ -1,69 +1,6 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
-export const getUser = /* GraphQL */ `
-  query GetUser($id: ID!) {
-    getUser(id: $id) {
-      id
-      email
-      jobs {
-        id
-        userID
-        evalUrl
-        genUrl
-        expiration
-        description
-        maxDesigns
-        population_size
-        tournament_size
-        survival_size
-        createdAt
-        endedAt
-        status
-        updatedAt
-        owner
-      }
-      status
-      createdAt
-      updatedAt
-    }
-  }
-`;
-export const listUsers = /* GraphQL */ `
-  query ListUsers(
-    $filter: ModelUserFilterInput
-    $limit: Int
-    $nextToken: String
-  ) {
-    listUsers(filter: $filter, limit: $limit, nextToken: $nextToken) {
-      items {
-        id
-        email
-        jobs {
-          id
-          userID
-          evalUrl
-          genUrl
-          expiration
-          description
-          maxDesigns
-          population_size
-          tournament_size
-          survival_size
-          createdAt
-          endedAt
-          status
-          updatedAt
-          owner
-        }
-        status
-        createdAt
-        updatedAt
-      }
-      nextToken
-    }
-  }
-`;
 export const getJob = /* GraphQL */ `
   query GetJob($id: ID!) {
     getJob(id: $id) {
@@ -79,6 +16,9 @@ export const getJob = /* GraphQL */ `
       survival_size
       createdAt
       endedAt
+      run
+      parentID
+      childID
       status
       updatedAt
       owner
@@ -105,6 +45,9 @@ export const listJobs = /* GraphQL */ `
         survival_size
         createdAt
         endedAt
+        run
+        parentID
+        childID
         status
         updatedAt
         owner
@@ -154,6 +97,37 @@ export const listGenEvalParams = /* GraphQL */ `
     }
   }
 `;
+export const getFile = /* GraphQL */ `
+  query GetFile($id: ID!) {
+    getFile(id: $id) {
+      id
+      s3key
+      filename
+      createdAt
+      updatedAt
+      owner
+    }
+  }
+`;
+export const listFiles = /* GraphQL */ `
+  query ListFiles(
+    $filter: ModelFileFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listFiles(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        s3key
+        filename
+        createdAt
+        updatedAt
+        owner
+      }
+      nextToken
+    }
+  }
+`;
 export const jobsByStatus = /* GraphQL */ `
   query JobsByStatus(
     $status: JobStatus
@@ -182,6 +156,9 @@ export const jobsByStatus = /* GraphQL */ `
         survival_size
         createdAt
         endedAt
+        run
+        parentID
+        childID
         status
         updatedAt
         owner

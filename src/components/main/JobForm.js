@@ -4,9 +4,9 @@ import { API, graphqlOperation } from 'aws-amplify';
 import { createJob } from '../../graphql/mutations';
 import { uploadS3, listS3, getS3 } from '../../amplify-apis/userFiles';
 import { UploadOutlined } from '@ant-design/icons';
-import { MenuContext, AuthContext } from '../../Contexts'
+import { AuthContext } from '../../Contexts';
+import { Link } from 'react-router-dom';
 import { Form, Input, InputNumber , Button, Steps, Table, Radio, Upload, message, Tag, Space, Spin, Row, Descriptions } from 'antd'
-import DescriptionsItem from 'antd/lib/descriptions/Item';
 const { Step } = Steps;
 
 function FileSelection({ nextStep, formValuesState}) {
@@ -277,7 +277,6 @@ function SettingsForm( { nextStep, formValuesState }) {
 
 function FinishedForm({ setCurrentStep, formValuesState }) {
   const { formValues, setFormValues } = formValuesState;
-  const { setMenuState } = useContext(MenuContext);
 
   return (
     <Space
@@ -306,10 +305,11 @@ function FinishedForm({ setCurrentStep, formValuesState }) {
           <Button 
             type="primary"
             onClick={()=>{
-              setMenuState('results');
               setFormValues(null);
             }}
-          >View Results</Button>
+          >
+            <Link to="/results">View Results</Link>
+          </Button>
           <Button 
             onClick={()=>{
               setCurrentStep(0);

@@ -1,30 +1,30 @@
-import React, { useContext } from 'react';
-import { MenuContext } from '../Contexts';
+import React from 'react';
+import { Route, Switch, Redirect } from 'react-router-dom';
 import Results from './main/Results';
 import JobForm from './main/JobForm';
 import Landing from './main/Landing';
 import User from './main/User';
 
-function MainSection() {
-  const menuContext  = useContext(MenuContext);
-  let toRender = null;
-  switch (menuContext.menuState) {
-    case "results":
-      toRender = <Results/>
-      break;
-    case "jobForm":
-      toRender = <JobForm/>
-      break;
-    case "user":
-      toRender = <User/>
-      break;
-    default:
-      toRender = <Landing />
-  };
+function PrivateRoute({ component: Component, ...rest}) {
+  return (
+    <Route 
+      {...rest}
+      render={
+        props => true ? <Component {...props}/> : <Redirect to={{ pathname:"/", state: { from: props.location } }} />
+      }
+    />
+  )
+}
 
+function MainSection() {
   return (
     <section id="main-section">
-      {toRender}
+      <Switch>
+        <PrivateRoute path="/user" component={ User }/>
+        <PrivateRoute path="/new-search" component={ JobForm }/>
+        <PrivateRoute path="/explorations" component={ Results }/>
+        <Route path="/" component={ Landing }/>
+      </Switch>
     </section>
   );
 }

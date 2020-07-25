@@ -1,99 +1,6 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
-export const createUser = /* GraphQL */ `
-  mutation CreateUser(
-    $input: CreateUserInput!
-    $condition: ModelUserConditionInput
-  ) {
-    createUser(input: $input, condition: $condition) {
-      id
-      email
-      jobs {
-        id
-        userID
-        evalUrl
-        genUrl
-        expiration
-        description
-        maxDesigns
-        population_size
-        tournament_size
-        survival_size
-        createdAt
-        endedAt
-        status
-        updatedAt
-        owner
-      }
-      status
-      createdAt
-      updatedAt
-    }
-  }
-`;
-export const updateUser = /* GraphQL */ `
-  mutation UpdateUser(
-    $input: UpdateUserInput!
-    $condition: ModelUserConditionInput
-  ) {
-    updateUser(input: $input, condition: $condition) {
-      id
-      email
-      jobs {
-        id
-        userID
-        evalUrl
-        genUrl
-        expiration
-        description
-        maxDesigns
-        population_size
-        tournament_size
-        survival_size
-        createdAt
-        endedAt
-        status
-        updatedAt
-        owner
-      }
-      status
-      createdAt
-      updatedAt
-    }
-  }
-`;
-export const deleteUser = /* GraphQL */ `
-  mutation DeleteUser(
-    $input: DeleteUserInput!
-    $condition: ModelUserConditionInput
-  ) {
-    deleteUser(input: $input, condition: $condition) {
-      id
-      email
-      jobs {
-        id
-        userID
-        evalUrl
-        genUrl
-        expiration
-        description
-        maxDesigns
-        population_size
-        tournament_size
-        survival_size
-        createdAt
-        endedAt
-        status
-        updatedAt
-        owner
-      }
-      status
-      createdAt
-      updatedAt
-    }
-  }
-`;
 export const createJob = /* GraphQL */ `
   mutation CreateJob(
     $input: CreateJobInput!
@@ -112,6 +19,9 @@ export const createJob = /* GraphQL */ `
       survival_size
       createdAt
       endedAt
+      run
+      parentID
+      childID
       status
       updatedAt
       owner
@@ -136,6 +46,9 @@ export const updateJob = /* GraphQL */ `
       survival_size
       createdAt
       endedAt
+      run
+      parentID
+      childID
       status
       updatedAt
       owner
@@ -160,6 +73,9 @@ export const deleteJob = /* GraphQL */ `
       survival_size
       createdAt
       endedAt
+      run
+      parentID
+      childID
       status
       updatedAt
       owner
@@ -220,6 +136,51 @@ export const deleteGenEvalParam = /* GraphQL */ `
       model
       params
       score
+      createdAt
+      updatedAt
+      owner
+    }
+  }
+`;
+export const createFile = /* GraphQL */ `
+  mutation CreateFile(
+    $input: CreateFileInput!
+    $condition: ModelFileConditionInput
+  ) {
+    createFile(input: $input, condition: $condition) {
+      id
+      s3key
+      filename
+      createdAt
+      updatedAt
+      owner
+    }
+  }
+`;
+export const updateFile = /* GraphQL */ `
+  mutation UpdateFile(
+    $input: UpdateFileInput!
+    $condition: ModelFileConditionInput
+  ) {
+    updateFile(input: $input, condition: $condition) {
+      id
+      s3key
+      filename
+      createdAt
+      updatedAt
+      owner
+    }
+  }
+`;
+export const deleteFile = /* GraphQL */ `
+  mutation DeleteFile(
+    $input: DeleteFileInput!
+    $condition: ModelFileConditionInput
+  ) {
+    deleteFile(input: $input, condition: $condition) {
+      id
+      s3key
+      filename
       createdAt
       updatedAt
       owner

@@ -1,32 +1,38 @@
 import React, { useContext } from 'react';
-import { Auth } from 'aws-amplify';
-import { MenuContext, AuthContext } from '../Contexts';
-import { LineChartOutlined, FormOutlined  } from '@ant-design/icons';
-import { Menu , Button } from 'antd';
+import { Link } from 'react-router-dom';
+import { Auth, nav } from 'aws-amplify';
+import { AuthContext } from '../Contexts';
+import { LineChartOutlined  } from '@ant-design/icons';
+import { Button, Space } from 'antd';
 
 function HeaderComponent() {
-  const { menuState, setMenuState } = useContext(MenuContext);
   const cognitoPayload = useContext(AuthContext).cognitoPayload;
 
   function NavButtons() {
-    const handleClick = event => setMenuState(event.key);
     const menu = (
-      <Menu 
-        onClick={handleClick} 
-        selectedKeys={[menuState]} 
-        mode="horizontal">
-        <Menu.Item key="jobForm" icon={<FormOutlined/>}>New Job</Menu.Item>
-        <Menu.Item key="results" icon={<LineChartOutlined/>}>View Results</Menu.Item>
-      </Menu>
+      <Button
+        id="explorations-btn"
+        type="link"
+        className="nav-button"
+      >
+        <Link to="/explorations">
+          <Space>
+            <LineChartOutlined/>
+            Explorations
+          </Space>
+        </Link>
+      </Button>
     );
 
     return (
       <nav>
         <h1 
           id="mobius-evo"
-          onClick={()=>setMenuState("landing")}
-        >
-          Mobius-evo
+          className="nav-button"
+          >
+          <Link 
+            to = "/" 
+          >Mobius-evo</Link>
         </h1>
         {cognitoPayload && menu}
       </nav>
@@ -39,10 +45,9 @@ function HeaderComponent() {
         <Button 
           id="user-btn"
           type="link"
-          style={{height:"100%"}}
-          onClick={()=>setMenuState("user")}
+          className="nav-button"
         >
-          Hi, {cognitoPayload.nickname}
+          <Link to="/user">Hi, {cognitoPayload.nickname}</Link>
         </Button>  
         <Button
           id="signout"

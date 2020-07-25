@@ -1,90 +1,6 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
-export const onCreateUser = /* GraphQL */ `
-  subscription OnCreateUser {
-    onCreateUser {
-      id
-      email
-      jobs {
-        id
-        userID
-        evalUrl
-        genUrl
-        expiration
-        description
-        maxDesigns
-        population_size
-        tournament_size
-        survival_size
-        createdAt
-        endedAt
-        status
-        updatedAt
-        owner
-      }
-      status
-      createdAt
-      updatedAt
-    }
-  }
-`;
-export const onUpdateUser = /* GraphQL */ `
-  subscription OnUpdateUser {
-    onUpdateUser {
-      id
-      email
-      jobs {
-        id
-        userID
-        evalUrl
-        genUrl
-        expiration
-        description
-        maxDesigns
-        population_size
-        tournament_size
-        survival_size
-        createdAt
-        endedAt
-        status
-        updatedAt
-        owner
-      }
-      status
-      createdAt
-      updatedAt
-    }
-  }
-`;
-export const onDeleteUser = /* GraphQL */ `
-  subscription OnDeleteUser {
-    onDeleteUser {
-      id
-      email
-      jobs {
-        id
-        userID
-        evalUrl
-        genUrl
-        expiration
-        description
-        maxDesigns
-        population_size
-        tournament_size
-        survival_size
-        createdAt
-        endedAt
-        status
-        updatedAt
-        owner
-      }
-      status
-      createdAt
-      updatedAt
-    }
-  }
-`;
 export const onCreateJob = /* GraphQL */ `
   subscription OnCreateJob($owner: String!) {
     onCreateJob(owner: $owner) {
@@ -100,6 +16,9 @@ export const onCreateJob = /* GraphQL */ `
       survival_size
       createdAt
       endedAt
+      run
+      parentID
+      childID
       status
       updatedAt
       owner
@@ -121,6 +40,9 @@ export const onUpdateJob = /* GraphQL */ `
       survival_size
       createdAt
       endedAt
+      run
+      parentID
+      childID
       status
       updatedAt
       owner
@@ -142,6 +64,9 @@ export const onDeleteJob = /* GraphQL */ `
       survival_size
       createdAt
       endedAt
+      run
+      parentID
+      childID
       status
       updatedAt
       owner
@@ -193,6 +118,42 @@ export const onDeleteGenEvalParam = /* GraphQL */ `
       model
       params
       score
+      createdAt
+      updatedAt
+      owner
+    }
+  }
+`;
+export const onCreateFile = /* GraphQL */ `
+  subscription OnCreateFile($owner: String!) {
+    onCreateFile(owner: $owner) {
+      id
+      s3key
+      filename
+      createdAt
+      updatedAt
+      owner
+    }
+  }
+`;
+export const onUpdateFile = /* GraphQL */ `
+  subscription OnUpdateFile($owner: String!) {
+    onUpdateFile(owner: $owner) {
+      id
+      s3key
+      filename
+      createdAt
+      updatedAt
+      owner
+    }
+  }
+`;
+export const onDeleteFile = /* GraphQL */ `
+  subscription OnDeleteFile($owner: String!) {
+    onDeleteFile(owner: $owner) {
+      id
+      s3key
+      filename
       createdAt
       updatedAt
       owner
