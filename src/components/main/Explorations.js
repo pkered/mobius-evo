@@ -1,15 +1,32 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useCallback } from 'react';
 import * as QueryString from 'query-string';
-import { Space, Row, Table, Button, Descriptions, Col, Badge, Tree, Spin, Drawer, Tag, Popconfirm } from 'antd';
+import { Space, Row, Table, Button, Descriptions, Col, Badge, Tree, Spin, Drawer, Tag, Popconfirm, Menu } from 'antd';
 import { Link } from 'react-router-dom';
-import { PlusSquareOutlined, DownOutlined, SyncOutlined, CheckCircleOutlined, MinusCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { PlusSquareOutlined, TableOutlined, ClusterOutlined, DownOutlined, SyncOutlined, CheckCircleOutlined, MinusCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { API, graphqlOperation } from 'aws-amplify';
 import { listJobs, getJob } from '../../graphql/queries';
 import { updateJob } from '../../graphql/mutations';
 import { AuthContext } from '../../Contexts';
 
-function JobTable({ isTableLoading, jobListState, setSelectedJob }) {
-  const { jobList, setJobList } = jobListState
+function JobTable({ isDataLoading, loadChildren, previewJobState, treeData }) {
+  const { previewJob, setPreviewJob } = previewJobState;
+  const removeLeaves = treeData => {
+    const filteredTree = treeData.filter( node => !node.isLeaf );
+    if (filteredTree.length === 0) {
+      return null;
+    } else {
+      return filteredTree.map(
+        node => {
+          if ( node.children ) {
+            return { ...node, children: removeLeaves( node.children ) };
+          }
+          return node;
+        }
+      )
+    }
+  };
+  const [ tableTreeData, setTableTreeData ] = useState(removeLeaves([ ...treeData ]));
+
   const sortProps = {
     sorter: true,
     sortDirections: [ "ascend", "descend" ],
@@ -17,12 +34,12 @@ function JobTable({ isTableLoading, jobListState, setSelectedJob }) {
   const columns = [
     {
       title: "Description",
-      dataIndex: "description",
+      dataIndex: ["data","description"],
       key: "description"
     },
     {
       title: "Created At",
-      dataIndex: "createdAt",
+      dataIndex: ["data","createdAt"],
       key: "createdAt",
       ...sortProps,
       defaultSortOrder: "descend",
@@ -30,7 +47,7 @@ function JobTable({ isTableLoading, jobListState, setSelectedJob }) {
     },
     {
       title: "Status",
-      dataIndex: "jobStatus",
+      dataIndex: ["data","jobStatus"],
       key: "status",
       render: text => {
         switch (text) {
@@ -47,14 +64,14 @@ function JobTable({ isTableLoading, jobListState, setSelectedJob }) {
     },
     {
       title: "Gen File",
-      dataIndex: "genUrl",
+      dataIndex: ["data","genUrl"],
       key: "genFile",
       ...sortProps,
       render: text => text.split("/").pop()
     },
     {
       title: "Eval File",
-      dataIndex: "evalUrl",
+      dataIndex: ["data","evalUrl"],
       key: "evalFile",
       ...sortProps,
       render: text => text.split("/").pop()
@@ -63,16 +80,18 @@ function JobTable({ isTableLoading, jobListState, setSelectedJob }) {
       title: "Action",
       dataIndex: "",
       key: "selectJob",
-      render: (text, record, index) => <Button onClick={()=>setSelectedJob(record.id)}>View Results</Button>
+      render: (text, record, index) => 
+        <Link 
+          to={`/new-exploration#${QueryString.stringify({parentID: record.data.id})}`} 
+          target="_blank"
+          className={record.data.jobStatus !== "completed" ? "disabled-link" : ""}
+        >New Search</Link>
     }
   ]
-  const expandedSettings = [
-    "maxDesigns",
-    "population_size",
-    "survival_size",
-    "tournament_size",
-    "expiration"
-  ]
+
+  const [ selectedKeys, setSelectedKeys ] = useState(previewJob ? [previewJob.key] : [])
+  useEffect(()=>setSelectedKeys(previewJob ? [previewJob.key] : []), [previewJob]);
+
   const handleTableChange = ( pagination, filters, sorter ) => {
     const compareAscend = (a,b) => {
       if ( a < b ) { return -1; }
@@ -85,60 +104,69 @@ function JobTable({ isTableLoading, jobListState, setSelectedJob }) {
       else { return 0; }
     };
     const [ field, order ] = [ sorter.field, sorter.order ];
-    const _jobList = [...jobList];
+    const _treeData = [...tableTreeData];
     if (order === "ascend") {
-      _jobList.sort((a,b) => compareAscend(a[field], b[field]));
+      _treeData.sort((a,b) => compareAscend(a.data[field[1]], b.data[field[1]]));
     } else {
-      _jobList.sort((a,b) => compareDescend(a[field], b[field]));
+      _treeData.sort((a,b) => compareDescend(a.data[field[1]], b.data[field[1]]));
     };
-    setJobList(_jobList);
+    setTableTreeData(_treeData);
   };
+
   return (
-    <Space
-      direction="vertical"
-      size = "large"
-      style = {{width:"inherit"}}
-    >
-      <Row><h1>Jobs</h1></Row>
-      <Table 
-        loading={isTableLoading}
-        dataSource={jobList}
-        columns={columns}
-        rowKey="id"
-        expandable={{
-          expandedRowRender: record => (
-            <Row>
-              <Col style={{width: "50px"}}></Col>
-              <Col >
-                <Descriptions 
-                  title={<p>Job: {record.id}</p>}
-                  bordered={true}
-                  size="small"
-                  column={4}
-                  style={{
-                    color: "rgba(0,0,0,0.5)",
-                  }}
-                >
-                  {expandedSettings.map( dataKey => <Descriptions.Item label={dataKey} key={dataKey}>{record[dataKey]}</Descriptions.Item>)}
-                </Descriptions>
-              </Col>
-            </Row>
-          )
-        }}
-        showSorterTooltip={false}
-        onChange={handleTableChange}
-        pagination={{
-          total:jobList.length,
-          showSizeChanger: true,
-          showQuickJumper: true,
-          showTotal: total => `${total} files`
-        }}
-      />
-    </Space>
+    <Table 
+      loading={isDataLoading}
+      dataSource={tableTreeData}
+      columns={columns}
+      rowKey="key"
+      showSorterTooltip={false}
+      onChange={handleTableChange}
+      rowSelection={{
+        type: "checkbox",
+        hideSelectAll: true,
+        selectedRowKeys: selectedKeys,
+        onSelect: (record, selected) => selected ? setPreviewJob(record) : setPreviewJob(null)
+      }}
+      expandable={{
+        defaultExpandAllRows: true
+      }}
+      pagination={{
+        // total:jobList.length,
+        showSizeChanger: true,
+        showQuickJumper: true,
+        showTotal: total => `${total} files`
+      }}
+    />
   );
 };
 
-function FilterRow() {}
+function ExplorationTree({ isDataLoading, loadChildren, previewJobState, treeDataState }) {
+  const { treeData } = treeDataState;
+  const { previewJob, setPreviewJob } = previewJobState;
+  const [ selectedKeys, setSelectedKeys ] = useState(previewJob ? [previewJob.key] : [])
+  useEffect(()=>setSelectedKeys(previewJob ? [previewJob.key] : []), [previewJob])
+  const handleClick = ( selectedKeys, event) => {
+    const node = event.node;
+    if (node.selected) {
+      setPreviewJob(null);
+    } else {
+      setPreviewJob(node);
+    }
+  }
+  return (
+    <Spin spinning={isDataLoading}>
+      <Tree 
+        showIcon={true}
+        switcherIcon={<DownOutlined />}
+        loadData={loadChildren}
+        treeData={treeData}
+        defaultExpandAll={true}
+        onSelect={handleClick}
+        selectedKeys={selectedKeys}
+      />
+    </Spin>
+  );
+}
 
 function JobDrawer({ previewJobState }) {
   const expandedSettings = [
@@ -173,7 +201,7 @@ function JobDrawer({ previewJobState }) {
           {
             input: {
               id: previewJob.data.id,
-              status: "cancelling",
+              jobStatus: "cancelling",
               run: false
             }
           }
@@ -182,7 +210,7 @@ function JobDrawer({ previewJobState }) {
           ...previewJob,
           data: {
             ...previewJob.data,
-            status: "cancelling"
+            jobStatus: "cancelling"
           }
         });
       }
@@ -252,10 +280,28 @@ function JobDrawer({ previewJobState }) {
   )
 }
 
-function ExplorationTree({ isTreeLoading, jobList, previewJobState, treeDataState }) {
-  const { treeData, setTreeData } = treeDataState;
-  const { previewJob, setPreviewJob } = previewJobState;
-  const [ selectedKeys, setSelectedKeys ] = useState(previewJob ? [previewJob.key] : [])
+function Explorations() {
+  const newExploration = {
+    title: <Link to="new-exploration" target="_blank" >Start Exploration</Link>,
+    icon: <PlusSquareOutlined />,
+    selectable: false,
+    key: "0",
+    isLeaf: true,
+    data: {}
+  } // appended to base tree
+  const newSearch = {
+    title: "Start Search",
+    icon: <PlusSquareOutlined />,
+    key: "0",
+    selectable: false,
+    isLeaf: true,
+    data: {}
+  } // appended to all leaves
+  const [ previewJob, setPreviewJob ] = useState(null);
+  const { cognitoPayload } = useContext(AuthContext);
+  const [ isDataLoading, setIsDataLoading ] = useState(true);
+  const [ dataView, setDataView ] = useState("tree");
+  const [ treeData, setTreeData ] = useState([ newExploration ]);
   const TreeTitle = ({ text, status }) => {
     const rowStyle = { 
       display: "flex",
@@ -282,14 +328,6 @@ function ExplorationTree({ isTreeLoading, jobList, previewJobState, treeDataStat
       <Row style={rowStyle}><Space style={rowStyle}>{ text }<StatusTag status={status}/></Space></Row>
     )
   }
-  const newSearch = {
-    title: "Start Search",
-    icon: <PlusSquareOutlined />,
-    key: "0",
-    selectable: false,
-    isLeaf: true,
-    data: {}
-  } // appended to all leaves
   function updateTreeData( treeData, key, children ) {
     return treeData.map( node => {
       if (node.key === key) {
@@ -301,24 +339,6 @@ function ExplorationTree({ isTreeLoading, jobList, previewJobState, treeDataStat
       return node;
     });
   }
-  useEffect(()=> {
-    if (!isTreeLoading) {
-      setTreeData(
-        (treeData) => 
-          [...treeData, 
-            ...jobList.map((jobData, index) => {
-              return {
-                key: index + 1,
-                title: <TreeTitle text={jobData.description} status={jobData.jobStatus} />,
-                data: jobData
-              };
-            })
-          ]
-      );
-    };
-  },[isTreeLoading, jobList, setTreeData]);
-  useEffect(()=>setSelectedKeys(previewJob ? [previewJob.key] : []), [previewJob])
-
   const loadChildren = ({ key, children, data })=>{
     return new Promise(resolve => {
       if (children) {
@@ -367,46 +387,6 @@ function ExplorationTree({ isTreeLoading, jobList, previewJobState, treeDataStat
       getChildren().then(()=>resolve())
     })
   }
-  const handleClick = ( selectedKeys, event) => {
-    const node = event.node;
-    if (node.selected) {
-      setPreviewJob(null);
-    } else {
-      setPreviewJob(node);
-    }
-  }
-
-  return (
-    <Spin spinning={isTreeLoading}>
-      <Tree 
-        showIcon={true}
-        switcherIcon={<DownOutlined />}
-        loadData={loadChildren}
-        treeData={treeData}
-        defaultExpandAll={true}
-        onSelect={handleClick}
-        selectedKeys={selectedKeys}
-      />
-    </Spin>
-  );
-}
-
-function Explorations() {
-  const [ jobList, setJobList ] = useState([]);
-  const [ previewJob, setPreviewJob ] = useState(null);
-  const { cognitoPayload } = useContext(AuthContext);
-  const [ isTreeLoading, setIsTreeLoading ] = useState(true);
-
-  const newExploration = {
-    title: <Link to="new-exploration" target="_blank" >Start Exploration</Link>,
-    icon: <PlusSquareOutlined />,
-    selectable: false,
-    key: "0",
-    isLeaf: true,
-    data: {}
-  } // appended to base tree
-  const [ treeData, setTreeData ] = useState([ newExploration ]);
-
   useEffect(()=>{
     API.graphql(
       graphqlOperation(
@@ -424,20 +404,60 @@ function Explorations() {
       )
     ).then(
       queriedResults => {
-        setJobList(queriedResults.data.listJobs.items);
-        setIsTreeLoading(false);
+        const jobList = queriedResults.data.listJobs.items;
+        setTreeData(
+          (treeData) => 
+            [...treeData, 
+              ...jobList.map((jobData, index) => {
+                return {
+                  key: index + 1,
+                  title: <TreeTitle text={jobData.description} status={jobData.jobStatus} />,
+                  data: jobData
+                };
+              })
+            ]
+        );
+        setIsDataLoading(false);
       }
     ).catch( error=> console.log(error) );
   },[ cognitoPayload ]);
 
   return (
     <div className="explorations-container">
-      <ExplorationTree 
-        isTreeLoading={isTreeLoading} 
-        jobList={jobList} 
+      <Menu 
+        onClick={e=>{setDataView(e.key)}} 
+        selectedKeys={[ dataView ]}
+        mode="horizontal"
+      >
+        <Menu.Item 
+          key="table"
+          icon={<TableOutlined/>}
+        >
+          Table
+        </Menu.Item>
+        <Menu.Item 
+          key="tree"
+          icon={<ClusterOutlined/>}
+        >
+          Tree
+        </Menu.Item>
+      </Menu>
+      {dataView==="tree" ? 
+      <ExplorationTree
+        isDataLoading={isDataLoading}
+        loadChildren={loadChildren}
         previewJobState={{previewJob, setPreviewJob}} 
         treeDataState={{treeData, setTreeData}}
       />
+      :
+      <JobTable 
+        isDataLoading={isDataLoading} 
+        loadChildren={loadChildren}
+        previewJobState={{previewJob, setPreviewJob}} 
+        treeData={treeData}
+      />
+      }
+      
       <JobDrawer 
         previewJobState={{previewJob, setPreviewJob}} 
       />
