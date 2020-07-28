@@ -18,8 +18,8 @@ export const onCreateJob = /* GraphQL */ `
       endedAt
       run
       parentID
-      childID
-      status
+      childrenID
+      jobStatus
       updatedAt
       owner
     }
@@ -42,8 +42,8 @@ export const onUpdateJob = /* GraphQL */ `
       endedAt
       run
       parentID
-      childID
-      status
+      childrenID
+      jobStatus
       updatedAt
       owner
     }
@@ -66,8 +66,8 @@ export const onDeleteJob = /* GraphQL */ `
       endedAt
       run
       parentID
-      childID
-      status
+      childrenID
+      jobStatus
       updatedAt
       owner
     }
@@ -76,14 +76,15 @@ export const onDeleteJob = /* GraphQL */ `
 export const onCreateGenEvalParam = /* GraphQL */ `
   subscription OnCreateGenEvalParam($owner: String!) {
     onCreateGenEvalParam(owner: $owner) {
-      id
-      jobID
-      genID
+      ParamID
+      JobID
+      GenID
       evalResult
       live
       model
       params
       score
+      expirationTime
       createdAt
       updatedAt
       owner
@@ -93,14 +94,15 @@ export const onCreateGenEvalParam = /* GraphQL */ `
 export const onUpdateGenEvalParam = /* GraphQL */ `
   subscription OnUpdateGenEvalParam($owner: String!) {
     onUpdateGenEvalParam(owner: $owner) {
-      id
-      jobID
-      genID
+      ParamID
+      JobID
+      GenID
       evalResult
       live
       model
       params
       score
+      expirationTime
       createdAt
       updatedAt
       owner
@@ -110,14 +112,15 @@ export const onUpdateGenEvalParam = /* GraphQL */ `
 export const onDeleteGenEvalParam = /* GraphQL */ `
   subscription OnDeleteGenEvalParam($owner: String!) {
     onDeleteGenEvalParam(owner: $owner) {
-      id
-      jobID
-      genID
+      ParamID
+      JobID
+      GenID
       evalResult
       live
       model
       params
       score
+      expirationTime
       createdAt
       updatedAt
       owner

@@ -18,8 +18,8 @@ export const getJob = /* GraphQL */ `
       endedAt
       run
       parentID
-      childID
-      status
+      childrenID
+      jobStatus
       updatedAt
       owner
     }
@@ -47,8 +47,8 @@ export const listJobs = /* GraphQL */ `
         endedAt
         run
         parentID
-        childID
-        status
+        childrenID
+        jobStatus
         updatedAt
         owner
       }
@@ -59,14 +59,15 @@ export const listJobs = /* GraphQL */ `
 export const getGenEvalParam = /* GraphQL */ `
   query GetGenEvalParam($id: ID!) {
     getGenEvalParam(id: $id) {
-      id
-      jobID
-      genID
+      ParamID
+      JobID
+      GenID
       evalResult
       live
       model
       params
       score
+      expirationTime
       createdAt
       updatedAt
       owner
@@ -81,14 +82,15 @@ export const listGenEvalParams = /* GraphQL */ `
   ) {
     listGenEvalParams(filter: $filter, limit: $limit, nextToken: $nextToken) {
       items {
-        id
-        jobID
-        genID
+        ParamID
+        JobID
+        GenID
         evalResult
         live
         model
         params
         score
+        expirationTime
         createdAt
         updatedAt
         owner
@@ -120,77 +122,6 @@ export const listFiles = /* GraphQL */ `
         id
         s3key
         filename
-        createdAt
-        updatedAt
-        owner
-      }
-      nextToken
-    }
-  }
-`;
-export const jobsByStatus = /* GraphQL */ `
-  query JobsByStatus(
-    $status: JobStatus
-    $sortDirection: ModelSortDirection
-    $filter: ModelJobFilterInput
-    $limit: Int
-    $nextToken: String
-  ) {
-    jobsByStatus(
-      status: $status
-      sortDirection: $sortDirection
-      filter: $filter
-      limit: $limit
-      nextToken: $nextToken
-    ) {
-      items {
-        id
-        userID
-        evalUrl
-        genUrl
-        expiration
-        description
-        maxDesigns
-        population_size
-        tournament_size
-        survival_size
-        createdAt
-        endedAt
-        run
-        parentID
-        childID
-        status
-        updatedAt
-        owner
-      }
-      nextToken
-    }
-  }
-`;
-export const evalByJobId = /* GraphQL */ `
-  query EvalByJobId(
-    $jobID: ID
-    $sortDirection: ModelSortDirection
-    $filter: ModelGenEvalParamFilterInput
-    $limit: Int
-    $nextToken: String
-  ) {
-    evalByJobID(
-      jobID: $jobID
-      sortDirection: $sortDirection
-      filter: $filter
-      limit: $limit
-      nextToken: $nextToken
-    ) {
-      items {
-        id
-        jobID
-        genID
-        evalResult
-        live
-        model
-        params
-        score
         createdAt
         updatedAt
         owner

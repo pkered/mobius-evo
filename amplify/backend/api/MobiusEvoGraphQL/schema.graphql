@@ -1,6 +1,5 @@
 type Job @model 
-  @auth(rules:[{ allow: owner }])
-  @key(name: "jobsByStatus", fields: ["status"], queryField: "jobsByStatus") {
+  @auth(rules:[{ allow: owner }]) {
   id: ID!
   userID: ID!
   evalUrl: String! #s3 key
@@ -15,8 +14,8 @@ type Job @model
   endedAt: String
   run: Boolean
   parentID: ID
-  childID: ID
-  status: JobStatus
+  childrenID: [ID]
+  jobStatus: JobStatus
 }
 
 enum JobStatus {
@@ -25,19 +24,20 @@ enum JobStatus {
   expired
   error
   cancelled
+  cancelling
 }
 
 type GenEvalParam @model 
-  @auth(rules: [{ allow: owner }])
-  @key(name: "evalByJobID", fields: ["jobID"], queryField: "evalByJobID") {
-  id: ID!
-  jobID: ID!
-  genID: ID!
+  @auth(rules: [{ allow: owner }]) {
+  ParamID: ID!
+  JobID: ID!
+  GenID: ID!
   evalResult: String
   live: Boolean
   model: String
   params: String
   score: Float
+  expirationTime: Float
 }
 
 type File @model

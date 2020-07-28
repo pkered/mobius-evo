@@ -1,7 +1,9 @@
 import React, { useState, useContext, useEffect } from 'react';
+import * as QueryString from 'query-string';
 import { v4 as uuidv4 } from 'uuid';
 import { API, graphqlOperation } from 'aws-amplify';
-import { createJob } from '../../graphql/mutations';
+import { getJob } from '../../graphql/queries';
+import { createJob, updateJob } from '../../graphql/mutations';
 import { uploadS3, listS3, getS3 } from '../../amplify-apis/userFiles';
 import { UploadOutlined } from '@ant-design/icons';
 import { AuthContext } from '../../Contexts';
@@ -174,7 +176,7 @@ function FileSelection({ nextStep, formValuesState}) {
   );
 };
 
-function SettingsForm( { nextStep, formValuesState }) {
+function SettingsForm( { nextStep, formValuesState, parentID, parentData, jobType }) {
   const { cognitoPayload } = useContext(AuthContext);
   const [form] = Form.useForm();
   const { formValues, setFormValues } = formValuesState;
@@ -182,7 +184,7 @@ function SettingsForm( { nextStep, formValuesState }) {
   function handleFinish() {
     setIsSubmitting(true);
     const jobID = uuidv4();
-    const jobSettings = {...formValues, ...form.getFieldsValue()};
+    const jobSettings = {...formValues, ...form.getFieldsValue() };
     API.graphql(
       graphqlOperation(
         createJob,
@@ -190,18 +192,38 @@ function SettingsForm( { nextStep, formValuesState }) {
           input: {
             id: jobID,
             userID: cognitoPayload.sub,
-            status: "inprogress",
-            ...jobSettings
+            jobStatus: "inprogress",
+            run: true,
+            ...jobSettings,
+            parentID: parentID || ""
           }
         }
       )
     ).then(
       () => {
         setIsSubmitting(false);
-        setFormValues(jobSettings);
+        setFormValues({...jobSettings, jobID});
         nextStep();
       }
     );
+    if (parentID) { // add jobID to parent
+      async function queriedResults(parentData) {
+        let childrenID = parentData.childrenID;
+        childrenID ? childrenID.push(jobID) : childrenID = [jobID]
+        await API.graphql(
+          graphqlOperation(
+            updateJob,
+            {
+              input: {
+                id: parentID,
+                childrenID: childrenID
+              }
+            }
+          )
+        )
+      };
+      queriedResults(parentData);
+    }
   };
 
   return (
@@ -217,16 +239,23 @@ function SettingsForm( { nextStep, formValuesState }) {
         wrapperCol={{ span: 18 }}
         layout="horizontal"
         initialValues={{
-          description: "",
+          description: `New ${jobType}`,
           maxDesigns: 80,
           population_size: 20,
           tournament_size: 5,
           survival_size: 2,
-          expiration: 86400
+          expiration: 86400,
+          parentID: parentID
         }}
       >
         <Form.Item
-          label="Job Description"
+          label="Parent ID"
+          name="parentID"
+        >
+          <Input disabled/>
+        </Form.Item>
+        <Form.Item
+          label="Description"
           name="description"
         >
           <Input />
@@ -267,7 +296,7 @@ function SettingsForm( { nextStep, formValuesState }) {
             type="primary"
             htmlType="submit"
           >
-            Start Job
+            Start {jobType}
           </Button>
         </Row>
       </Form>
@@ -275,7 +304,7 @@ function SettingsForm( { nextStep, formValuesState }) {
   )
 }
 
-function FinishedForm({ setCurrentStep, formValuesState }) {
+function FinishedForm({ formValuesState }) {
   const { formValues, setFormValues } = formValuesState;
 
   return (
@@ -308,14 +337,8 @@ function FinishedForm({ setCurrentStep, formValuesState }) {
               setFormValues(null);
             }}
           >
-            <Link to="/results">View Results</Link>
+            <Link to={`/explorations/search-results#${QueryString.stringify({id:formValues.jobID})}`}>View Results</Link>
           </Button>
-          <Button 
-            onClick={()=>{
-              setCurrentStep(0);
-              setFormValues(null);
-            }}
-          >Start New Job</Button>
         </Space>
       </Row>
     </Space>
@@ -325,8 +348,46 @@ function FinishedForm({ setCurrentStep, formValuesState }) {
 function JobForm() {
   const [ formValues, setFormValues ] = useState({});
   const [ currentStep, setCurrentStep ] = useState(0);
-  const steps = ["1. Select Files", "2. Job Settings", "3. Finished"];
+  const [ parentID, setParentID ] = useState("");
+  const [ parentData, setParentData ] = useState(null);
+  const [ jobType, setJobType ] = useState("");
+  const steps = ["1. Select Files", `2. ${jobType} Settings`, "3. Finished"];
   const nextStep = () => setCurrentStep( Math.min( steps.length - 1, currentStep + 1 ));
+
+  useEffect( ()=> {
+    const hashParentID = QueryString.parse(window.location.hash).parentID;
+    setParentID(hashParentID);
+    setJobType(hashParentID ? "Search" : "Exploration");
+    if (hashParentID) { 
+      API.graphql(
+        graphqlOperation(
+          getJob,
+          {
+            id: hashParentID}
+        )
+      ).then(
+        queriedResults => {
+          const parentJob = queriedResults.data.getJob
+          if (parentJob) { //check valid, completed job in db
+            if (!parentJob.run) { 
+              if (parentJob.jobStatus === "completed") {
+                setParentData(queriedResults.data.getJob)
+              } else {
+                alert(`Parent Job has ${parentJob.jobStatus}. Restart Job`);
+                window.location = `/explorations/${parentJob.id}`
+              }
+            } else{
+              alert("Parent Job is still processing.")
+              window.location = `/explorations/${parentJob.id}`
+            }
+          } else {
+            alert("Invalid Parent ID. Redirecting to new exploration.");
+            window.location = "/new-exploration"
+          };
+        }
+      ).catch(err => console.log(err))
+    }
+  }, []);
 
   function FormToRender() {
     switch (currentStep) {
@@ -335,11 +396,13 @@ function JobForm() {
         <SettingsForm 
           nextStep={nextStep} 
           formValuesState={{formValues, setFormValues}}
+          parentID={parentID}
+          parentData={parentData}
+          jobType={jobType}
         />);
       case 2:
         return (
         <FinishedForm 
-          setCurrentStep={setCurrentStep}
           formValuesState={{formValues, setFormValues}}
         />);
       default:
@@ -358,7 +421,7 @@ function JobForm() {
         size = "large"
         style = {{width:"inherit"}}
       >
-        <h1>Start an Evolution Job</h1>
+        <h1>Start New { jobType }</h1>
         <Steps progressDot current={ currentStep }>
           {steps.map((step, index) => <Step title={step} key={index}/>)}
         </Steps>

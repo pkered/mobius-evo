@@ -21,8 +21,8 @@ export const createJob = /* GraphQL */ `
       endedAt
       run
       parentID
-      childID
-      status
+      childrenID
+      jobStatus
       updatedAt
       owner
     }
@@ -48,8 +48,8 @@ export const updateJob = /* GraphQL */ `
       endedAt
       run
       parentID
-      childID
-      status
+      childrenID
+      jobStatus
       updatedAt
       owner
     }
@@ -75,8 +75,8 @@ export const deleteJob = /* GraphQL */ `
       endedAt
       run
       parentID
-      childID
-      status
+      childrenID
+      jobStatus
       updatedAt
       owner
     }
@@ -88,14 +88,15 @@ export const createGenEvalParam = /* GraphQL */ `
     $condition: ModelGenEvalParamConditionInput
   ) {
     createGenEvalParam(input: $input, condition: $condition) {
-      id
-      jobID
-      genID
+      ParamID
+      JobID
+      GenID
       evalResult
       live
       model
       params
       score
+      expirationTime
       createdAt
       updatedAt
       owner
@@ -108,14 +109,15 @@ export const updateGenEvalParam = /* GraphQL */ `
     $condition: ModelGenEvalParamConditionInput
   ) {
     updateGenEvalParam(input: $input, condition: $condition) {
-      id
-      jobID
-      genID
+      ParamID
+      JobID
+      GenID
       evalResult
       live
       model
       params
       score
+      expirationTime
       createdAt
       updatedAt
       owner
@@ -128,14 +130,15 @@ export const deleteGenEvalParam = /* GraphQL */ `
     $condition: ModelGenEvalParamConditionInput
   ) {
     deleteGenEvalParam(input: $input, condition: $condition) {
-      id
-      jobID
-      genID
+      ParamID
+      JobID
+      GenID
       evalResult
       live
       model
       params
       score
+      expirationTime
       createdAt
       updatedAt
       owner
