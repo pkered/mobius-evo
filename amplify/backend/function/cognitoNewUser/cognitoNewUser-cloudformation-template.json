@@ -83,7 +83,7 @@
 				"Timeout": "25",
 				"Code": {
 					"S3Bucket": "amplify-mobiusevo-dev-131353-deployment",
-					"S3Key": "amplify-builds/cognitoNewUser-37336653735369597165-build.zip"
+					"S3Key": "amplify-builds/cognitoNewUser-69687443393165464533-build.zip"
 				}
 			}
 		},
