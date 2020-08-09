@@ -351,7 +351,7 @@ function JobForm() {
   const [ parentID, setParentID ] = useState("");
   const [ parentData, setParentData ] = useState(null);
   const [ jobType, setJobType ] = useState("");
-  const steps = ["1. Select Files", `2. ${jobType} Settings`, "3. Finished"];
+  const steps = ["1. Select Files", `2. ${jobType} Settings`, "3. Summary"];
   const nextStep = () => setCurrentStep( Math.min( steps.length - 1, currentStep + 1 ));
 
   useEffect( ()=> {

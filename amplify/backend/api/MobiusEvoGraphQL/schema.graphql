@@ -29,7 +29,7 @@ enum JobStatus {
 
 type GenEvalParam @model 
   @auth(rules: [{ allow: owner }]) {
-  ParamID: ID!
+  id: ID!
   JobID: ID!
   GenID: ID!
   evalResult: String

@@ -59,7 +59,7 @@ export const listJobs = /* GraphQL */ `
 export const getGenEvalParam = /* GraphQL */ `
   query GetGenEvalParam($id: ID!) {
     getGenEvalParam(id: $id) {
-      ParamID
+      id
       JobID
       GenID
       evalResult
@@ -82,7 +82,7 @@ export const listGenEvalParams = /* GraphQL */ `
   ) {
     listGenEvalParams(filter: $filter, limit: $limit, nextToken: $nextToken) {
       items {
-        ParamID
+        id
         JobID
         GenID
         evalResult

@@ -88,7 +88,7 @@ export const createGenEvalParam = /* GraphQL */ `
     $condition: ModelGenEvalParamConditionInput
   ) {
     createGenEvalParam(input: $input, condition: $condition) {
-      ParamID
+      id
       JobID
       GenID
       evalResult
@@ -109,7 +109,7 @@ export const updateGenEvalParam = /* GraphQL */ `
     $condition: ModelGenEvalParamConditionInput
   ) {
     updateGenEvalParam(input: $input, condition: $condition) {
-      ParamID
+      id
       JobID
       GenID
       evalResult
@@ -130,7 +130,7 @@ export const deleteGenEvalParam = /* GraphQL */ `
     $condition: ModelGenEvalParamConditionInput
   ) {
     deleteGenEvalParam(input: $input, condition: $condition) {
-      ParamID
+      id
       JobID
       GenID
       evalResult

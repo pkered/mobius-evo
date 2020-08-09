@@ -76,7 +76,7 @@ export const onDeleteJob = /* GraphQL */ `
 export const onCreateGenEvalParam = /* GraphQL */ `
   subscription OnCreateGenEvalParam($owner: String!) {
     onCreateGenEvalParam(owner: $owner) {
-      ParamID
+      id
       JobID
       GenID
       evalResult
@@ -94,7 +94,7 @@ export const onCreateGenEvalParam = /* GraphQL */ `
 export const onUpdateGenEvalParam = /* GraphQL */ `
   subscription OnUpdateGenEvalParam($owner: String!) {
     onUpdateGenEvalParam(owner: $owner) {
-      ParamID
+      id
       JobID
       GenID
       evalResult
@@ -112,7 +112,7 @@ export const onUpdateGenEvalParam = /* GraphQL */ `
 export const onDeleteGenEvalParam = /* GraphQL */ `
   subscription OnDeleteGenEvalParam($owner: String!) {
     onDeleteGenEvalParam(owner: $owner) {
-      ParamID
+      id
       JobID
       GenID
       evalResult
