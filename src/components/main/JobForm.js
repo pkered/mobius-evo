@@ -1,4 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
+import './JobForm.css';
 import * as QueryString from 'query-string';
 import { v4 as uuidv4 } from 'uuid';
 import { API, graphqlOperation } from 'aws-amplify';

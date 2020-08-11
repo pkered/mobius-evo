@@ -1,4 +1,5 @@
 import React, { useContext }from 'react';
+import './MainSection.css';
 import { AuthContext } from '../Contexts';
 import { Route, Switch, Redirect } from 'react-router-dom';
 import Explorations from './main/Explorations';

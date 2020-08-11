@@ -1,4 +1,5 @@
 import React, { useContext } from 'react';
+import './HeaderComponent.css';
 import { Link } from 'react-router-dom';
 import { Auth, nav } from 'aws-amplify';
 import { AuthContext } from '../Contexts';

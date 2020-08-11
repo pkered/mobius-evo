@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
+import './Explorations.css';
 import * as QueryString from 'query-string';
 import { Space, Row, Table, Button, Descriptions, Badge, Tree, Spin, Drawer, Tag, Popconfirm, Menu } from 'antd';
 import { Link } from 'react-router-dom';

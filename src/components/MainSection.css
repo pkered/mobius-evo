@@ -1,7 +1,3 @@
-@import './main/Explorations.css';
-@import './main/Landing.css';
-@import './main/JobForm.css';
-
 #app-body {
   display: flex;
   height: 100%;
