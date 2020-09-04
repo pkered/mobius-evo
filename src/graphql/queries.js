@@ -20,8 +20,8 @@ export const getJob = /* GraphQL */ `
       parentID
       childrenID
       jobStatus
-      updatedAt
       owner
+      updatedAt
     }
   }
 `;
@@ -49,8 +49,8 @@ export const listJobs = /* GraphQL */ `
         parentID
         childrenID
         jobStatus
-        updatedAt
         owner
+        updatedAt
       }
       nextToken
     }
@@ -67,10 +67,10 @@ export const getGenEvalParam = /* GraphQL */ `
       model
       params
       score
+      owner
       expirationTime
       createdAt
       updatedAt
-      owner
     }
   }
 `;
@@ -90,10 +90,10 @@ export const listGenEvalParams = /* GraphQL */ `
         model
         params
         score
+        owner
         expirationTime
         createdAt
         updatedAt
-        owner
       }
       nextToken
     }
@@ -125,6 +125,41 @@ export const listFiles = /* GraphQL */ `
         createdAt
         updatedAt
         owner
+      }
+      nextToken
+    }
+  }
+`;
+export const generationsByJobId = /* GraphQL */ `
+  query GenerationsByJobId(
+    $JobID: ID
+    $owner: ModelStringKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelGenEvalParamFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    generationsByJobID(
+      JobID: $JobID
+      owner: $owner
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        JobID
+        GenID
+        evalResult
+        live
+        model
+        params
+        score
+        owner
+        expirationTime
+        createdAt
+        updatedAt
       }
       nextToken
     }

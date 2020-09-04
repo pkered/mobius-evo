@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { API, graphqlOperation } from 'aws-amplify';
-import { listGenEvalParams, getJob } from '../../graphql/queries';
+import { generationsByJobId, getJob } from '../../graphql/queries';
 import { createGenEvalParam } from '../../graphql/mutations';
 import * as QueryString from 'query-string';
 import { Link } from 'react-router-dom';
 import { Row, Space, Button, Spin, Form, Col, Divider, Input, Checkbox, message } from 'antd';
 import { Line } from '@ant-design/charts';
+import { AuthContext } from '../../Contexts';
 
 function createMockData( jobID ) {
   const bools = [false, true]
@@ -27,7 +28,14 @@ function createMockData( jobID ) {
     )).then(result => console.log(result)).catch(err => console.log(err))
   }
 }
-async function getData(jobID, setJobSettings, setJobResults, callback, filters = null, nextToken = null) {
+function paramsRegex(params) {
+  const pattern = /(\w+)=(\w+.?\w+)/gm;
+  const result = [...params.matchAll(pattern)]
+  const ret = {}
+  result.forEach( match => ret[match[1]] = match[2] )
+  return ret;
+}
+async function getData(jobID, userID, setJobSettings, setJobResults, callback, filters = null, nextToken = null) {
   let _filters = {};
   if (filters) {
     if (filters["show-group"].length === 0) {
@@ -50,27 +58,26 @@ async function getData(jobID, setJobSettings, setJobResults, callback, filters =
     }
   }
   await API.graphql(graphqlOperation(
-    listGenEvalParams,
+    generationsByJobId,
     {
-      filter: {
-        JobID: {
-          eq: jobID
-        },
-        ..._filters
-      },
+      limit: 1000,
+      owner: { eq: userID },
+      JobID: jobID,
+      filter: Object.keys(_filters) > 0 ? _filters: null,
+      items: {},
       nextToken
     }
   )).then( queryResult => {
-      let queriedJobResults = queryResult.data.listGenEvalParams.items;
-      if (queryResult.data.listGenEvalParams.nextToken) {
-        getData(jobID, setJobSettings, setJobResults, callback, filters, nextToken = queryResult.data.listGenEvalParams.nextToken).catch(err=> {throw err})
+      let queriedJobResults = queryResult.data.generationsByJobID.items;
+      if (queryResult.data.generationsByJobID.nextToken) {
+        getData(jobID, userID, setJobSettings, setJobResults, callback, filters, nextToken = queryResult.data.generationsByJobID.nextToken).catch(err=> {throw err})
       } else { callback() }
       setJobResults(jobResults => {
         queriedJobResults = [...jobResults, ...queriedJobResults];
         if (filters) {
-          const params = Object.keys(JSON.parse(queriedJobResults[0].params));
+          const params = Object.keys(paramsRegex(queriedJobResults[0].params));
           queriedJobResults = queriedJobResults.filter((jobResult, index) => {
-            const jobParams = JSON.parse(jobResult.params);
+            const jobParams = paramsRegex(jobResult.params);
             for (let i in params) {
               if (jobParams[params[i]] > filters[`${params[i]}-max`] || jobParams[params[i]] < filters[`${params[i]}-min`]) {
                 return false;
@@ -82,7 +89,7 @@ async function getData(jobID, setJobSettings, setJobResults, callback, filters =
         queriedJobResults.sort((a,b) => a.GenID - b.GenID );
         return queriedJobResults;
       });
-  }).catch(err => {throw err});
+  }).catch(err => {console.log(err); throw err});
   await API.graphql(graphqlOperation(
     getJob,
     {
@@ -94,6 +101,7 @@ async function getData(jobID, setJobSettings, setJobResults, callback, filters =
 }
 
 function FilterForm({ jobID, modelParamsState, jobSettingsState, jobResultsState }) {
+  const {cognitoPayload} = useContext(AuthContext)
   const { modelParams, setModelParams } = modelParamsState;
   const { jobSettings, setJobSettings } = jobSettingsState;
   const { jobResults, setJobResults } = jobResultsState;
@@ -103,12 +111,12 @@ function FilterForm({ jobID, modelParamsState, jobSettingsState, jobResultsState
   const handleFinish = values => {
     setIsFiltering(true);
     setJobResults([]);
-    getData(jobID, setJobSettings, setJobResults, ()=>setIsFiltering(false), values).catch(err=>console.log(err));
+    getData(jobID, cognitoPayload.sub, setJobSettings, setJobResults, ()=>setIsFiltering(false), values).catch(err=>console.log(err));
   };
   useEffect(()=>{
     const singleResult = jobResults[0];
     if (singleResult && modelParams.length === 0) {
-      setModelParams(Object.keys(JSON.parse(singleResult.params)));
+      setModelParams(Object.keys(paramsRegex(singleResult.params)));
     }
     const resultMinMax = {
       params: modelParams.reduce((result, current, index, array) => {
@@ -118,7 +126,7 @@ function FilterForm({ jobID, modelParamsState, jobSettingsState, jobResultsState
       score: [ Infinity, -Infinity ]
     }
     jobResults.forEach( result => {
-      const _params = JSON.parse( result.params );
+      const _params = paramsRegex( result.params );
       modelParams.forEach( param => {
         if ( _params[param] >= resultMinMax.params[`${param}`][1] ) { resultMinMax.params[`${param}`][1] = Math.ceil(_params[param]) }
         if ( _params[param] <= resultMinMax.params[`${param}`][0] ) { resultMinMax.params[`${param}`][0] = Math.floor(_params[param]) }
@@ -234,11 +242,13 @@ function FilterForm({ jobID, modelParamsState, jobSettingsState, jobResultsState
 function ParallelPlot({ jobResults }) {
   // map params to {param:}
   let data = [];
-  jobResults.forEach(result => {
-    const parameters = JSON.parse(result.params);
-    const paramList = Object.keys(parameters).map(paramName => { return { param: paramName, value: parameters[paramName], GenID: result.GenID } });
-    data = data.concat(paramList);
-  });
+  try {
+    jobResults.forEach(result => {
+      const parameters = paramsRegex(result.params);
+      const paramList = Object.keys(parameters).map(paramName => { return { param: paramName, value: parameters[paramName], GenID: result.GenID } });
+      data = data.concat(paramList);
+    });
+  } catch(err) {console.log(err)}
   const config = {
     title: {
       visible: true,
@@ -289,11 +299,12 @@ function JobResults() {
   const [ jobSettings, setJobSettings ] = useState(null);
   const [ jobResults, setJobResults ] = useState([]);
   const [ isLoading, setIsLoading ] = useState(true);
+  const { cognitoPayload } = useContext(AuthContext)
 
   useEffect(()=>{
     const jobID = QueryString.parse(window.location.hash).id;
     setJobID(jobID);
-    getData(jobID, setJobSettings, setJobResults, ()=>setIsLoading(false)).catch(err => console.log(err));
+    getData(jobID, cognitoPayload.sub, setJobSettings, setJobResults, ()=>setIsLoading(false)).catch(err => console.log(err));
   }, []);
 
   return (
@@ -314,7 +325,6 @@ function JobResults() {
             size="large"
             style={{width:"100%"}}
           >
-            <Button onClick={()=>createMockData(jobID)}>Mock Data</Button>
             <FilterForm 
               jobID={jobID}
               modelParamsState={{modelParams, setModelParams}}

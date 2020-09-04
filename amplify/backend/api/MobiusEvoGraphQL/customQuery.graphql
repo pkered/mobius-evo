@@ -1,0 +1,23 @@
+query generationsByJobIDcustom(
+      JobID: JobID
+      owner: owner
+      sortDirection: sortDirection
+      filter: filter
+      limit: limit
+      nextToken: nextToken
+    ) {
+      items {
+        id
+        JobID
+        GenID
+        evalResult
+        live
+        params
+        score
+        owner
+        expirationTime
+        createdAt
+        updatedAt
+      }
+      nextToken
+    }

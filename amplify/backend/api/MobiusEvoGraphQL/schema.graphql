@@ -16,6 +16,8 @@ type Job @model
   parentID: ID
   childrenID: [ID]
   jobStatus: JobStatus
+  owner: String
+  updatedAt: AWSDateTime
 }
 
 enum JobStatus {
@@ -28,7 +30,8 @@ enum JobStatus {
 }
 
 type GenEvalParam @model 
-  @auth(rules: [{ allow: owner }]) {
+  @auth(rules: [{ allow: owner }])
+  @key(name: "byJobID", fields: ["JobID", "owner"], queryField:"generationsByJobID") {
   id: ID!
   JobID: ID!
   GenID: ID!
@@ -37,7 +40,10 @@ type GenEvalParam @model
   model: String
   params: String
   score: Float
+  owner: String
   expirationTime: Float
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
 }
 
 type File @model

@@ -20,8 +20,8 @@ export const onCreateJob = /* GraphQL */ `
       parentID
       childrenID
       jobStatus
-      updatedAt
       owner
+      updatedAt
     }
   }
 `;
@@ -44,8 +44,8 @@ export const onUpdateJob = /* GraphQL */ `
       parentID
       childrenID
       jobStatus
-      updatedAt
       owner
+      updatedAt
     }
   }
 `;
@@ -68,8 +68,8 @@ export const onDeleteJob = /* GraphQL */ `
       parentID
       childrenID
       jobStatus
-      updatedAt
       owner
+      updatedAt
     }
   }
 `;
@@ -84,10 +84,10 @@ export const onCreateGenEvalParam = /* GraphQL */ `
       model
       params
       score
+      owner
       expirationTime
       createdAt
       updatedAt
-      owner
     }
   }
 `;
@@ -102,10 +102,10 @@ export const onUpdateGenEvalParam = /* GraphQL */ `
       model
       params
       score
+      owner
       expirationTime
       createdAt
       updatedAt
-      owner
     }
   }
 `;
@@ -120,10 +120,10 @@ export const onDeleteGenEvalParam = /* GraphQL */ `
       model
       params
       score
+      owner
       expirationTime
       createdAt
       updatedAt
-      owner
     }
   }
 `;

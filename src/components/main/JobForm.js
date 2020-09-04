@@ -194,6 +194,7 @@ function SettingsForm( { nextStep, formValuesState, parentID, parentData, jobTyp
             id: jobID,
             userID: cognitoPayload.sub,
             jobStatus: "inprogress",
+            owner: cognitoPayload.sub,
             run: true,
             ...jobSettings,
             parentID: parentID || ""
