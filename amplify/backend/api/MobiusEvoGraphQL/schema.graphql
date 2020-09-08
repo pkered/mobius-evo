@@ -37,7 +37,6 @@ type GenEvalParam @model
   GenID: ID!
   evalResult: String
   live: Boolean
-  model: String
   params: String
   score: Float
   owner: String

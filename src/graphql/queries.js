@@ -64,7 +64,6 @@ export const getGenEvalParam = /* GraphQL */ `
       GenID
       evalResult
       live
-      model
       params
       score
       owner
@@ -87,7 +86,6 @@ export const listGenEvalParams = /* GraphQL */ `
         GenID
         evalResult
         live
-        model
         params
         score
         owner
@@ -153,7 +151,6 @@ export const generationsByJobId = /* GraphQL */ `
         GenID
         evalResult
         live
-        model
         params
         score
         owner

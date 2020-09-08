@@ -93,7 +93,6 @@ export const createGenEvalParam = /* GraphQL */ `
       GenID
       evalResult
       live
-      model
       params
       score
       owner
@@ -114,7 +113,6 @@ export const updateGenEvalParam = /* GraphQL */ `
       GenID
       evalResult
       live
-      model
       params
       score
       owner
@@ -135,7 +133,6 @@ export const deleteGenEvalParam = /* GraphQL */ `
       GenID
       evalResult
       live
-      model
       params
       score
       owner
