@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { API, graphqlOperation } from 'aws-amplify';
+import { API, graphqlOperation, formContainer } from 'aws-amplify';
 import { generationsByJobId, getJob } from '../../graphql/queries';
 import { createGenEvalParam } from '../../graphql/mutations';
 import * as QueryString from 'query-string';
@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import { Row, Space, Button, Spin, Form, Col, Divider, Input, Checkbox, message } from 'antd';
 import { Line } from '@ant-design/charts';
 import { AuthContext } from '../../Contexts';
+import { useForm } from 'antd/lib/form/Form';
 
 function createMockData( jobID ) {
   const bools = [false, true]
@@ -52,8 +53,8 @@ async function getData(jobID, userID, setJobSettings, setJobResults, callback, f
     _filters = {
       ..._filters,
       score: {
-        gt: filters["score-min"],
-        lt: filters["score-max"]
+        gt: Number(filters["score-min"]),
+        lt: Number(filters["score-max"])
       }
     }
   }
@@ -63,7 +64,7 @@ async function getData(jobID, userID, setJobSettings, setJobResults, callback, f
       limit: 1000,
       owner: { eq: userID },
       JobID: jobID,
-      filter: Object.keys(_filters) > 0 ? _filters: null,
+      filter: Object.keys(_filters).length > 0 ? _filters: null,
       items: {},
       nextToken
     }
@@ -101,6 +102,7 @@ async function getData(jobID, userID, setJobSettings, setJobResults, callback, f
 }
 
 function FilterForm({ jobID, modelParamsState, jobSettingsState, jobResultsState }) {
+  const [form] = Form.useForm();
   const {cognitoPayload} = useContext(AuthContext)
   const { modelParams, setModelParams } = modelParamsState;
   const { jobSettings, setJobSettings } = jobSettingsState;
@@ -143,22 +145,23 @@ function FilterForm({ jobID, modelParamsState, jobSettingsState, jobResultsState
     _initialValues["score-min"] = resultMinMax.score[0];
     _initialValues["score-max"] = resultMinMax.score[1];
     setInitialValues(initialValues => {return {...initialValues, ..._initialValues}});
-
     return ()=>{setIsLoading(false);}
   }, [jobResults, modelParams, setModelParams, isFiltering]);
-  useEffect(() => {
-    if (!isLoading && !isFiltering && jobResults.length===0) {
-      if (jobSettings.jobStatus === "completed") {
-        message.warning("filter returned 0 results");
-      } else {
-        message.info("search is still processing");
-      }
-    }
-  },[isLoading, isFiltering])
+  // useEffect(() => {
+  //   if (!isLoading && !isFiltering && jobResults.length===0) {
+  //     if (jobSettings.jobStatus === "completed") {
+  //       message.warning("filter returned 0 results");
+  //     } else {
+  //       message.info("search is still processing");
+  //     }
+  //   }
+  // },[isLoading, isFiltering])
+  useEffect(()=>form.resetFields(),[initialValues])
 
   return (
     !isLoading?
     <Form
+      form={form}
       onFinish={handleFinish}
       initialValues={initialValues}
     >
@@ -180,21 +183,25 @@ function FilterForm({ jobID, modelParamsState, jobSettingsState, jobResultsState
             <Col>
               <h3>parameters</h3>
               {modelParams.map(param=>
-                <Row key={`${param}-group`}>
-                  <Space>
-                    <Form.Item
-                      name={`${param}-min`}
-                      label={param}
-                    >
-                      <Input prefix="min"></Input>
-                    </Form.Item>
-                    <Form.Item
-                      name={`${param}-max`}
-                    >
-                      <Input prefix="max"></Input>
-                    </Form.Item>
-                  </Space>
-                </Row>
+                {
+                  return(
+                  <Row key={`${param}-group`}>
+                    <Space>
+                      <Form.Item
+                        name={`${param}-min`}
+                        label={param}
+                      >
+                        <Input prefix="min" />
+                      </Form.Item>
+                      <Form.Item
+                        name={`${param}-max`}
+                      >
+                        <Input prefix="max" />
+                      </Form.Item>
+                    </Space>
+                  </Row>
+                  )
+                }
               )}
             </Col>
             <Divider type="vertical" />
@@ -205,13 +212,13 @@ function FilterForm({ jobID, modelParamsState, jobSettingsState, jobResultsState
                   name={`score-min`}
                   key={`score-min`}
                 >
-                  <Input prefix="min"></Input>
+                  <Input prefix="min" />
                 </Form.Item>
                 <Form.Item
                   name={`score-max`}
                   key={`score-max`}
                 >
-                  <Input prefix="max"></Input>
+                  <Input prefix="max" />
                 </Form.Item>
               </Space>
               <Form.Item 
