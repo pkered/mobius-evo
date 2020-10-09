@@ -4,7 +4,7 @@ import { generationsByJobId, getJob } from '../../graphql/queries';
 import { createGenEvalParam } from '../../graphql/mutations';
 import * as QueryString from 'query-string';
 import { Link } from 'react-router-dom';
-import { Row, Space, Button, Spin, Form, Col, Divider, Input, Checkbox, message } from 'antd';
+import { Row, Space, Button, Spin, Form, Col, Divider, Input, Checkbox, message, Table } from 'antd';
 import { Line } from '@ant-design/charts';
 import { AuthContext } from '../../Contexts';
 import { useForm } from 'antd/lib/form/Form';
@@ -300,6 +300,79 @@ function ScorePlot({ jobResults }) {
   return <Line {...config}/>
 }
 
+function ResultTable({ jobResults }) {
+    console.log(jobResults)
+    let addCol = true;
+    const columns = [
+        {
+          title: 'ID',
+          dataIndex: 'genID',
+          key: 'genID',
+          defaultSortOrder: 'ascend',
+          sorter: (a, b) => a.genID - b.genID
+        }
+    ];
+    const tableData = jobResults.map(entry => {
+        const tableEntry = {
+            genID: entry.GenID,
+            live: entry.live? 'True':'False',
+            score: entry.score,
+        };
+        if (entry.params) {
+            const paramsString = entry.params.replace(/\{|\}/g, '');
+            const params = paramsString.split(',')
+            params.forEach(param => {
+                const splittedParam = param.split('=');
+                if (addCol) {
+                    columns.push({
+                        title: splittedParam[0],
+                        dataIndex: splittedParam[0],
+                        key: splittedParam[0],
+                        sorter: (a, b) => a[splittedParam[0]] - b[splittedParam[0]]
+                    })
+                }
+                let val = parseFloat(splittedParam[1])
+                if (isNaN(val)) {
+                    val = splittedParam[1];
+                }
+                tableEntry[splittedParam[0]] = val;
+            });
+            if (addCol) {
+                addCol = false;
+            }
+        }
+        return tableEntry;
+    });
+
+    // if (tableData.length > 0 && tableData[0].params) {
+    //     const params = JSON.parse(tableData[0].params);
+    //     Object.keys(params).forEach(paramName => {
+    //         columns.push({
+    //             title: paramName,
+    //             dataIndex: paramName,
+    //             key: paramName,
+    //             sorter: (a, b) => a[paramName] - b[paramName]
+    //         })
+    //     })
+
+    // }
+    columns.push({
+        title: 'Live',
+        dataIndex: 'live',
+        key: 'live',
+        sorter: (a, b) => b.live.length - a.live.length
+    });
+    columns.push({
+        title: 'Score',
+        dataIndex: 'score',
+        key: 'score',
+        sorter: (a, b) => a.score - b.score
+    });
+
+    return <Table dataSource={tableData} columns={columns} />;
+
+}
+
 function JobResults() {
   const [ jobID, setJobID ] = useState(null);
   const [ modelParams, setModelParams ] = useState([]);
@@ -344,6 +417,9 @@ function JobResults() {
             />
             <ScorePlot
               jobSettings={jobSettings}
+              jobResults={jobResults}
+            />
+            <ResultTable
               jobResults={jobResults}
             />
           </Space>
