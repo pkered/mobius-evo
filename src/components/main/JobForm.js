@@ -247,6 +247,11 @@ function SettingsForm( { nextStep, formValuesState, parentID, parentData, jobTyp
           tournament_size: 5,
           survival_size: 2,
           expiration: 86400,
+        //   maxDesigns: 10,
+        //   population_size: 2,
+        //   tournament_size: 2,
+        //   survival_size: 1,
+        //   expiration: 600,
           parentID: parentID
         }}
       >

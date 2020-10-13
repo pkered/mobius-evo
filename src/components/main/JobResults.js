@@ -9,6 +9,8 @@ import { Line } from '@ant-design/charts';
 import { AuthContext } from '../../Contexts';
 import { useForm } from 'antd/lib/form/Form';
 
+const S3_MODEL_URL = 'https://mobius-evo-userfiles131353-dev.s3.amazonaws.com/models/';
+
 function createMockData( jobID ) {
   const bools = [false, true]
   for (let i=0; i < 80; i++) {
@@ -317,6 +319,7 @@ function ResultTable({ jobResults }) {
             genID: entry.GenID,
             live: entry.live? 'True':'False',
             score: entry.score,
+            model: S3_MODEL_URL + entry.id + '.gi'
         };
         if (entry.params) {
             const paramsString = entry.params.replace(/\{|\}/g, '');
@@ -367,6 +370,12 @@ function ResultTable({ jobResults }) {
         dataIndex: 'score',
         key: 'score',
         sorter: (a, b) => a.score - b.score
+    });
+    columns.push({
+        title: 'Model',
+        dataIndex: 'model',
+        key: 'model',
+        render: text => <a href={text}>File</a>,
     });
 
     return <Table dataSource={tableData} columns={columns} />;
