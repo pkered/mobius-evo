@@ -1,13 +1,14 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { API, graphqlOperation, formContainer } from 'aws-amplify';
+import { API, graphqlOperation } from 'aws-amplify';
 import { generationsByJobId, getJob } from '../../graphql/queries';
-import { createGenEvalParam } from '../../graphql/mutations';
 import * as QueryString from 'query-string';
 import { Link } from 'react-router-dom';
 import { Row, Space, Button, Spin, Form, Col, Divider, Input, Checkbox, message, Table } from 'antd';
 import { Line } from '@ant-design/charts';
 import { AuthContext } from '../../Contexts';
+import { createGenEvalParam } from '../../graphql/mutations';
 import { useForm } from 'antd/lib/form/Form';
+import Iframe from 'react-iframe'
 
 const S3_MODEL_URL = 'https://mobius-evo-userfiles131353-dev.s3.amazonaws.com/models/';
 
@@ -302,8 +303,15 @@ function ScorePlot({ jobResults }) {
   return <Line {...config}/>
 }
 
+function viewModel(url) {
+    const iframe = document.getElementById('mobius_viewer').contentWindow;
+    iframe.postMessage({
+        messageType: 'update',
+        url: url
+    }, '*');
+}
+
 function ResultTable({ jobResults }) {
-    console.log(jobResults)
     let addCol = true;
     const columns = [
         {
@@ -325,7 +333,7 @@ function ResultTable({ jobResults }) {
             const paramsString = entry.params.replace(/\{|\}/g, '');
             const params = paramsString.split(',')
             params.forEach(param => {
-                const splittedParam = param.split('=');
+                const splittedParam = param.split('=').map(sp => sp.trim());
                 if (addCol) {
                     columns.push({
                         title: splittedParam[0],
@@ -375,10 +383,13 @@ function ResultTable({ jobResults }) {
         title: 'Model',
         dataIndex: 'model',
         key: 'model',
-        render: text => <a href={text}>File</a>,
+        render: text => <div>
+                <a href={text}>File </a>
+                <a onClick={() => viewModel(text)}> View</a>
+            </div>,
     });
 
-    return <Table dataSource={tableData} columns={columns} />;
+    return <Table dataSource={tableData} columns={columns} rowKey="genID"/>;
 
 }
 
@@ -430,6 +441,12 @@ function JobResults() {
             />
             <ResultTable
               jobResults={jobResults}
+            />
+            <Iframe 
+              url="https://design-automation.github.io/mobius-viewer/"
+              width="100%"
+              height="700px"
+              id="mobius_viewer"
             />
           </Space>
           :null
