@@ -3,7 +3,7 @@ type Job @model
   id: ID!
   userID: ID!
   evalUrl: String! #s3 key
-  genUrl: String! #s3 key
+  genUrl: [String!]
   expiration: Int
   description: String
   maxDesigns: Int
@@ -13,8 +13,6 @@ type Job @model
   createdAt: String
   endedAt: String
   run: Boolean
-  parentID: ID
-  childrenID: [ID]
   jobStatus: JobStatus
   owner: String
   updatedAt: AWSDateTime
@@ -35,14 +33,14 @@ type GenEvalParam @model
   id: ID!
   JobID: ID!
   GenID: ID!
+  genUrl: String
+  evalUrl: String
   evalResult: String
   live: Boolean
   params: String
   score: Float
   owner: String
   expirationTime: Float
-  createdAt: AWSDateTime
-  updatedAt: AWSDateTime
 }
 
 type File @model

@@ -3,11 +3,10 @@ import { API, graphqlOperation } from 'aws-amplify';
 import { generationsByJobId, getJob } from '../../graphql/queries';
 import * as QueryString from 'query-string';
 import { Link } from 'react-router-dom';
-import { Row, Space, Button, Spin, Form, Col, Divider, Input, Checkbox, message, Table } from 'antd';
+import { Row, Space, Button, Spin, Form, Col, Divider, Input, Checkbox, Table } from 'antd';
 import { Line } from '@ant-design/charts';
 import { AuthContext } from '../../Contexts';
 import { createGenEvalParam } from '../../graphql/mutations';
-import { useForm } from 'antd/lib/form/Form';
 import Iframe from 'react-iframe'
 
 const S3_MODEL_URL = 'https://mobius-evo-userfiles131353-dev.s3.amazonaws.com/models/';

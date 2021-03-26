@@ -17,8 +17,6 @@ export const getJob = /* GraphQL */ `
       createdAt
       endedAt
       run
-      parentID
-      childrenID
       jobStatus
       owner
       updatedAt
@@ -46,8 +44,6 @@ export const listJobs = /* GraphQL */ `
         createdAt
         endedAt
         run
-        parentID
-        childrenID
         jobStatus
         owner
         updatedAt
@@ -62,6 +58,8 @@ export const getGenEvalParam = /* GraphQL */ `
       id
       JobID
       GenID
+      genUrl
+      evalUrl
       evalResult
       live
       params
@@ -84,6 +82,8 @@ export const listGenEvalParams = /* GraphQL */ `
         id
         JobID
         GenID
+        genUrl
+        evalUrl
         evalResult
         live
         params
@@ -149,6 +149,8 @@ export const generationsByJobId = /* GraphQL */ `
         id
         JobID
         GenID
+        genUrl
+        evalUrl
         evalResult
         live
         params

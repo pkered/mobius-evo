@@ -17,8 +17,6 @@ export const onCreateJob = /* GraphQL */ `
       createdAt
       endedAt
       run
-      parentID
-      childrenID
       jobStatus
       owner
       updatedAt
@@ -41,8 +39,6 @@ export const onUpdateJob = /* GraphQL */ `
       createdAt
       endedAt
       run
-      parentID
-      childrenID
       jobStatus
       owner
       updatedAt
@@ -65,8 +61,6 @@ export const onDeleteJob = /* GraphQL */ `
       createdAt
       endedAt
       run
-      parentID
-      childrenID
       jobStatus
       owner
       updatedAt
@@ -79,6 +73,8 @@ export const onCreateGenEvalParam = /* GraphQL */ `
       id
       JobID
       GenID
+      genUrl
+      evalUrl
       evalResult
       live
       params
@@ -96,6 +92,8 @@ export const onUpdateGenEvalParam = /* GraphQL */ `
       id
       JobID
       GenID
+      genUrl
+      evalUrl
       evalResult
       live
       params
@@ -113,6 +111,8 @@ export const onDeleteGenEvalParam = /* GraphQL */ `
       id
       JobID
       GenID
+      genUrl
+      evalUrl
       evalResult
       live
       params

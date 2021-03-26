@@ -65,7 +65,7 @@ function JobTable({ isDataLoading, loadChildren, previewJobState, treeData }) {
     },
     {
       title: "Gen File",
-      dataIndex: ["data","genUrl"],
+      dataIndex: ["data"],
       key: "genFile",
       ...sortProps,
       render: text => text.split("/").pop()
@@ -283,7 +283,7 @@ function JobDrawer({ previewJobState }) {
 
 function Explorations() {
   const newExploration = {
-    title: <Link to="new-exploration" target="_blank" >Start Exploration</Link>,
+    title: <Link to="new-exploration">Start Exploration</Link>,
     icon: <PlusSquareOutlined />,
     selectable: false,
     key: "0",
@@ -396,9 +396,6 @@ function Explorations() {
           filter: {
             userID: {
               eq: cognitoPayload.sub
-            },
-            parentID: {
-              eq: ""
             }
           }
         }
