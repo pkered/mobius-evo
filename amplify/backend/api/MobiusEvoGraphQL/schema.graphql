@@ -1,51 +1,42 @@
-type Job @model 
-  @auth(rules:[{ allow: owner }]) {
-  id: ID!
-  userID: ID!
-  evalUrl: String! #s3 key
-  genUrl: [String!]
-  expiration: Int
-  description: String
-  maxDesigns: Int
-  population_size: Int
-  tournament_size: Int
-  survival_size: Int
-  createdAt: String
-  endedAt: String
-  run: Boolean
-  jobStatus: JobStatus
-  owner: String
-  updatedAt: AWSDateTime
+type Job @model @auth(rules: [{ allow: owner }]) {
+    id: ID!
+    userID: ID!
+    evalUrl: String! #s3 key
+    genUrl: [String!]
+    expiration: Int
+    description: String
+    maxDesigns: Int
+    population_size: Int
+    tournament_size: Int
+    survival_size: Int
+    createdAt: String
+    endedAt: String
+    run: Boolean
+    jobStatus: JobStatus
+    owner: String
+    updatedAt: AWSDateTime
 }
 
 enum JobStatus {
-  inprogress
-  completed
-  expired
-  error
-  cancelled
-  cancelling
+    inprogress
+    completed
+    expired
+    error
+    cancelled
+    cancelling
 }
 
-type GenEvalParam @model 
-  @auth(rules: [{ allow: owner }])
-  @key(name: "byJobID", fields: ["JobID", "owner"], queryField:"generationsByJobID") {
-  id: ID!
-  JobID: ID!
-  GenID: ID!
-  genUrl: String
-  evalUrl: String
-  evalResult: String
-  live: Boolean
-  params: String
-  score: Float
-  owner: String
-  expirationTime: Float
-}
-
-type File @model
-  @auth(rules: [{ allow: owner }]) {
-  id: ID!
-  s3key: ID!
-  filename: String!
+type GenEvalParam @model @auth(rules: [{ allow: owner }]) @key(name: "byJobID", fields: ["JobID", "owner"], queryField: "generationsByJobID") {
+    id: ID!
+    JobID: ID!
+    GenID: ID!
+    generation: Int
+    genUrl: String
+    evalUrl: String
+    evalResult: String
+    live: Boolean
+    params: String
+    score: Float
+    owner: String
+    expirationTime: Float
 }

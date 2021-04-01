@@ -73,6 +73,7 @@ export const onCreateGenEvalParam = /* GraphQL */ `
       id
       JobID
       GenID
+      generation
       genUrl
       evalUrl
       evalResult
@@ -92,6 +93,7 @@ export const onUpdateGenEvalParam = /* GraphQL */ `
       id
       JobID
       GenID
+      generation
       genUrl
       evalUrl
       evalResult
@@ -111,6 +113,7 @@ export const onDeleteGenEvalParam = /* GraphQL */ `
       id
       JobID
       GenID
+      generation
       genUrl
       evalUrl
       evalResult
@@ -121,42 +124,6 @@ export const onDeleteGenEvalParam = /* GraphQL */ `
       expirationTime
       createdAt
       updatedAt
-    }
-  }
-`;
-export const onCreateFile = /* GraphQL */ `
-  subscription OnCreateFile($owner: String!) {
-    onCreateFile(owner: $owner) {
-      id
-      s3key
-      filename
-      createdAt
-      updatedAt
-      owner
-    }
-  }
-`;
-export const onUpdateFile = /* GraphQL */ `
-  subscription OnUpdateFile($owner: String!) {
-    onUpdateFile(owner: $owner) {
-      id
-      s3key
-      filename
-      createdAt
-      updatedAt
-      owner
-    }
-  }
-`;
-export const onDeleteFile = /* GraphQL */ `
-  subscription OnDeleteFile($owner: String!) {
-    onDeleteFile(owner: $owner) {
-      id
-      s3key
-      filename
-      createdAt
-      updatedAt
-      owner
     }
   }
 `;

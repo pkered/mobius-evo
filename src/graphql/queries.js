@@ -58,6 +58,7 @@ export const getGenEvalParam = /* GraphQL */ `
       id
       JobID
       GenID
+      generation
       genUrl
       evalUrl
       evalResult
@@ -82,6 +83,7 @@ export const listGenEvalParams = /* GraphQL */ `
         id
         JobID
         GenID
+        generation
         genUrl
         evalUrl
         evalResult
@@ -92,37 +94,6 @@ export const listGenEvalParams = /* GraphQL */ `
         expirationTime
         createdAt
         updatedAt
-      }
-      nextToken
-    }
-  }
-`;
-export const getFile = /* GraphQL */ `
-  query GetFile($id: ID!) {
-    getFile(id: $id) {
-      id
-      s3key
-      filename
-      createdAt
-      updatedAt
-      owner
-    }
-  }
-`;
-export const listFiles = /* GraphQL */ `
-  query ListFiles(
-    $filter: ModelFileFilterInput
-    $limit: Int
-    $nextToken: String
-  ) {
-    listFiles(filter: $filter, limit: $limit, nextToken: $nextToken) {
-      items {
-        id
-        s3key
-        filename
-        createdAt
-        updatedAt
-        owner
       }
       nextToken
     }
@@ -149,6 +120,7 @@ export const generationsByJobId = /* GraphQL */ `
         id
         JobID
         GenID
+        generation
         genUrl
         evalUrl
         evalResult
