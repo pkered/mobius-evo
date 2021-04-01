@@ -68,29 +68,7 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
                             .then()
                             .catch((err) => console.log(err))
                     );
-                    allPromises.push(
-                        API.graphql(
-                            graphqlOperation(createGenEvalParam, {
-                                input:  {
-                                    id: result.JobID + '_' + newID,
-                                    JobID: result.JobID,
-                                    GenID: newID,
-                                    generation: result.generation,
-                                    genUrl: newUrl,
-                                    evalUrl: result.evalUrl,
-                                    evalResult: null,
-                                    live: true,
-                                    params: result.params,
-                                    score: null,
-                                    owner: result.owner,
-                                    expirationTime: null,
-                                }
-                            })
-                        )
-                            .then()
-                            .catch((err) => console.log(err))
-                    );
-                    newJobs.push({
+                    const newParam = {
                         id: result.JobID + '_' + newID,
                         JobID: result.JobID,
                         GenID: newID,
@@ -103,7 +81,16 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
                         score: null,
                         owner: result.owner,
                         expirationTime: null,
-                    })
+                    }
+                    allPromises.push(
+                        API.graphql(
+                            graphqlOperation(createGenEvalParam, {
+                                input:  newParam})
+                        )
+                            .then()
+                            .catch((err) => console.log(err))
+                    );
+                    newJobs.push(newParam)
                     newID += 1;
                 });
             allPromises.push(
@@ -313,12 +300,14 @@ function JobResumeForm({jobSettingsState, jobResults}) {
             if (!params) {
                 continue;
             }
+            let maxGen = 1;
+            jobResults.forEach(result => maxGen = Math.max(maxGen, result.generation))
             for (let i = 0; i < newJobSettings["genFile_" + genKey]; i++) {
                 const paramSet = {
                     id: jobID + "_" + startingGenID,
                     JobID: jobID.toString(),
                     GenID: startingGenID.toString(),
-                    generation: 1,
+                    generation: maxGen + 1,
                     genUrl: newJobSettings.genUrl[genKey],
                     evalUrl: newJobSettings.evalUrl,
                     evalResult: null,
@@ -591,12 +580,12 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState }) {
 
     return (
         <>
-            <Button onClick={() => showModal(null)}>Add Gen File</Button>
-            <Table dataSource={genTableData} columns={genTableColumns} rowKey="genUrl"></Table>
             <JobResumeForm
                 jobSettingsState={{ jobSettings, setJobSettings }}
                 jobResults={jobResults}
             />
+            <Button onClick={() => showModal(null)}>Add Gen File</Button>
+            <Table dataSource={genTableData} columns={genTableColumns} rowKey="genUrl"></Table>
             <FileSelectionModal
                 isModalVisibleState={{ isModalVisible, setIsModalVisible }}
                 jobSettingsState={{ jobSettings, setJobSettings }}

@@ -343,8 +343,8 @@ function ResultTable({ jobResults }) {
         let paramsString = "";
         if (entry.params) {
             paramsString = entry.params
-                .replace(/\{|\}|\"/g, "")
-                .replace(/\,|\,\s/g, " \n")
+                .replace(/\{|\}|"/g, "")
+                .replace(/,|,\s/g, " \n")
                 .replace(/:/g, ": ");
         }
         const tableEntry = {

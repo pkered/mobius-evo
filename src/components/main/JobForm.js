@@ -227,11 +227,6 @@ function SettingsForm({ nextStep, formValuesState, jobType }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     async function initParams(jobID, jobSettings) {
-        let expiration = 86400;
-        if (jobSettings.expiration) {
-            expiration = jobSettings.expiration;
-        }
-        const expiration_time = Math.round(Date.now() / 1000) + expiration;
         let startingGenID = 0;
         const allPromises = [];
         for (let i = 0; i < jobSettings.genFile_random_generated; i++) {

@@ -247,7 +247,7 @@ function JobDrawer({ previewJobState , userID}) {
         urlString = data.split("/").pop();
         return urlString;
     }
-    function deleteGenEvalParamByJobID(jobID, userID, nextToken = null) {
+    async function deleteGenEvalParamByJobID(jobID, userID, nextToken = null) {
         API.graphql(
             graphqlOperation(generationsByJobId, {
                 limit: 1000,
@@ -281,13 +281,15 @@ function JobDrawer({ previewJobState , userID}) {
             throw err;
         });
     }
-    function deleteJobAndParams(jobID, userID) {
+    async function deleteJobAndParams(jobID, userID) {
         deleteGenEvalParamByJobID(jobID, userID);
         API.graphql(
             graphqlOperation(deleteJob, {
                 input: {id: jobID}
             })
-        ).catch((err) => {
+        ).then(()=> {
+            setPreviewJob(null);
+        }).catch((err) => {
             throw err;
         })
     }
@@ -347,14 +349,6 @@ function Explorations() {
         isLeaf: true,
         data: {},
     }; // appended to base tree
-    const newSearch = {
-        title: "Start Search",
-        icon: <PlusSquareOutlined />,
-        key: "0",
-        selectable: false,
-        isLeaf: true,
-        data: {},
-    }; // appended to all leaves
     const [previewJob, setPreviewJob] = useState(null);
     const { cognitoPayload } = useContext(AuthContext);
     const [isDataLoading, setIsDataLoading] = useState(true);
@@ -415,19 +409,9 @@ function Explorations() {
             </Row>
         );
     };
-    function updateTreeData(treeData, key, children) {
-        return treeData.map((node) => {
-            if (node.key === key) {
-                return { ...node, children };
-            }
-            if (node.children) {
-                return { ...node, children: updateTreeData(node.children, key, children) };
-            }
-            return node;
-        });
-    }
     const loadChildren = ({ key, children, data }) => {
         return new Promise((resolve) => {
+            console.log('!!!!!!!!!!!!!!!!!!!!!!!!', children)
             if (children) {
                 resolve(); // children were retrieved
                 return;
@@ -449,26 +433,6 @@ function Explorations() {
                         });
                     });
                 }
-                // setTreeData(origin=>{
-                //   const NewSearch = ()=> (
-                //     <Link
-                //       to={`/new-exploration#${QueryString.stringify({parentID: data.id})}`}
-                //       target="_blank"
-                //       className={data.jobStatus !== "completed" ? "disabled-link" : ""}
-                //     >New Search</Link>
-                //   );
-
-                //   return updateTreeData(
-                //   origin,
-                //   key,
-                //   [...childrenData,
-                //     {...newSearch,
-                //       key:`${key}-${childrenData.length}`,
-                //       title: <NewSearch />
-                //     }],
-                //   data
-                //   )
-                // });
             }
             getChildren().then(() => resolve());
         });
