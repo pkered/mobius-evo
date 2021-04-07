@@ -220,7 +220,7 @@ function FileSelection({ nextStep, formValuesState }) {
     );
 }
 
-function SettingsForm({ nextStep, formValuesState, jobType }) {
+function SettingsForm({ nextStep, formValuesState }) {
     const { cognitoPayload } = useContext(AuthContext);
     const [form] = Form.useForm();
     const { formValues, setFormValues } = formValuesState;
@@ -342,7 +342,7 @@ function SettingsForm({ nextStep, formValuesState, jobType }) {
         });
     }
     //   const formInitialValues = {
-    //     description: `New ${jobType}`,
+    //     description: `New Job`,
     //     maxDesigns: 80,
     //     population_size: 20,
     //     tournament_size: 5,
@@ -449,7 +449,7 @@ function SettingsForm({ nextStep, formValuesState, jobType }) {
                 </Form.Item>
                 <Row justify="center">
                     <Button type="primary" htmlType="submit">
-                        Start {jobType}
+                        Start
                     </Button>
                 </Row>
             </Form>
@@ -501,9 +501,7 @@ function FinishedForm({ formValuesState }) {
 function JobForm() {
     const [formValues, setFormValues] = useState({});
     const [currentStep, setCurrentStep] = useState(0);
-    const [parentData, setParentData] = useState(null);
-    const [jobType, setJobType] = useState("");
-    const steps = ["1. Select Files", `2. ${jobType} Settings`, "3. Summary"];
+    const steps = ["1. Select Files", `2. Job Settings`, "3. Summary"];
     const nextStep = () => setCurrentStep(Math.min(steps.length - 1, currentStep + 1));
 
     function FormToRender() {
@@ -511,7 +509,7 @@ function JobForm() {
             case 0:
                 return <FileSelection nextStep={nextStep} formValuesState={{ formValues, setFormValues }} />;
             case 1:
-                return <SettingsForm nextStep={nextStep} formValuesState={{ formValues, setFormValues }} parentData={parentData} jobType={jobType} />;
+                return <SettingsForm nextStep={nextStep} formValuesState={{ formValues, setFormValues }}/>;
             case 2:
                 return <FinishedForm formValuesState={{ formValues, setFormValues }} />;
             default:
@@ -522,7 +520,7 @@ function JobForm() {
     return (
         <div className="jobForm-container">
             <Space direction="vertical" size="large" style={{ width: "inherit" }}>
-                <h1>Start New {jobType}</h1>
+                <h1>Start New Job</h1>
                 <Steps progressDot current={currentStep}>
                     {steps.map((step, index) => (
                         <Step title={step} key={index} />

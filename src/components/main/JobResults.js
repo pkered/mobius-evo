@@ -30,7 +30,7 @@ function paramsRegex(params) {
     // result.forEach((match) => (ret[match[1]] = match[2]));
     // return ret;
 }
-async function getData(jobID, userID, setJobSettings, setJobResults, callback, filters = null, nextToken = null) {
+async function getData(jobID, userID, setJobSettings, setJobResults, setIsLoading, callback, filters = null, nextToken = null) {
     let _filters = {};
     if (filters) {
         if (filters["show-group"].length === 0) {
@@ -72,6 +72,7 @@ async function getData(jobID, userID, setJobSettings, setJobResults, callback, f
                     userID,
                     setJobSettings,
                     setJobResults,
+                    setIsLoading,
                     callback,
                     filters,
                     (nextToken = queryResult.data.generationsByJobID.nextToken)
@@ -110,10 +111,12 @@ async function getData(jobID, userID, setJobSettings, setJobResults, callback, f
     )
         .then((queryResult) => {
             setJobSettings(queryResult.data.getJob);
-            if (queryResult.data.getJob.jobStatus === "processing") {
+            if (queryResult.data.getJob.jobStatus === "inprogress") {
                 setTimeout(() => {
-                    getData(jobID, userID, setJobSettings, setJobResults, callback, filters);
-                }, 5000);
+                    setIsLoading(true);
+                    setJobResults([]);
+                    getData(jobID, userID, setJobSettings, setJobResults, setIsLoading, callback, filters);
+                }, 2000);
             }
         })
         .catch((err) => {
@@ -124,7 +127,7 @@ function FilterForm({ jobID, modelParamsState, jobSettingsState, jobResultsState
     const [form] = Form.useForm();
     const { cognitoPayload } = useContext(AuthContext);
     const { modelParams, setModelParams } = modelParamsState;
-    const { jobSettings, setJobSettings } = jobSettingsState;
+    const { setJobSettings } = jobSettingsState;
     const { jobResults, setJobResults } = jobResultsState;
     const [initialValues, setInitialValues] = useState({
         "show-group": ["live", "dead"],
@@ -134,7 +137,8 @@ function FilterForm({ jobID, modelParamsState, jobSettingsState, jobResultsState
     const handleFinish = (values) => {
         setIsFiltering(true);
         setJobResults([]);
-        getData(jobID, cognitoPayload.sub, setJobSettings, setJobResults, () => setIsFiltering(false), values).catch((err) => console.log(err));
+        getData(jobID, cognitoPayload.sub, setJobSettings, setJobResults, setIsLoading,
+            () => setIsFiltering(false), values).catch((err) => console.log(err));
     };
     useEffect(() => {
         const singleResult = jobResults[0];
@@ -189,7 +193,7 @@ function FilterForm({ jobID, modelParamsState, jobSettingsState, jobResultsState
     //     }
     //   }
     // },[isLoading, isFiltering])
-    useEffect(() => form.resetFields(), [initialValues]);
+    useEffect(() => form.resetFields(), [form, initialValues]);
 
     return !isLoading ? (
         <Form form={form} onFinish={handleFinish} initialValues={initialValues}>
@@ -287,7 +291,6 @@ function viewModel(url) {
 }
 
 function ResultTable({ jobResults }) {
-    let addCol = true;
     const columns = [
         {
             title: "ID",
@@ -358,7 +361,6 @@ function ResultTable({ jobResults }) {
         };
         return tableEntry;
     });
-
     return <Table style={{ whiteSpace: "pre" }} dataSource={tableData} columns={columns} rowKey="genID" size="small" />;
 }
 
@@ -373,8 +375,13 @@ function JobResults() {
     useEffect(() => {
         const jobID = QueryString.parse(window.location.hash).id;
         setJobID(jobID);
-        getData(jobID, cognitoPayload.sub, setJobSettings, setJobResults, () => setIsLoading(false)).catch((err) => console.log(err));
-    }, []);
+        getData(jobID,
+            cognitoPayload.sub,
+            setJobSettings,
+            setJobResults,
+            setIsLoading,
+            () => setIsLoading(false)).catch((err) => console.log(err));
+    }, [cognitoPayload]);
 
     return (
         <Space direction="vertical" size="large" style={{ width: "inherit" }}>
@@ -390,6 +397,8 @@ function JobResults() {
                             jobID={jobID}
                             jobSettingsState={{ jobSettings, setJobSettings }}
                             jobResultsState={{ jobResults, setJobResults }}
+                            getData = {getData}
+                            setIsLoading = {setIsLoading}
                         />
                         <FilterForm
                             jobID={jobID}

@@ -1,163 +1,153 @@
 import React, { useEffect, useState, useContext } from "react";
-import "./Explorations.css";
 import * as QueryString from "query-string";
-import { Space, Row, Table, Button, Descriptions, Badge, Tree, Spin, Drawer, Tag, Popconfirm, Menu } from "antd";
+import { Space, Row, Button, Descriptions, Badge, Tree, Spin, Drawer, Tag, Popconfirm, Menu } from "antd";
 import { Link } from "react-router-dom";
-import {
-    PlusSquareOutlined,
-    TableOutlined,
-    ClusterOutlined,
-    DownOutlined,
-    SyncOutlined,
-    CheckCircleOutlined,
-    MinusCircleOutlined,
-    ClockCircleOutlined,
-} from "@ant-design/icons";
+import { PlusSquareOutlined, SyncOutlined, CheckCircleOutlined, MinusCircleOutlined, ClockCircleOutlined } from "@ant-design/icons";
 import { API, graphqlOperation } from "aws-amplify";
-import { listJobs, getJob, generationsByJobId } from "../../graphql/queries";
-import { updateJob, deleteGenEvalParam, deleteJob} from "../../graphql/mutations";
+import { listJobs, generationsByJobId } from "../../graphql/queries";
+import { updateJob, deleteGenEvalParam, deleteJob } from "../../graphql/mutations";
 import { AuthContext } from "../../Contexts";
+import "./Explorations.css";
 
-function JobTable({ isDataLoading, loadChildren, previewJobState, treeData }) {
-    const { previewJob, setPreviewJob } = previewJobState;
-    const removeLeaves = (treeData) => {
-        const filteredTree = treeData.filter((node) => !node.isLeaf);
-        if (filteredTree.length === 0) {
-            return null;
-        } else {
-            return filteredTree.map((node) => {
-                if (node.children) {
-                    return { ...node, children: removeLeaves(node.children) };
-                }
-                return node;
-            });
-        }
-    };
-    const [tableTreeData, setTableTreeData] = useState(removeLeaves([...treeData]));
+// function JobTable({ isDataLoading, loadChildren, previewJobState, treeData }) {
+//     const { previewJob, setPreviewJob } = previewJobState;
+//     const removeLeaves = (treeData) => {
+//         const filteredTree = treeData.filter((node) => !node.isLeaf);
+//         if (filteredTree.length === 0) {
+//             return null;
+//         } else {
+//             return filteredTree.map((node) => {
+//                 if (node.children) {
+//                     return { ...node, children: removeLeaves(node.children) };
+//                 }
+//                 return node;
+//             });
+//         }
+//     };
+//     const [tableTreeData, setTableTreeData] = useState(removeLeaves([...treeData]));
+//     const sortProps = {
+//         sorter: true,
+//         sortDirections: ["ascend", "descend"],
+//     };
+//     const columns = [
+//         {
+//             title: "Description",
+//             dataIndex: ["data", "description"],
+//             key: "description",
+//         },
+//         {
+//             title: "Created At",
+//             dataIndex: ["data", "createdAt"],
+//             key: "createdAt",
+//             ...sortProps,
+//             defaultSortOrder: "descend",
+//             render: (text) => new Date(text).toLocaleString(),
+//         },
+//         {
+//             title: "Status",
+//             dataIndex: ["data", "jobStatus"],
+//             key: "status",
+//             render: (text) => {
+//                 switch (text) {
+//                     case "inprogress":
+//                         return <Badge status="processing" text="In Progress" />;
+//                     case "completed":
+//                         return <Badge status="success" text="Completed" />;
+//                     case "cancelled":
+//                         return <Badge status="error" text="Error" />;
+//                     default:
+//                         return <Badge status="default" text="Expired" />;
+//                 }
+//             },
+//         },
+//         {
+//             title: "Gen File",
+//             dataIndex: ["data", "genUrl"],
+//             key: "genFile",
+//             ...sortProps,
+//             render: (urls) => {console.log(urls); return urls.map(text => text.split("/").pop()).join(', ')},
+//         },
+//         {
+//             title: "Eval File",
+//             dataIndex: ["data", "evalUrl"],
+//             key: "evalFile",
+//             ...sortProps,
+//             render: (text) => text.split("/").pop(),
+//         },
+//         {
+//             title: "Action",
+//             dataIndex: "",
+//             key: "selectJob",
+//             render: (text, record, index) => (
+//                 <Link
+//                     to={`/new-exploration#${QueryString.stringify({ parentID: record.data.id })}`}
+//                     target="_blank"
+//                     className={record.data.jobStatus !== "completed" ? "disabled-link" : ""}
+//                 >
+//                     New Search
+//                 </Link>
+//             ),
+//         },
+//     ];
 
-    const sortProps = {
-        sorter: true,
-        sortDirections: ["ascend", "descend"],
-    };
-    const columns = [
-        {
-            title: "Description",
-            dataIndex: ["data", "description"],
-            key: "description",
-        },
-        {
-            title: "Created At",
-            dataIndex: ["data", "createdAt"],
-            key: "createdAt",
-            ...sortProps,
-            defaultSortOrder: "descend",
-            render: (text) => new Date(text).toLocaleString(),
-        },
-        {
-            title: "Status",
-            dataIndex: ["data", "jobStatus"],
-            key: "status",
-            render: (text) => {
-                switch (text) {
-                    case "inprogress":
-                        return <Badge status="processing" text="In Progress" />;
-                    case "completed":
-                        return <Badge status="success" text="Completed" />;
-                    case "cancelled":
-                        return <Badge status="error" text="Error" />;
-                    default:
-                        return <Badge status="default" text="Expired" />;
-                }
-            },
-        },
-        {
-            title: "Gen File",
-            dataIndex: ["data"],
-            key: "genFile",
-            ...sortProps,
-            render: (text) => text.split("/").pop(),
-        },
-        {
-            title: "Eval File",
-            dataIndex: ["data", "evalUrl"],
-            key: "evalFile",
-            ...sortProps,
-            render: (text) => text.split("/").pop(),
-        },
-        {
-            title: "Action",
-            dataIndex: "",
-            key: "selectJob",
-            render: (text, record, index) => (
-                <Link
-                    to={`/new-exploration#${QueryString.stringify({ parentID: record.data.id })}`}
-                    target="_blank"
-                    className={record.data.jobStatus !== "completed" ? "disabled-link" : ""}
-                >
-                    New Search
-                </Link>
-            ),
-        },
-    ];
+//     const [selectedKeys, setSelectedKeys] = useState(previewJob ? [previewJob.key] : []);
+//     useEffect(() => setSelectedKeys(previewJob ? [previewJob.key] : []), [previewJob]);
 
-    const [selectedKeys, setSelectedKeys] = useState(previewJob ? [previewJob.key] : []);
-    useEffect(() => setSelectedKeys(previewJob ? [previewJob.key] : []), [previewJob]);
+//     const handleTableChange = (pagination, filters, sorter) => {
+//         const compareAscend = (a, b) => {
+//             if (a < b) {
+//                 return -1;
+//             } else if (a > b) {
+//                 return 1;
+//             } else {
+//                 return 0;
+//             }
+//         };
+//         const compareDescend = (a, b) => {
+//             if (a > b) {
+//                 return -1;
+//             } else if (a < b) {
+//                 return 1;
+//             } else {
+//                 return 0;
+//             }
+//         };
+//         const [field, order] = [sorter.field, sorter.order];
+//         const _treeData = [...tableTreeData];
+//         if (order === "ascend") {
+//             _treeData.sort((a, b) => compareAscend(a.data[field[1]], b.data[field[1]]));
+//         } else {
+//             _treeData.sort((a, b) => compareDescend(a.data[field[1]], b.data[field[1]]));
+//         }
+//         setTableTreeData(_treeData);
+//     };
 
-    const handleTableChange = (pagination, filters, sorter) => {
-        const compareAscend = (a, b) => {
-            if (a < b) {
-                return -1;
-            } else if (a > b) {
-                return 1;
-            } else {
-                return 0;
-            }
-        };
-        const compareDescend = (a, b) => {
-            if (a > b) {
-                return -1;
-            } else if (a < b) {
-                return 1;
-            } else {
-                return 0;
-            }
-        };
-        const [field, order] = [sorter.field, sorter.order];
-        const _treeData = [...tableTreeData];
-        if (order === "ascend") {
-            _treeData.sort((a, b) => compareAscend(a.data[field[1]], b.data[field[1]]));
-        } else {
-            _treeData.sort((a, b) => compareDescend(a.data[field[1]], b.data[field[1]]));
-        }
-        setTableTreeData(_treeData);
-    };
-
-    return (
-        <Table
-            loading={isDataLoading}
-            dataSource={tableTreeData}
-            columns={columns}
-            rowKey="key"
-            showSorterTooltip={false}
-            onChange={handleTableChange}
-            rowSelection={{
-                type: "checkbox",
-                hideSelectAll: true,
-                selectedRowKeys: selectedKeys,
-                onSelect: (record, selected) => (selected ? setPreviewJob(record) : setPreviewJob(null)),
-            }}
-            expandable={{
-                defaultExpandAllRows: true,
-            }}
-            pagination={{
-                // total:jobList.length,
-                showSizeChanger: true,
-                showQuickJumper: true,
-                showTotal: (total) => `${total} files`,
-            }}
-        />
-    );
-}
+//     return (
+//         <Table
+//             loading={isDataLoading}
+//             dataSource={tableTreeData}
+//             columns={columns}
+//             rowKey="key"
+//             showSorterTooltip={false}
+//             onChange={handleTableChange}
+//             rowSelection={{
+//                 type: "checkbox",
+//                 hideSelectAll: true,
+//                 selectedRowKeys: selectedKeys,
+//                 onSelect: (record, selected) => (selected ? setPreviewJob(record) : setPreviewJob(null)),
+//             }}
+//             expandable={{
+//                 defaultExpandAllRows: true,
+//             }}
+//             pagination={{
+//                 // total:jobList.length,
+//                 showSizeChanger: true,
+//                 showQuickJumper: true,
+//                 showTotal: (total) => `${total} files`,
+//             }}
+//         />
+//     );
+// }
 
 function ExplorationTree({ isDataLoading, loadChildren, previewJobState, treeDataState }) {
     const { treeData } = treeDataState;
@@ -175,8 +165,7 @@ function ExplorationTree({ isDataLoading, loadChildren, previewJobState, treeDat
     return (
         <Spin spinning={isDataLoading}>
             <Tree
-                showIcon={true}
-                switcherIcon={<DownOutlined />}
+                showIcon={false}
                 loadData={loadChildren}
                 treeData={treeData}
                 defaultExpandAll={true}
@@ -187,7 +176,7 @@ function ExplorationTree({ isDataLoading, loadChildren, previewJobState, treeDat
     );
 }
 
-function JobDrawer({ previewJobState , userID}) {
+function JobDrawer({ previewJobState, userID, setIsDataLoading }) {
     const expandedSettings = ["maxDesigns", "population_size", "survival_size", "tournament_size", "expiration"];
     const { previewJob, setPreviewJob } = previewJobState;
     const JobStatus = () => {
@@ -247,8 +236,8 @@ function JobDrawer({ previewJobState , userID}) {
         urlString = data.split("/").pop();
         return urlString;
     }
-    async function deleteGenEvalParamByJobID(jobID, userID, nextToken = null) {
-        API.graphql(
+    async function getGenEvalParamByJobID(jobID, userID, resultList, nextToken = null) {
+        await API.graphql(
             graphqlOperation(generationsByJobId, {
                 limit: 1000,
                 owner: { eq: userID },
@@ -257,43 +246,51 @@ function JobDrawer({ previewJobState , userID}) {
                 items: {},
                 nextToken,
             })
-        ).then((queryResult) => {
-            let queriedJobResults = queryResult.data.generationsByJobID.items;
-            if (queryResult.data.generationsByJobID.nextToken) {
-                deleteGenEvalParamByJobID(
-                    jobID,
-                    userID,
-                    (nextToken = queryResult.data.generationsByJobID.nextToken)
+        )
+            .then((queryResult) => {
+                let queriedJobResults = queryResult.data.generationsByJobID.items;
+                if (queryResult.data.generationsByJobID.nextToken) {
+                    getGenEvalParamByJobID(jobID, userID, (nextToken = queryResult.data.generationsByJobID.nextToken)).catch((err) => {
+                        throw err;
+                    });
+                }
+                queriedJobResults.forEach((result) => resultList.push(result.id));
+            })
+            .catch((err) => {
+                console.log(err);
+                throw err;
+            });
+    }
+    async function deleteJobAndParams(jobID, userID) {
+        const genParamIDList = [];
+        const promiseList = [];
+        setPreviewJob(null);
+        setIsDataLoading(true);
+        await getGenEvalParamByJobID(jobID, userID, genParamIDList);
+        genParamIDList.forEach((paramID) =>
+            promiseList.push(
+                API.graphql(
+                    graphqlOperation(deleteGenEvalParam, {
+                        input: { id: paramID },
+                    })
                 ).catch((err) => {
                     throw err;
-                });
-            }
-            queriedJobResults.forEach(result => API.graphql(
-                graphqlOperation(deleteGenEvalParam, {
-                    input: {id: result.id}
+                })
+            )
+        );
+
+        promiseList.push(
+            API.graphql(
+                graphqlOperation(deleteJob, {
+                    input: { id: jobID },
                 })
             ).catch((err) => {
                 throw err;
-            }))
-        })
-        .catch((err) => {
-            console.log(err);
-            throw err;
-        });
-    }
-    async function deleteJobAndParams(jobID, userID) {
-        deleteGenEvalParamByJobID(jobID, userID);
-        API.graphql(
-            graphqlOperation(deleteJob, {
-                input: {id: jobID}
             })
-        ).then(()=> {
-            setPreviewJob(null);
-        }).catch((err) => {
-            throw err;
-        })
+        );
+        await Promise.all(promiseList);
+        setIsDataLoading(false);
     }
-
     return (
         <Drawer title="Search Settings" placement="right" mask={false} visible={previewJob} onClose={() => setPreviewJob(null)} width="40em">
             {previewJob ? (
@@ -308,12 +305,12 @@ function JobDrawer({ previewJobState , userID}) {
                             color: "rgba(0,0,0,0.5)",
                         }}
                     >
-                        <Descriptions.item label="Gen File" key="genUrl">
+                        <Descriptions.Item label="genFile" key="genFile">
                             {getDisplayUrlString(previewJob.data.genUrl, true)}
-                        </Descriptions.item>
-                        <Descriptions.item label="Eval File" key="evalUrl">
+                        </Descriptions.Item>
+                        <Descriptions.Item label="evalFile" key="evalFile">
                             {getDisplayUrlString(previewJob.data.evalUrl)}
-                        </Descriptions.item>
+                        </Descriptions.Item>
                         {expandedSettings.map((dataKey) => (
                             <Descriptions.Item label={dataKey} key={dataKey}>
                                 {previewJob.data[dataKey]}
@@ -331,7 +328,9 @@ function JobDrawer({ previewJobState , userID}) {
                             <Button type="primary">
                                 <Link to={`/explorations/search-results#${QueryString.stringify({ id: previewJob.data.id })}`}>View Results</Link>
                             </Button>
-                            <Button type="default" onClick={() => deleteJobAndParams(previewJob.data.id, userID)}>Delete Job</Button>
+                            <Button type="default" onClick={() => deleteJobAndParams(previewJob.data.id, userID)}>
+                                Delete Job
+                            </Button>
                         </Space>
                     </Row>
                 </Space>
@@ -411,38 +410,38 @@ function Explorations() {
     };
     const loadChildren = ({ key, children, data }) => {
         return new Promise((resolve) => {
-            console.log('!!!!!!!!!!!!!!!!!!!!!!!!', children)
-            if (children) {
-                resolve(); // children were retrieved
-                return;
-            }
-            let childrenData = [];
-            async function getChildren() {
-                if (data.childrenID) {
-                    await Promise.all(
-                        data.childrenID.map((childID) =>
-                            API.graphql(graphqlOperation(getJob, { id: childID })).then((queriedResults) => queriedResults.data.getJob)
-                        )
-                    ).then((results) => {
-                        childrenData = results.map((childData, index) => {
-                            return {
-                                key: `${key}-${index}`,
-                                title: <TreeTitle text={childData.description} status={childData.jobStatus} />,
-                                data: childData,
-                            };
-                        });
-                    });
-                }
-            }
-            getChildren().then(() => resolve());
+            resolve(); // no children
+            // if (children) {
+            //     resolve(); // children were retrieved
+            //     return;
+            // }
+            // let childrenData = [];
+            // async function getChildren() {
+            //     if (data.childrenID) {
+            //         await Promise.all(
+            //             data.childrenID.map((childID) =>
+            //                 API.graphql(graphqlOperation(getJob, { id: childID })).then((queriedResults) => queriedResults.data.getJob)
+            //             )
+            //         ).then((results) => {
+            //             childrenData = results.map((childData, index) => {
+            //                 return {
+            //                     key: `${key}-${index}`,
+            //                     title: <TreeTitle text={childData.description} status={childData.jobStatus} />,
+            //                     data: childData,
+            //                 };
+            //             });
+            //         });
+            //     }
+            // }
+            // getChildren().then(() => resolve());
         });
     };
-    useEffect(() => {
+    const refreshList = (cognitoPayloadSub, setTreeData, setIsDataLoading) => {
         API.graphql(
             graphqlOperation(listJobs, {
                 filter: {
                     userID: {
-                        eq: cognitoPayload.sub,
+                        eq: cognitoPayloadSub,
                     },
                 },
             })
@@ -450,7 +449,7 @@ function Explorations() {
             .then((queriedResults) => {
                 const jobList = queriedResults.data.listJobs.items;
                 setTreeData((treeData) => [
-                    ...treeData,
+                    treeData[0],
                     ...jobList.map((jobData, index) => {
                         return {
                             key: index + 1,
@@ -462,8 +461,10 @@ function Explorations() {
                 setIsDataLoading(false);
             })
             .catch((error) => console.log(error));
+    }
+    useEffect(() => {
+        refreshList(cognitoPayload.sub, setTreeData, setIsDataLoading)
     }, [cognitoPayload]);
-
     return (
         <div className="explorations-container">
             <Menu
@@ -472,31 +473,25 @@ function Explorations() {
                 }}
                 selectedKeys={[dataView]}
                 mode="horizontal"
-            >
-                <Menu.Item key="table" icon={<TableOutlined />}>
-                    Table
-                </Menu.Item>
-                <Menu.Item key="tree" icon={<ClusterOutlined />}>
-                    Tree
-                </Menu.Item>
-            </Menu>
-            {dataView === "tree" ? (
-                <ExplorationTree
-                    isDataLoading={isDataLoading}
-                    loadChildren={loadChildren}
-                    previewJobState={{ previewJob, setPreviewJob }}
-                    treeDataState={{ treeData, setTreeData }}
-                />
-            ) : (
-                <JobTable
-                    isDataLoading={isDataLoading}
-                    loadChildren={loadChildren}
-                    previewJobState={{ previewJob, setPreviewJob }}
-                    treeData={treeData}
-                />
-            )}
+            ></Menu>
+            <ExplorationTree
+                isDataLoading={isDataLoading}
+                loadChildren={loadChildren}
+                previewJobState={{ previewJob, setPreviewJob }}
+                treeDataState={{ treeData, setTreeData }}
+            />
+            {/* <JobTable
+                isDataLoading={isDataLoading}
+                loadChildren={loadChildren}
+                previewJobState={{ previewJob, setPreviewJob }}
+                treeData={treeData}
+            /> */}
 
-            <JobDrawer previewJobState={{ previewJob, setPreviewJob }} userID={cognitoPayload.sub} />
+            <JobDrawer
+                previewJobState={{ previewJob, setPreviewJob }}
+                userID={cognitoPayload.sub}
+                setIsDataLoading={setIsDataLoading}
+            />
         </div>
     );
 }
