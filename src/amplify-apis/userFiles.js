@@ -33,6 +33,15 @@ export async function getS3(s3Key, resolved, rejected) {
   }
 };
 
+export async function getS3Url(s3Key, resolved, rejected) {
+  try {
+    const s3Url = await Storage.get(s3Key, { level: "protected" });
+    resolved(s3Url.split("?")[0].replace(/s3.us-east-1.amazonaws/g, 's3.amazonaws'));
+  } catch (err) {
+    rejected();
+  }
+};
+
 export async function downloadS3(s3Key, resolved, rejected) {
   try {
     const s3Blob = await Storage.get(s3Key, { level: "protected", download: true });

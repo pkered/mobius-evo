@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useContext } from "react";
 import { API, graphqlOperation } from "aws-amplify";
 import { generationsByJobId, getJob } from "../../graphql/queries";
+import { updateJob } from "../../graphql/mutations";
 import * as QueryString from "query-string";
 import { Link } from "react-router-dom";
-import { Row, Space, Button, Spin, Form, Col, Divider, Input, Checkbox, Table } from "antd";
+import { Row, Space, Button, Spin, Form, Col, Divider, Input, Checkbox, Table, Popconfirm } from "antd";
 import { Column } from "@ant-design/charts";
 import { AuthContext } from "../../Contexts";
 import Iframe from "react-iframe";
@@ -113,10 +114,10 @@ async function getData(jobID, userID, setJobSettings, setJobResults, setIsLoadin
             setJobSettings(queryResult.data.getJob);
             if (queryResult.data.getJob.jobStatus === "inprogress") {
                 setTimeout(() => {
-                    setIsLoading(true);
+                    // setIsLoading(true);
                     setJobResults([]);
                     getData(jobID, userID, setJobSettings, setJobResults, setIsLoading, callback, filters);
-                }, 2000);
+                }, 3000);
             }
         })
         .catch((err) => {
@@ -270,7 +271,11 @@ function ScorePlot({ jobResults }) {
         data: plotData,
         xField: "GenID",
         yField: "score",
-        colorField: "genFile",
+        seriesField: "genFile",
+        slider: {
+            start: 0,
+            end: 1
+        },
         responsive: true,
         events: {
             click: (e) => console.log(e),
@@ -383,6 +388,25 @@ function JobResults() {
             () => setIsLoading(false)).catch((err) => console.log(err));
     }, [cognitoPayload]);
 
+    const CancelJob = () => {
+        function cancelJob() {
+            API.graphql(
+                graphqlOperation(updateJob, {
+                    input: {
+                        id: jobID,
+                        jobStatus: "cancelling",
+                        run: false,
+                    },
+                })
+            ).catch((err) => console.log({ cancelJobError: err }));
+        }
+        return (
+            <Popconfirm placement="topRight" title="Cancel Search?" onConfirm={cancelJob} okText="Yes" cancelText="No">
+                <Button type="default">Cancel</Button>
+            </Popconfirm>
+        );
+    };
+
     return (
         <Space direction="vertical" size="large" style={{ width: "inherit" }}>
             <Row>
@@ -393,13 +417,14 @@ function JobResults() {
             <Spin spinning={isLoading}>
                 {!isLoading ? (
                     <Space direction="vertical" size="large" style={{ width: "100%" }}>
-                        <ResumeForm
+                        {(jobSettings && (jobSettings.jobStatus === 'completed' || jobSettings.jobStatus === 'cancelled')) ? <ResumeForm
                             jobID={jobID}
                             jobSettingsState={{ jobSettings, setJobSettings }}
                             jobResultsState={{ jobResults, setJobResults }}
                             getData = {getData}
                             setIsLoading = {setIsLoading}
-                        />
+                        />: <></>}
+                        {(jobSettings && (jobSettings.jobStatus === 'inprogress')) ? <CancelJob/>: <></>}
                         <FilterForm
                             jobID={jobID}
                             modelParamsState={{ modelParams, setModelParams }}

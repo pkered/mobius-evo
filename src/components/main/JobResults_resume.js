@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Form, Space, Button, Radio, InputNumber, Upload, message, Tag, Table, Modal, Row, Divider } from "antd";
-import { uploadS3, listS3, getS3, downloadS3 } from "../../amplify-apis/userFiles";
+import { uploadS3, listS3, getS3Url, downloadS3 } from "../../amplify-apis/userFiles";
 import { UploadOutlined } from "@ant-design/icons";
 import { API, graphqlOperation } from "aws-amplify";
 import { createGenEvalParam, updateGenEvalParam, updateJob } from "../../graphql/mutations";
@@ -21,9 +21,9 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
             return;
         }
         let newUrl = "";
-        await getS3(
+        await getS3Url(
             `files/${newFile}`,
-            (s3Url) => (newUrl = s3Url.split("?")[0]),
+            (s3Url) => (newUrl = s3Url),
             () => {}
         );
         let okCheck = false;
@@ -458,6 +458,10 @@ function JobResumeForm({jobSettingsState, jobResultsState, getData, setIsLoading
         genFile_random_generated: jobSettings.population_size * 2,
         genFile_mutate: 0
     }
+    if (jobSettings.jobStatus === 'cancelled') {
+        formInitialValues.maxDesigns = jobSettings.maxDesigns;
+        formInitialValues.newDesigns = 0;
+    }
     jobSettings.genUrl.forEach(url => {
         const genFile = url.split('/').pop();
         formInitialValues['genFile_' + genFile] = 0
@@ -483,16 +487,16 @@ function JobResumeForm({jobSettingsState, jobResultsState, getData, setIsLoading
                     <InputNumber disabled/>
                 </Form.Item>
                 <Form.Item label="Number of new Designs" name="newDesigns">
-                    <InputNumber min={1} onChange={onNewDesignChange} />
+                    <InputNumber min={0} onChange={onNewDesignChange} />
                 </Form.Item>
                 <Form.Item label="Population Size" name="population_size">
                     <InputNumber min={1} onChange={onPopChange} />
                 </Form.Item>
                 <Form.Item label="Tournament Size" name="tournament_size">
-                    <InputNumber />
+                    <InputNumber min={1}/>
                 </Form.Item>
                 <Form.Item label="Survival Size" name="survival_size">
-                    <InputNumber />
+                    <InputNumber min={1}/>
                 </Form.Item>
                 <Divider />
                 <Form.Item label="Total Starting Items" name="genFile_total_items">

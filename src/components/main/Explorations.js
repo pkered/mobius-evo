@@ -176,7 +176,7 @@ function ExplorationTree({ isDataLoading, loadChildren, previewJobState, treeDat
     );
 }
 
-function JobDrawer({ previewJobState, userID, setIsDataLoading }) {
+function JobDrawer({ previewJobState, userID, setIsDataLoading, setTreeData }) {
     const expandedSettings = ["maxDesigns", "population_size", "survival_size", "tournament_size", "expiration"];
     const { previewJob, setPreviewJob } = previewJobState;
     const JobStatus = () => {
@@ -219,7 +219,7 @@ function JobDrawer({ previewJobState, userID, setIsDataLoading }) {
         }
         return (
             <Popconfirm placement="topRight" title="Cancel Search?" onConfirm={cancelJob} okText="Yes" cancelText="No">
-                <Button type="text">Cancel</Button>
+                <Button type="default">Cancel</Button>
             </Popconfirm>
         );
     };
@@ -250,7 +250,7 @@ function JobDrawer({ previewJobState, userID, setIsDataLoading }) {
             .then((queryResult) => {
                 let queriedJobResults = queryResult.data.generationsByJobID.items;
                 if (queryResult.data.generationsByJobID.nextToken) {
-                    getGenEvalParamByJobID(jobID, userID, (nextToken = queryResult.data.generationsByJobID.nextToken)).catch((err) => {
+                    getGenEvalParamByJobID(jobID, userID, resultList, (nextToken = queryResult.data.generationsByJobID.nextToken)).catch((err) => {
                         throw err;
                     });
                 }
@@ -289,6 +289,16 @@ function JobDrawer({ previewJobState, userID, setIsDataLoading }) {
             })
         );
         await Promise.all(promiseList);
+        setTreeData((treeData) => {
+            const newTreeData = [];
+            treeData.forEach(treeObj => {
+                if (treeObj.data && treeObj.data.id === jobID) {
+                    return;
+                }
+                newTreeData.push(treeObj);
+            });
+            return newTreeData;
+        })
         setIsDataLoading(false);
     }
     return (
@@ -491,6 +501,7 @@ function Explorations() {
                 previewJobState={{ previewJob, setPreviewJob }}
                 userID={cognitoPayload.sub}
                 setIsDataLoading={setIsDataLoading}
+                setTreeData={setTreeData}
             />
         </div>
     );

@@ -4,7 +4,7 @@ import * as QueryString from "query-string";
 import { v4 as uuidv4 } from "uuid";
 import { API, graphqlOperation } from "aws-amplify";
 import { createJob, createGenEvalParam } from "../../graphql/mutations";
-import { uploadS3, listS3, getS3, downloadS3 } from "../../amplify-apis/userFiles";
+import { uploadS3, listS3, getS3Url, downloadS3 } from "../../amplify-apis/userFiles";
 import { UploadOutlined } from "@ant-design/icons";
 import { AuthContext } from "../../Contexts";
 import { Link } from "react-router-dom";
@@ -177,18 +177,18 @@ function FileSelection({ nextStep, formValuesState }) {
     const handleClick = async () => {
         const _formValues = { genKeys: [], genUrl: {}, evalUrl: null };
         for (const genF of genFile) {
-            await getS3(
+            await getS3Url(
                 `files/${genF}`,
                 (s3Url) => {
-                    _formValues.genUrl[genF] = s3Url.split("?")[0];
+                    _formValues.genUrl[genF] = s3Url;
                     _formValues.genKeys.push(genF);
                 },
                 () => {}
             );
         }
-        await getS3(
+        await getS3Url(
             `files/${evalFile}`,
-            (s3Url) => (_formValues.evalUrl = s3Url.split("?")[0]),
+            (s3Url) => (_formValues.evalUrl = s3Url),
             () => {}
         );
         setFormValues({ ...formValues, ..._formValues });
