@@ -4,7 +4,7 @@ import { generationsByJobId, getJob } from "../../graphql/queries";
 import { updateJob } from "../../graphql/mutations";
 import * as QueryString from "query-string";
 import { Link } from "react-router-dom";
-import { Row, Space, Button, Spin, Form, Col, Divider, Input, Checkbox, Table, Popconfirm } from "antd";
+import { Row, Space, Button, Spin, Form, Col, Divider, Input, Checkbox, Table, Popconfirm, Tabs } from "antd";
 import { Column } from "@ant-design/charts";
 import { AuthContext } from "../../Contexts";
 import Iframe from "react-iframe";
@@ -12,7 +12,9 @@ import { ReactComponent as Download } from "../../assets/download.svg";
 import { ReactComponent as View } from "../../assets/view.svg";
 import { ResumeForm } from "./JobResults_resume.js";
 
+
 const S3_MODEL_URL = "https://mobius-evo-userfiles131353-dev.s3.amazonaws.com/models/";
+const { TabPane } = Tabs;
 
 function paramsRegex(params) {
     return JSON.parse(params);
@@ -124,7 +126,7 @@ async function getData(jobID, userID, setJobSettings, setJobResults, setIsLoadin
             throw err;
         });
 }
-function FilterForm({ jobID, modelParamsState, jobSettingsState, jobResultsState }) {
+function FilterForm({ jobID, modelParamsState, jobSettingsState, jobResultsState, setIsLoadingState }) {
     const [form] = Form.useForm();
     const { cognitoPayload } = useContext(AuthContext);
     const { modelParams, setModelParams } = modelParamsState;
@@ -133,7 +135,7 @@ function FilterForm({ jobID, modelParamsState, jobSettingsState, jobResultsState
     const [initialValues, setInitialValues] = useState({
         "show-group": ["live", "dead"],
     });
-    const [isLoading, setIsLoading] = useState(true);
+    const {isLoading, setIsLoading} = setIsLoadingState;
     const [isFiltering, setIsFiltering] = useState(false);
     const handleFinish = (values) => {
         setIsFiltering(true);
@@ -414,34 +416,46 @@ function JobResults() {
                     <Link to="/explorations">Explorations</Link> / {jobID}
                 </h3>
             </Row>
+            {jobSettings?(<Row>
+                <h1>{jobSettings.description}</h1>
+            </Row>):null}
             <Spin spinning={isLoading}>
                 {!isLoading ? (
-                    <Space direction="vertical" size="large" style={{ width: "100%" }}>
-                        {(jobSettings && (jobSettings.jobStatus === 'completed' || jobSettings.jobStatus === 'cancelled')) ? <ResumeForm
-                            jobID={jobID}
-                            jobSettingsState={{ jobSettings, setJobSettings }}
-                            jobResultsState={{ jobResults, setJobResults }}
-                            getData = {getData}
-                            setIsLoading = {setIsLoading}
-                        />: <></>}
-                        {(jobSettings && (jobSettings.jobStatus === 'inprogress')) ? <CancelJob/>: <></>}
-                        <FilterForm
-                            jobID={jobID}
-                            modelParamsState={{ modelParams, setModelParams }}
-                            jobSettingsState={{ jobSettings, setJobSettings }}
-                            jobResultsState={{ jobResults, setJobResults }}
-                        />
-                        <ScorePlot jobSettings={jobSettings} jobResults={jobResults} />
-                        <Space direction="horizontal" size="large" align="start">
-                            <ResultTable jobResults={jobResults} />
-                            <Iframe
-                                url="https://design-automation.github.io/mobius-viewer-dev-0-7/"
-                                width="600px"
-                                height="600px"
-                                id="mobius_viewer"
-                            />
-                        </Space>
-                    </Space>
+                    <Tabs defaultActiveKey="1">
+                        <TabPane tab="Settings" key="1">
+                            <Space direction="vertical" size="large" style={{ width: "100%" }}>
+                                {(jobSettings && (jobSettings.jobStatus === 'completed' || jobSettings.jobStatus === 'cancelled')) ? <ResumeForm
+                                    jobID={jobID}
+                                    jobSettingsState={{ jobSettings, setJobSettings }}
+                                    jobResultsState={{ jobResults, setJobResults }}
+                                    getData = {getData}
+                                    setIsLoading = {setIsLoading}
+                                />: <></>}
+                                {(jobSettings && (jobSettings.jobStatus === 'inprogress')) ? <CancelJob/>: <></>}
+                            </Space>
+                        </TabPane>
+                        <TabPane tab="Results" key="2">
+                            <Space direction="vertical" size="large" style={{ width: "100%" }}>
+                                <FilterForm
+                                    jobID={jobID}
+                                    modelParamsState={{ modelParams, setModelParams }}
+                                    jobSettingsState={{ jobSettings, setJobSettings }}
+                                    jobResultsState={{ jobResults, setJobResults }}
+                                    setIsLoadingState = {{isLoading, setIsLoading}}
+                                />
+                                <ScorePlot jobSettings={jobSettings} jobResults={jobResults} />
+                                <Space direction="horizontal" size="large" align="start">
+                                    <ResultTable jobResults={jobResults} />
+                                    <Iframe
+                                        url="https://design-automation.github.io/mobius-viewer-dev-0-7/"
+                                        width="600px"
+                                        height="600px"
+                                        id="mobius_viewer"
+                                    />
+                                </Space>
+                            </Space>
+                        </TabPane>
+                    </Tabs>
                 ) : null}
             </Spin>
         </Space>

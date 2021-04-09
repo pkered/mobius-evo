@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Form, Space, Button, Radio, InputNumber, Upload, message, Tag, Table, Modal, Row, Divider } from "antd";
+import { Form, Space, Button, Radio, InputNumber, Upload, message, Tag, Table, Modal, Row, Divider, Descriptions } from "antd";
 import { uploadS3, listS3, getS3Url, downloadS3 } from "../../amplify-apis/userFiles";
 import { UploadOutlined } from "@ant-design/icons";
 import { API, graphqlOperation } from "aws-amplify";
@@ -472,6 +472,7 @@ function JobResumeForm({jobSettingsState, jobResultsState, getData, setIsLoading
         formInitialValues['genFile_' + genFile] += 1;
         formInitialValues.genFile_random_generated -= 1;
     })
+
     return (<>
             <Form
                 name="ResumeJob"
@@ -483,10 +484,10 @@ function JobResumeForm({jobSettingsState, jobResultsState, getData, setIsLoading
                 initialValues={formInitialValues}
             >
                 <h2>Resume Job</h2>
-                <Form.Item label="max Designs" name="maxDesigns">
+                <Form.Item label="New Max Designs" name="maxDesigns">
                     <InputNumber disabled/>
                 </Form.Item>
-                <Form.Item label="Number of new Designs" name="newDesigns">
+                <Form.Item label="Number of New Designs" name="newDesigns">
                     <InputNumber min={0} onChange={onNewDesignChange} />
                 </Form.Item>
                 <Form.Item label="Population Size" name="population_size">
@@ -549,6 +550,19 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
             setJobSettings(jobSettings);
         }
     };
+    function getDisplayUrlString(data, isGen = false) {
+        if (!data) {
+            return "";
+        }
+        let urlString = "";
+        if (isGen) {
+            urlString = data.map((url) => url.split("/").pop()).join(", ");
+            console.log(urlString);
+            return urlString;
+        }
+        urlString = data.split("/").pop();
+        return urlString;
+    }
 
     if (!jobID || !jobSettings) {
         return <></>;
@@ -598,9 +612,30 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
         };
         return tableEntry;
     });
+    const expandedSettings = ["maxDesigns", "population_size", "survival_size", "tournament_size", "expiration"];
 
     return (
         <>
+            <Descriptions
+                bordered={true}
+                size="small"
+                column={1}
+                style={{
+                    color: "rgba(0,0,0,0.5)",
+                }}
+            >
+                <Descriptions.Item label="genFile" key="genFile">
+                    {getDisplayUrlString(jobSettings.genUrl, true)}
+                </Descriptions.Item>
+                <Descriptions.Item label="evalFile" key="evalFile">
+                    {getDisplayUrlString(jobSettings.evalUrl)}
+                </Descriptions.Item>
+                {expandedSettings.map((dataKey) => (
+                    <Descriptions.Item label={dataKey} key={dataKey}>
+                        {jobSettings[dataKey]}
+                    </Descriptions.Item>
+                ))}
+            </Descriptions>
             <JobResumeForm
                 jobSettingsState={{ jobSettings, setJobSettings }}
                 jobResultsState={{ jobResults, setJobResults }}
