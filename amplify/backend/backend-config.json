@@ -1,57 +1,53 @@
 {
-    "api": {
-        "MobiusEvoGraphQL": {
-            "service": "AppSync",
-            "providerPlugin": "awscloudformation",
-            "output": {
-                "authConfig": {
-                    "additionalAuthenticationProviders": [
-                        {
-                            "authenticationType": "AWS_IAM"
-                        }
-                    ],
-                    "defaultAuthentication": {
-                        "authenticationType": "AMAZON_COGNITO_USER_POOLS",
-                        "userPoolConfig": {
-                            "userPoolId": "authmobiusevoe7b26413"
-                        }
-                    }
-                }
+  "api": {
+    "MobiusEvoGraphQL": {
+      "service": "AppSync",
+      "providerPlugin": "awscloudformation",
+      "output": {
+        "authConfig": {
+          "additionalAuthenticationProviders": [
+            {
+              "authenticationType": "AWS_IAM"
             }
+          ],
+          "defaultAuthentication": {
+            "authenticationType": "AMAZON_COGNITO_USER_POOLS",
+            "userPoolConfig": {
+              "userPoolId": "authmobiusevoe7b26413"
+            }
+          }
         }
-    },
-    "storage": {
-        "MobiusEvoDynamo": {
-            "service": "DynamoDB",
-            "providerPlugin": "awscloudformation"
-        },
-        "mobiusevoUserfiles": {
-            "service": "S3",
-            "providerPlugin": "awscloudformation"
-        }
-    },
-    "auth": {
-        "mobiusevoe7b26413": {
-            "service": "Cognito",
-            "providerPlugin": "awscloudformation",
-            "dependsOn": []
-        }
-    },
-    "function": {
-        "cognitoNewUser": {
-            "build": true,
-            "providerPlugin": "awscloudformation",
-            "service": "Lambda",
-            "dependsOn": [
-                {
-                    "category": "api",
-                    "resourceName": "MobiusEvoGraphQL",
-                    "attributes": [
-                        "GraphQLAPIIdOutput",
-                        "GraphQLAPIEndpointOutput"
-                    ]
-                }
-            ]
-        }
+      }
     }
+  },
+  "storage": {
+    "mobiusevoUserfiles": {
+      "service": "S3",
+      "providerPlugin": "awscloudformation"
+    }
+  },
+  "auth": {
+    "mobiusevoe7b26413": {
+      "service": "Cognito",
+      "providerPlugin": "awscloudformation",
+      "dependsOn": []
+    }
+  },
+  "function": {
+    "cognitoNewUser": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda",
+      "dependsOn": [
+        {
+          "category": "api",
+          "resourceName": "MobiusEvoGraphQL",
+          "attributes": [
+            "GraphQLAPIIdOutput",
+            "GraphQLAPIEndpointOutput"
+          ]
+        }
+      ]
+    }
+  }
 }

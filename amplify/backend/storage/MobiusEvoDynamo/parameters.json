@@ -1,7 +1,0 @@
-{
-    "tableName": "MobiusEvoDynamo",
-    "partitionKeyName": "id",
-    "partitionKeyType": "S",
-    "sortKeyName": "name",
-    "sortKeyType": "S"
-}
