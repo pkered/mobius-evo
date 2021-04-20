@@ -9,7 +9,6 @@ import { UploadOutlined } from "@ant-design/icons";
 import { AuthContext } from "../../Contexts";
 import { Link } from "react-router-dom";
 import { Form, Input, InputNumber, Button, Steps, Table, Radio, Checkbox, Upload, message, Tag, Space, Spin, Row, Descriptions, Divider } from "antd";
-const { Step } = Steps;
 const testDefault = {
     description: `new test`,
     maxDesigns: 12,
@@ -21,15 +20,19 @@ const testDefault = {
     genFile_total_items: 6,
 };
 
-function FileSelection({ nextStep, formValuesState }) {
+function SettingsForm({ formValuesState }) {
+    const { cognitoPayload } = useContext(AuthContext);
+    const [form] = Form.useForm();
     const { formValues, setFormValues } = formValuesState;
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [genFile, setGenFile] = useState([]);
     const [evalFile, setEvalFile] = useState(null);
     const [s3Files, setS3Files] = useState([]);
     const [uploadedFiles, setUploadedFiles] = useState([]);
     const [isTableLoading, setIsTableLoading] = useState(true);
+    const [genElements, setGenElements] = useState([]);
     const onRadioCell = () => ({ style: { textAlign: "center" } });
-    const columns = [
+    const genColumns = [
         {
             title: "File",
             dataIndex: "filename",
@@ -56,7 +59,7 @@ function FileSelection({ nextStep, formValuesState }) {
             ),
         },
         {
-            title: "Gen File",
+            title: "Select File",
             key: "genfile",
             onCell: onRadioCell,
             width: "8em",
@@ -64,23 +67,71 @@ function FileSelection({ nextStep, formValuesState }) {
                 <Checkbox
                     value={record.filename}
                     checked={genFile.indexOf(record.filename) !== -1}
-                    onChange={(event) => {
+                    onChange={async (event) => {
                         const ind = genFile.indexOf(record.filename);
+                        let newGenFile;
                         if (ind !== -1) {
                             genFile.splice(ind, 1);
-                            setGenFile([...genFile]);
+                            newGenFile = [...genFile];
+                            setGenFile(newGenFile);
                         } else {
-                            setGenFile([...genFile, event.target.value]);
-                            if (evalFile === event.target.value) {
-                                setEvalFile(null);
-                            }
+                            newGenFile = [...genFile, event.target.value];
+                            setGenFile(newGenFile);
                         }
+                        formValues.genUrl = {};
+                        formValues.genKeys = [];
+                        const genElements = [];
+                        for (const genF of newGenFile) {
+                            await getS3Url(
+                                `files/gen/${genF}`,
+                                (s3Url) => {
+                                    formValues.genUrl[genF] = s3Url;
+                                    formValues.genKeys.push(genF);
+                                    genElements.push(
+                                        <Form.Item label={genF} name={"genFile_" + genF} key={genF} initialValue={0}>
+                                            <InputNumber min={0} onChange={onNumChange} />
+                                        </Form.Item>
+                                    );
+                                },
+                                () => {}
+                            );
+                        }
+                        console.log("___", genFile, genElements);
+                        setFormValues(formValues);
+                        setGenElements(genElements);
                     }}
                 ></Checkbox>
             ),
         },
+    ];
+    const evalColumns = [
         {
-            title: "Eval File",
+            title: "File",
+            dataIndex: "filename",
+            key: "filename",
+            sorter: true,
+            sortDirections: ["ascend", "descend"],
+        },
+        {
+            title: "Uploaded",
+            dataIndex: "lastModified",
+            key: "lastModified",
+            sorter: true,
+            sortDirections: ["ascend", "descend"],
+            defaultSortOrder: "descend",
+            render: (text, record, index) => (
+                <Space>
+                    {text.toLocaleString()}
+                    {record.tag ? (
+                        <Tag color="green" key={record.tag}>
+                            {record.tag.toUpperCase()}
+                        </Tag>
+                    ) : null}
+                </Space>
+            ),
+        },
+        {
+            title: "Select File",
             key: "evalfile",
             onCell: onRadioCell,
             width: "8em",
@@ -88,13 +139,19 @@ function FileSelection({ nextStep, formValuesState }) {
                 <Radio
                     value={record.filename}
                     checked={record.filename === evalFile}
-                    onChange={(event) => {
+                    onChange={async (event) => {
                         setEvalFile(event.target.value);
-                        const genIndex = genFile.indexOf(event.target.value);
-                        if (genIndex !== -1) {
-                            genFile.splice(genIndex, 1);
-                            setGenFile([...genFile]);
-                        }
+                        await getS3Url(
+                            `files/eval/${event.target.value}`,
+                            (s3Url) => (formValues.evalUrl = s3Url),
+                            () => {}
+                        );
+                        setFormValues(formValues);
+                        // const genIndex = genFile.indexOf(event.target.value);
+                        // if (genIndex !== -1) {
+                        //     genFile.splice(genIndex, 1);
+                        //     setGenFile([...genFile]);
+                        // }
                     }}
                 ></Radio>
             ),
@@ -109,6 +166,7 @@ function FileSelection({ nextStep, formValuesState }) {
                     return {
                         key: index,
                         filename: key.split("/").pop(),
+                        fileType: key.split("/").slice(-2, -1)[0],
                         lastModified,
                         tag: uploadedSet.has(key.split("/").pop()) ? "new" : null,
                     };
@@ -122,9 +180,9 @@ function FileSelection({ nextStep, formValuesState }) {
         return () => (isSubscribed = false);
     };
     useEffect(listS3files, [uploadedFiles]); // Updates when new files are uploaded
-    function FileUpload() {
+    function FileUpload({ uploadType }) {
         function handleUpload({ file, onSuccess, onError, onProgress }) {
-            uploadS3(`files/${file.name}`, file, onSuccess, onError, onProgress);
+            uploadS3(`files/${uploadType.toLowerCase()}/${file.name}`, file, onSuccess, onError, onProgress);
         }
         function handleChange(event) {
             if (event.file.status === "done") {
@@ -138,13 +196,15 @@ function FileSelection({ nextStep, formValuesState }) {
             <div className="upload-topbar">
                 <Upload accept=".js" multiple={true} customRequest={handleUpload} onChange={handleChange} showUploadList={false}>
                     <Button>
-                        <UploadOutlined /> Upload
+                        <UploadOutlined /> Upload {uploadType} File
                     </Button>
                 </Upload>
-                {/* <span>{uploadedFiles.length>0 ? `Uploaded: ${uploadedFiles.join(", ")}` : null}</span> */}
             </div>
         );
     }
+
+    const genFiles = s3Files.filter((record) => record.fileType === "gen");
+    const evalFiles = s3Files.filter((record) => record.fileType === "eval");
 
     const handleTableChange = (pagination, filters, sorter) => {
         const compareAscend = (a, b) => {
@@ -174,57 +234,6 @@ function FileSelection({ nextStep, formValuesState }) {
         }
         setS3Files(_s3Files);
     };
-    const handleClick = async () => {
-        const _formValues = { genKeys: [], genUrl: {}, evalUrl: null };
-        for (const genF of genFile) {
-            await getS3Url(
-                `files/${genF}`,
-                (s3Url) => {
-                    _formValues.genUrl[genF] = s3Url;
-                    _formValues.genKeys.push(genF);
-                },
-                () => {}
-            );
-        }
-        await getS3Url(
-            `files/${evalFile}`,
-            (s3Url) => (_formValues.evalUrl = s3Url),
-            () => {}
-        );
-        setFormValues({ ...formValues, ..._formValues });
-        nextStep();
-    };
-
-    return (
-        <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-            <FileUpload />
-            <Table
-                dataSource={s3Files}
-                columns={columns}
-                loading={isTableLoading}
-                onChange={handleTableChange}
-                showSorterTooltip={false}
-                pagination={{
-                    total: s3Files.length,
-                    showSizeChanger: true,
-                    showQuickJumper: true,
-                    showTotal: (total) => `${total} files`,
-                }}
-            ></Table>
-            <Row justify="end">
-                <Button onClick={handleClick} disabled={genFile === null || evalFile === null}>
-                    Continue
-                </Button>
-            </Row>
-        </Space>
-    );
-}
-
-function SettingsForm({ nextStep, formValuesState }) {
-    const { cognitoPayload } = useContext(AuthContext);
-    const [form] = Form.useForm();
-    const { formValues, setFormValues } = formValuesState;
-    const [isSubmitting, setIsSubmitting] = useState(false);
 
     async function initParams(jobID, jobSettings) {
         let startingGenID = 0;
@@ -236,7 +245,7 @@ function SettingsForm({ nextStep, formValuesState }) {
         for (const genKey of jobSettings.genKeys) {
             let genFile;
             await downloadS3(
-                `files/${genKey}`,
+                `files/gen/${genKey}`,
                 (data) => {
                     genFile = data;
                 },
@@ -337,8 +346,7 @@ function SettingsForm({ nextStep, formValuesState }) {
             })
         ).then(() => {
             setIsSubmitting(false);
-            setFormValues({ ...jobSettings, jobID });
-            nextStep();
+            window.location.href = `/jobs/search-results#${QueryString.stringify({ id: jobID })}`;
         });
     }
     //   const formInitialValues = {
@@ -365,10 +373,12 @@ function SettingsForm({ nextStep, formValuesState }) {
         setTimeout(() => {
             const starting_population = Number(form.getFieldValue("population_size")) * 2;
             let totalCount = 0;
-            formValues.genKeys.forEach((genFile) => {
-                const inpID = "genFile_" + genFile;
-                totalCount += Number(form.getFieldValue(inpID));
-            });
+            if (formValues.genKeys) {
+                formValues.genKeys.forEach((genFile) => {
+                    const inpID = "genFile_" + genFile;
+                    totalCount += Number(form.getFieldValue(inpID));
+                });
+            }
             let countDiff = starting_population - totalCount;
             const formUpdate = { genFile_total_items: starting_population };
             if (countDiff < 0) {
@@ -378,32 +388,42 @@ function SettingsForm({ nextStep, formValuesState }) {
                     document.activeElement.value = formUpdate[inpID];
                     countDiff = 0;
                 } else {
-                    formValues.genKeys.forEach((genFile) => {
-                        if (countDiff >= 0) {
-                            return;
-                        }
-                        const inpID = "genFile_" + genFile;
-                        const inpCount = Number(form.getFieldValue(inpID));
-                        if (inpCount === 0) {
-                            return;
-                        }
-                        if (inpCount + countDiff >= 0) {
-                            formUpdate[inpID] = inpCount + countDiff;
-                            countDiff = 0;
-                            return;
-                        }
-                        formUpdate[inpID] = 0;
-                        countDiff += inpCount;
-                    });
+                    if (formValues.genKeys) {
+                        formValues.genKeys.forEach((genFile) => {
+                            if (countDiff >= 0) {
+                                return;
+                            }
+                            const inpID = "genFile_" + genFile;
+                            const inpCount = Number(form.getFieldValue(inpID));
+                            if (inpCount === 0) {
+                                return;
+                            }
+                            if (inpCount + countDiff >= 0) {
+                                formUpdate[inpID] = inpCount + countDiff;
+                                countDiff = 0;
+                                return;
+                            }
+                            formUpdate[inpID] = 0;
+                            countDiff += inpCount;
+                        });
+                    }
                 }
             }
             formUpdate["genFile_random_generated"] = countDiff;
             form.setFieldsValue(formUpdate);
         }, 0);
     }
-    formValues.genKeys.forEach((genFile) => {
-        formInitialValues["genFile_" + genFile] = 0;
-    });
+
+    // if (formValues.genKeys) {
+    //     formValues.genKeys.forEach((genFile) => {
+    //         formInitialValues["genFile_" + genFile] = 0;
+    //         genElements.push(
+    //             <Form.Item label={genFile} name={"genFile_" + genFile} key={genFile}>
+    //                 <InputNumber min={0} onChange={onNumChange} />
+    //             </Form.Item>
+    //         );
+    //     });
+    // }
     return (
         <Spin spinning={isSubmitting} tip="Starting Job...">
             <Form
@@ -434,67 +454,53 @@ function SettingsForm({ nextStep, formValuesState }) {
                     <InputNumber />
                 </Form.Item>
                 <Divider />
+                <FileUpload uploadType={"Gen"} />
+                <Table
+                    dataSource={genFiles}
+                    columns={genColumns}
+                    loading={isTableLoading}
+                    onChange={handleTableChange}
+                    showSorterTooltip={false}
+                    pagination={{
+                        total: genFiles.length,
+                        showSizeChanger: true,
+                        showQuickJumper: true,
+                        showTotal: (total) => `${total} files`,
+                    }}
+                ></Table>
+                <FileUpload uploadType={"Eval"} />
+                <Table
+                    dataSource={evalFiles}
+                    columns={evalColumns}
+                    loading={isTableLoading}
+                    onChange={handleTableChange}
+                    showSorterTooltip={false}
+                    pagination={{
+                        total: evalFiles.length,
+                        showSizeChanger: true,
+                        showQuickJumper: true,
+                        showTotal: (total) => `${total} files`,
+                    }}
+                ></Table>
+                <Divider />
                 <Form.Item label="Total Starting Items" name="genFile_total_items">
                     <InputNumber disabled />
                 </Form.Item>
-                {formValues.genKeys.map((genFile) => {
-                    return (
-                        <Form.Item label={genFile} name={"genFile_" + genFile} key={genFile}>
-                            <InputNumber min={0} onChange={onNumChange} />
-                        </Form.Item>
-                    );
-                })}
+                {genElements}
                 <Form.Item label="Random Generated" name="genFile_random_generated">
                     <InputNumber disabled />
                 </Form.Item>
+                <br></br>
                 <Row justify="center">
                     <Button type="primary" htmlType="submit">
                         Start
                     </Button>
                 </Row>
+                <br></br>
+                <br></br>
+                <br></br>
             </Form>
         </Spin>
-    );
-}
-
-function FinishedForm({ formValuesState }) {
-    const { formValues, setFormValues } = formValuesState;
-
-    return (
-        <Space direction="vertical" size="large" style={{ width: "100%" }}>
-            <Descriptions title="Your Job has been submitted" bordered={true} column={2}>
-                <Descriptions.Item label="Gen File">
-                    {Object.values(formValues.genUrl)
-                        .map((url) => url.split("/").pop())
-                        .join(", ")}
-                </Descriptions.Item>
-                <Descriptions.Item label="Eval File">{formValues.evalUrl.split("/").pop()}</Descriptions.Item>
-                <Descriptions.Item label="Description">{formValues.description}</Descriptions.Item>
-                <Descriptions.Item label="Number of Designs">{formValues.maxDesigns}</Descriptions.Item>
-                <Descriptions.Item label="Population Size">{formValues.population_size}</Descriptions.Item>
-                <Descriptions.Item label="Tournament Size">{formValues.tournament_size}</Descriptions.Item>
-                <Descriptions.Item label="Survival Size">{formValues.survival_size}</Descriptions.Item>
-                <Descriptions.Item label="Expiration">{formValues.expiration}</Descriptions.Item>
-            </Descriptions>
-            <Row justify="center">
-                <Space>
-                    <Button
-                        type="primary"
-                        onClick={() => {
-                            setFormValues(null);
-                        }}
-                    >
-                        <Link
-                            to={`/explorations/search-results#${QueryString.stringify({
-                                id: formValues.jobID,
-                            })}`}
-                        >
-                            View Results
-                        </Link>
-                    </Button>
-                </Space>
-            </Row>
-        </Space>
     );
 }
 
@@ -504,29 +510,13 @@ function JobForm() {
     const steps = ["1. Select Files", `2. Job Settings`, "3. Summary"];
     const nextStep = () => setCurrentStep(Math.min(steps.length - 1, currentStep + 1));
 
-    function FormToRender() {
-        switch (currentStep) {
-            case 0:
-                return <FileSelection nextStep={nextStep} formValuesState={{ formValues, setFormValues }} />;
-            case 1:
-                return <SettingsForm nextStep={nextStep} formValuesState={{ formValues, setFormValues }}/>;
-            case 2:
-                return <FinishedForm formValuesState={{ formValues, setFormValues }} />;
-            default:
-                return <FileSelection nextStep={nextStep} formValuesState={{ formValues, setFormValues }} />;
-        }
-    }
-
     return (
         <div className="jobForm-container">
             <Space direction="vertical" size="large" style={{ width: "inherit" }}>
                 <h1>Start New Job</h1>
-                <Steps progressDot current={currentStep}>
-                    {steps.map((step, index) => (
-                        <Step title={step} key={index} />
-                    ))}
-                </Steps>
-                <FormToRender />
+                {/* <FileSelection nextStep={nextStep} formValuesState={{ formValues, setFormValues }} /> */}
+                <SettingsForm formValuesState={{ formValues, setFormValues }} />
+                {/* <FormToRender /> */}
             </Space>
         </div>
     );

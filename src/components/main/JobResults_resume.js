@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Form, Space, Button, Radio, InputNumber, Upload, message, Tag, Table, Modal, Row, Divider, Descriptions } from "antd";
+import { Form, Space, Button, Radio, InputNumber, Upload, message, Tag, Table, Modal, Row, Divider } from "antd";
 import { uploadS3, listS3, getS3Url, downloadS3 } from "../../amplify-apis/userFiles";
 import { UploadOutlined } from "@ant-design/icons";
 import { API, graphqlOperation } from "aws-amplify";
 import { createGenEvalParam, updateGenEvalParam, updateJob } from "../../graphql/mutations";
-import './JobResults_resume.css';
+import "./JobResults_resume.css";
 
-function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsState, replacedUrl }) {
+function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsState, replacedUrl, replaceEvalCheck }) {
     const [s3Files, setS3Files] = useState([]);
     const [uploadedFiles, setUploadedFiles] = useState([]);
     const [isTableLoading, setIsTableLoading] = useState(true);
@@ -16,13 +16,20 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
     const [newFile, setnewFile] = useState(null);
 
     const handleOk = async () => {
+        if (!replaceEvalCheck) {
+            handleGenOk();
+        } else {
+            handleEvalOk();
+        }
+    };
+    const handleGenOk = async () => {
         if (!newFile) {
             setIsModalVisible(false);
             return;
         }
         let newUrl = "";
         await getS3Url(
-            `files/${newFile}`,
+            `files/gen/${newFile}`,
             (s3Url) => (newUrl = s3Url),
             () => {}
         );
@@ -50,7 +57,7 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
             console.log("newUrl", newUrl);
             console.log(jobSettings);
             let newID = jobResults.length;
-            const newJobs = []
+            const newJobs = [];
             jobResults
                 .filter((result) => result.genUrl === replacedUrl && result.live === true)
                 .forEach((result) => {
@@ -62,7 +69,7 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
                                     JobID: result.JobID,
                                     GenID: result.GenID,
                                     live: false,
-                                    expirationTime: expiration_time
+                                    expirationTime: expiration_time,
                                 },
                             })
                         )
@@ -70,7 +77,7 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
                             .catch((err) => console.log(err))
                     );
                     const newParam = {
-                        id: result.JobID + '_' + newID,
+                        id: result.JobID + "_" + newID,
                         JobID: result.JobID,
                         GenID: newID,
                         generation: result.generation,
@@ -82,16 +89,18 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
                         score: null,
                         owner: result.owner,
                         expirationTime: null,
-                    }
+                    };
                     allPromises.push(
                         API.graphql(
                             graphqlOperation(createGenEvalParam, {
-                                input:  newParam})
+                                input: newParam,
+                            })
                         )
                             .then()
                             .catch((err) => console.log(err))
                     );
-                    newJobs.push(newParam)
+                    result.live = false;
+                    newJobs.push(newParam);
                     newID += 1;
                 });
             allPromises.push(
@@ -103,8 +112,89 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
                     .then()
                     .catch((err) => console.log(err))
             );
-            setJobResults(jobResults.concat(newJobs))
+            setJobResults(jobResults.concat(newJobs));
         }
+        await Promise.all(allPromises);
+        setIsModalVisible(false);
+    };
+    const handleEvalOk = async () => {
+        if (!newFile) {
+            setIsModalVisible(false);
+            return;
+        }
+        let newUrl = "";
+        await getS3Url(
+            `files/eval/${newFile}`,
+            (s3Url) => (newUrl = s3Url),
+            () => {}
+        );
+        jobSettings.evalUrl = newUrl;
+        let expiration = 86400;
+        if (jobSettings.expiration) {
+            expiration = jobSettings.expiration;
+        }
+        const expiration_time = Math.round(Date.now() / 1000) + expiration;
+        const allPromises = [];
+
+        setJobSettings(jobSettings);
+        let newID = jobResults.length;
+        const newJobs = [];
+        jobResults
+            .filter((result) => result.live === true)
+            .forEach((result) => {
+                allPromises.push(
+                    API.graphql(
+                        graphqlOperation(updateGenEvalParam, {
+                            input: {
+                                id: result.id,
+                                JobID: result.JobID,
+                                GenID: result.GenID,
+                                live: false,
+                                expirationTime: expiration_time,
+                            },
+                        })
+                    )
+                        .then()
+                        .catch((err) => console.log(err))
+                );
+                const newParam = {
+                    id: result.JobID + "_" + newID,
+                    JobID: result.JobID,
+                    GenID: newID,
+                    generation: result.generation,
+                    genUrl: result.genUrl,
+                    evalUrl: newUrl,
+                    evalResult: null,
+                    live: true,
+                    params: result.params,
+                    score: null,
+                    owner: result.owner,
+                    expirationTime: null,
+                };
+                allPromises.push(
+                    API.graphql(
+                        graphqlOperation(createGenEvalParam, {
+                            input: newParam,
+                        })
+                    )
+                        .then()
+                        .catch((err) => console.log(err))
+                );
+                result.live = false;
+                newJobs.push(newParam);
+                newID += 1;
+            });
+        allPromises.push(
+            API.graphql(
+                graphqlOperation(updateJob, {
+                    input: jobSettings,
+                })
+            )
+                .then()
+                .catch((err) => console.log(err))
+        );
+        setJobResults(jobResults.concat(newJobs));
+
         await Promise.all(allPromises);
         setIsModalVisible(false);
     };
@@ -158,17 +248,25 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
     ];
 
     const listS3files = () => {
+        setIsTableLoading(true);
         const uploadedSet = new Set(uploadedFiles);
         let isSubscribed = true; // prevents memory leak on unmount
         const prepS3files = (files) => {
             if (isSubscribed) {
-                const fileList = files.map(({ key, lastModified }, index) => {
-                    return {
+                const fileList = [];
+                files.forEach(({ key, lastModified }, index) => {
+                    const fileUrlSplit = key.split("/");
+                    if (replaceEvalCheck && fileUrlSplit[fileUrlSplit.length - 2] === 'gen') {
+                        return;
+                    } else if (!replaceEvalCheck && fileUrlSplit[fileUrlSplit.length - 2] === 'eval') {
+                        return;
+                    }
+                    fileList.push({
                         key: index,
                         filename: key.split("/").pop(),
                         lastModified,
                         tag: uploadedSet.has(key.split("/").pop()) ? "new" : null,
-                    };
+                    })
                 });
                 fileList.sort((a, b) => b.lastModified - a.lastModified); // Default descending order
                 setS3Files([...fileList]);
@@ -178,7 +276,7 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
         listS3(prepS3files, () => {});
         return () => (isSubscribed = false);
     };
-    useEffect(listS3files, [uploadedFiles]); // Updates when new files are uploaded
+    useEffect(listS3files, [uploadedFiles, isModalVisible]); // Updates when new files are uploaded
     function FileUpload() {
         function handleUpload({ file, onSuccess, onError, onProgress }) {
             uploadS3(`files/${file.name}`, file, onSuccess, onError, onProgress);
@@ -232,7 +330,7 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
     };
     return (
         <>
-            <Modal title="Basic Modal" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
+            <Modal title="Select File" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
                 <Space direction="vertical" size="middle" style={{ width: "100%" }}>
                     <FileUpload />
                     <Table
@@ -254,9 +352,12 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
     );
 }
 
-function JobResumeForm({jobSettingsState, jobResultsState, getData, setIsLoading}) {
+function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLoading }) {
     const { jobSettings, setJobSettings } = jobSettingsState;
     const { jobResults, setJobResults } = jobResultsState;
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [replacedUrl, setReplacedUrl] = useState(null);
+    const [replaceEvalCheck, setReplacedEvalCheck] = useState(false);
     const [form] = Form.useForm();
     async function initParams(jobID, newJobSettings) {
         let startingGenID = jobResults.length;
@@ -268,7 +369,7 @@ function JobResumeForm({jobSettingsState, jobResultsState, getData, setIsLoading
         for (const genKey of newJobSettings.genKeys) {
             let genFile;
             await downloadS3(
-                `files/${genKey}`,
+                `files/gen/${genKey}`,
                 (data) => {
                     genFile = data;
                 },
@@ -303,7 +404,7 @@ function JobResumeForm({jobSettingsState, jobResultsState, getData, setIsLoading
                 continue;
             }
             let maxGen = 1;
-            jobResults.forEach(result => maxGen = Math.max(maxGen, result.generation))
+            jobResults.forEach((result) => (maxGen = Math.max(maxGen, result.generation)));
             for (let i = 0; i < newJobSettings["genFile_" + genKey]; i++) {
                 const paramSet = {
                     id: jobID + "_" + startingGenID,
@@ -347,23 +448,25 @@ function JobResumeForm({jobSettingsState, jobResultsState, getData, setIsLoading
     }
 
     async function handleFinish() {
-        console.log('submitting',form.getFieldsValue())
-        console.log('jobs settings', jobSettings)
-        const newJobSettings = {...form.getFieldsValue() };
+        console.log("submitting", form.getFieldsValue());
+        console.log("jobs settings", jobSettings);
+        const newJobSettings = { ...form.getFieldsValue() };
         newJobSettings.description = jobSettings.description;
-        newJobSettings.genUrl = {}
+        newJobSettings.genUrl = {};
         newJobSettings.genKeys = jobSettings.genUrl.map((genUrl) => {
-            const genKey = genUrl.split('/').pop();
+            const genKey = genUrl.split("/").pop();
             newJobSettings.genUrl[genKey] = genUrl;
             return genKey;
         });
-        newJobSettings.genKeys.forEach(key => {
-            console.log('... key:', 'genFile_' + key, 'val:',newJobSettings['genFile_' + key])
-            newJobSettings['genFile_' + key] -= jobResults.filter((result) => result.live === true && result.genUrl === newJobSettings.genUrl[key]).length
-        })
+        newJobSettings.genKeys.forEach((key) => {
+            console.log("... key:", "genFile_" + key, "val:", newJobSettings["genFile_" + key]);
+            newJobSettings["genFile_" + key] -= jobResults.filter(
+                (result) => result.live === true && result.genUrl === newJobSettings.genUrl[key]
+            ).length;
+        });
         newJobSettings.evalUrl = jobSettings.evalUrl;
         setIsLoading(true);
-        await initParams(jobSettings.id, newJobSettings)
+        await initParams(jobSettings.id, newJobSettings);
         API.graphql(
             graphqlOperation(updateJob, {
                 input: {
@@ -378,26 +481,25 @@ function JobResumeForm({jobSettingsState, jobResultsState, getData, setIsLoading
                     survival_size: newJobSettings.survival_size,
                 },
             })
-        ).then(() => {
-            setJobResults([]);
-            getData(jobSettings.id,
-                jobSettings.owner,
-                setJobSettings,
-                setJobResults,
-                setIsLoading,
-                () => setIsLoading(false)).catch((err) => console.log(err));
-        }).catch((err) => console.log(err));
+        )
+            .then(() => {
+                setJobResults([]);
+                getData(jobSettings.id, jobSettings.owner, setJobSettings, setJobResults, setIsLoading, () => setIsLoading(false)).catch((err) =>
+                    console.log(err)
+                );
+            })
+            .catch((err) => console.log(err));
         jobSettings.expiration = newJobSettings.expiration;
         jobSettings.maxDesigns = newJobSettings.maxDesigns;
         jobSettings.population_size = newJobSettings.population_size;
         jobSettings.tournament_size = newJobSettings.tournament_size;
         jobSettings.survival_size = newJobSettings.survival_size;
-        setJobSettings(jobSettings)
+        setJobSettings(jobSettings);
     }
     function onNewDesignChange(e) {
         setTimeout(() => {
             const newDesigns = Number(form.getFieldValue("newDesigns"));
-            const formUpdate = {"maxDesigns": jobSettings.maxDesigns + newDesigns};
+            const formUpdate = { maxDesigns: jobSettings.maxDesigns + newDesigns };
             form.setFieldsValue(formUpdate);
         }, 0);
     }
@@ -409,11 +511,11 @@ function JobResumeForm({jobSettingsState, jobResultsState, getData, setIsLoading
             const starting_population = Number(form.getFieldValue("population_size")) * 2;
             let totalCount = 0;
             jobSettings.genUrl.forEach((genUrl) => {
-                const genFile = genUrl.split('/').pop()
+                const genFile = genUrl.split("/").pop();
                 const inpID = "genFile_" + genFile;
                 totalCount += Number(form.getFieldValue(inpID));
             });
-            totalCount += Number(form.getFieldValue('genFile_mutate'));
+            totalCount += Number(form.getFieldValue("genFile_mutate"));
             let countDiff = starting_population - totalCount;
             const formUpdate = { genFile_total_items: starting_population };
             if (countDiff < 0) {
@@ -427,7 +529,7 @@ function JobResumeForm({jobSettingsState, jobResultsState, getData, setIsLoading
                         if (countDiff >= 0) {
                             return;
                         }
-                        const genFile = genUrl.split('/').pop()
+                        const genFile = genUrl.split("/").pop();
                         const inpID = "genFile_" + genFile;
                         const inpCount = Number(form.getFieldValue(inpID));
                         if (inpCount === 0) {
@@ -456,86 +558,36 @@ function JobResumeForm({jobSettingsState, jobResultsState, getData, setIsLoading
 
         genFile_total_items: jobSettings.population_size * 2,
         genFile_random_generated: jobSettings.population_size * 2,
-        genFile_mutate: 0
-    }
-    if (jobSettings.jobStatus === 'cancelled') {
+        genFile_mutate: 0,
+    };
+    if (jobSettings.jobStatus === "cancelled") {
         formInitialValues.maxDesigns = jobSettings.maxDesigns;
         formInitialValues.newDesigns = 0;
     }
-    jobSettings.genUrl.forEach(url => {
-        const genFile = url.split('/').pop();
-        formInitialValues['genFile_' + genFile] = 0
+    jobSettings.genUrl.forEach((url) => {
+        const genFile = url.split("/").pop();
+        formInitialValues["genFile_" + genFile] = 0;
     });
-    jobResults.forEach(result => {
-        if (!result.live) { return; }
-        const genFile = result.genUrl.split('/').pop();
-        formInitialValues['genFile_' + genFile] += 1;
+    jobResults.forEach((result) => {
+        if (!result.live) {
+            return;
+        }
+        const genFile = result.genUrl.split("/").pop();
+        formInitialValues["genFile_" + genFile] += 1;
         formInitialValues.genFile_random_generated -= 1;
-    })
+    });
 
-    return (<>
-            <Form
-                name="ResumeJob"
-                onFinish={handleFinish}
-                form={form}
-                labelCol={{ span: 6 }}
-                wrapperCol={{ span: 16 }}
-                layout="horizontal"
-                initialValues={formInitialValues}
-            >
-                <h2>Resume Job</h2>
-                <Form.Item label="New Max Designs" name="maxDesigns">
-                    <InputNumber disabled/>
-                </Form.Item>
-                <Form.Item label="Number of New Designs" name="newDesigns">
-                    <InputNumber min={0} onChange={onNewDesignChange} />
-                </Form.Item>
-                <Form.Item label="Population Size" name="population_size">
-                    <InputNumber min={1} onChange={onPopChange} />
-                </Form.Item>
-                <Form.Item label="Tournament Size" name="tournament_size">
-                    <InputNumber min={1}/>
-                </Form.Item>
-                <Form.Item label="Survival Size" name="survival_size">
-                    <InputNumber min={1}/>
-                </Form.Item>
-                <Divider />
-                <Form.Item label="Total Starting Items" name="genFile_total_items">
-                    <InputNumber disabled />
-                </Form.Item>
-                {jobSettings.genUrl.map((genUrl) => {
-                    const genFile = genUrl.split('/').pop();
-                    return (
-                        <Form.Item label={genFile} name={'genFile_' + genFile} key={'genFile_' + genFile}>
-                            <InputNumber min={formInitialValues['genFile_' + genFile]} onChange={onNumChange} />
-                        </Form.Item>
-                    );
-                })}
-                <Form.Item label="Mutate from Existing" name="genFile_mutate">
-                    <InputNumber min={0} onChange={onNumChange}  />
-                </Form.Item>
-                <Form.Item label="Random Generated" name="genFile_random_generated">
-                    <InputNumber disabled />
-                </Form.Item>
-                <Row justify="center">
-                    <Button type="primary" htmlType="submit">
-                        Resume Job
-                    </Button>
-                </Row>
-            </Form>
-    </>)
-}
-
-function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLoading }) {
-    const { jobSettings, setJobSettings } = jobSettingsState;
-    const { jobResults, setJobResults } = jobResultsState;
-    const [isModalVisible, setIsModalVisible] = useState(false);
-    const [replacedUrl, setReplacedUrl] = useState(null);
-
-    const showModal = (url) => {
+    const showModalGen = (url) => {
         setReplacedUrl(url);
+        setReplacedEvalCheck(false);
         setIsModalVisible(true);
     };
+    const showModalEval = () => {
+        setReplacedUrl("");
+        setReplacedEvalCheck(true);
+        setIsModalVisible(true);
+    };
+
     const deleteGenFile = async (url) => {
         const urlIndex = jobSettings.genUrl.indexOf(url);
         if (urlIndex !== -1) {
@@ -550,19 +602,6 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
             setJobSettings(jobSettings);
         }
     };
-    function getDisplayUrlString(data, isGen = false) {
-        if (!data) {
-            return "";
-        }
-        let urlString = "";
-        if (isGen) {
-            urlString = data.map((url) => url.split("/").pop()).join(", ");
-            console.log(urlString);
-            return urlString;
-        }
-        urlString = data.split("/").pop();
-        return urlString;
-    }
 
     if (!jobID || !jobSettings) {
         return <></>;
@@ -591,12 +630,13 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
             key: "fileAction",
             render: (url) => (
                 <>
-                    {/* <a href="#" onClick={() => showModal(url)}>replace</a>
+                    <Button type="text" htmlType="button" onClick={() => showModalGen(url)}>
+                        replace
+                    </Button>
                     <br></br>
-                    <a href="#" onClick={() => deleteGenFile(url)}>delete</a> */}
-                    <button className='text-btn' onClick={() => showModal(url)}>replace</button>
-                    <br></br>
-                    <button className='text-btn' onClick={() => deleteGenFile(url)}>delete</button>
+                    <Button type="text" htmlType="button" onClick={() => deleteGenFile(url)}>
+                        delete
+                    </Button>
                 </>
             ),
         },
@@ -612,43 +652,106 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
         };
         return tableEntry;
     });
-    const expandedSettings = ["maxDesigns", "population_size", "survival_size", "tournament_size", "expiration"];
+    const evalTableColumns = [
+        {
+            title: "Eval File",
+            dataIndex: "evalFile",
+            key: "evalFile",
+        },
+        {
+            title: "Total Items",
+            dataIndex: "numItems",
+            key: "numItems",
+        },
+        {
+            title: "Live Items",
+            dataIndex: "liveItems",
+            key: "liveItems",
+        },
+        {
+            title: "Action",
+            dataIndex: "fileAction",
+            key: "fileAction",
+            render: () => (
+                    <Button type="text" htmlType="button" onClick={() => showModalEval()}>
+                        replace
+                    </Button>
+            ),
+        },
+    ];
+
+    const evalTableData = [
+        {
+            evalUrl: jobSettings.evalUrl,
+            evalFile: jobSettings.evalUrl.split("/").pop(),
+            numItems: jobResults.filter((result) => result.evalUrl === jobSettings.evalUrl).length,
+            liveItems: jobResults.filter((result) => result.evalUrl === jobSettings.evalUrl && result.live === true).length,
+            fileAction: jobSettings.evalUrl,
+        },
+    ];
 
     return (
         <>
-            <Descriptions
-                bordered={true}
-                size="small"
-                column={1}
-                style={{
-                    color: "rgba(0,0,0,0.5)",
-                }}
+            <Form
+                name="ResumeJob"
+                onFinish={handleFinish}
+                form={form}
+                labelCol={{ span: 6 }}
+                wrapperCol={{ span: 16 }}
+                layout="horizontal"
+                initialValues={formInitialValues}
             >
-                <Descriptions.Item label="genFile" key="genFile">
-                    {getDisplayUrlString(jobSettings.genUrl, true)}
-                </Descriptions.Item>
-                <Descriptions.Item label="evalFile" key="evalFile">
-                    {getDisplayUrlString(jobSettings.evalUrl)}
-                </Descriptions.Item>
-                {expandedSettings.map((dataKey) => (
-                    <Descriptions.Item label={dataKey} key={dataKey}>
-                        {jobSettings[dataKey]}
-                    </Descriptions.Item>
-                ))}
-            </Descriptions>
-            <JobResumeForm
-                jobSettingsState={{ jobSettings, setJobSettings }}
-                jobResultsState={{ jobResults, setJobResults }}
-                getData={getData}
-                setIsLoading={setIsLoading}
-            />
-            <Button onClick={() => showModal(null)}>Add Gen File</Button>
-            <Table dataSource={genTableData} columns={genTableColumns} rowKey="genUrl"></Table>
+                <h2>Resume Job</h2>
+                <Form.Item label="New Max Designs" name="maxDesigns">
+                    <InputNumber disabled />
+                </Form.Item>
+                <Form.Item label="Number of New Designs" name="newDesigns">
+                    <InputNumber min={0} onChange={onNewDesignChange} />
+                </Form.Item>
+                <Form.Item label="Population Size" name="population_size">
+                    <InputNumber min={1} onChange={onPopChange} />
+                </Form.Item>
+                <Form.Item label="Tournament Size" name="tournament_size">
+                    <InputNumber min={1} />
+                </Form.Item>
+                <Form.Item label="Survival Size" name="survival_size">
+                    <InputNumber min={1} />
+                </Form.Item>
+                <Divider />
+                <Button htmlType="button" onClick={() => showModalGen(null)}>Add Gen File</Button>
+                <Table dataSource={genTableData} columns={genTableColumns} rowKey="genUrl"></Table>
+                <Button htmlType="button" onClick={() => showModalEval(null)}>Add Eval File</Button>
+                <Table dataSource={evalTableData} columns={evalTableColumns} rowKey="evalUrl"></Table>
+                <Divider />
+                <Form.Item label="Total Starting Items" name="genFile_total_items">
+                    <InputNumber disabled />
+                </Form.Item>
+                {jobSettings.genUrl.map((genUrl) => {
+                    const genFile = genUrl.split("/").pop();
+                    return (
+                        <Form.Item label={genFile} name={"genFile_" + genFile} key={"genFile_" + genFile} initialValue={0}>
+                            <InputNumber min={formInitialValues["genFile_" + genFile]} onChange={onNumChange} />
+                        </Form.Item>
+                    );
+                })}
+                <Form.Item label="Mutate from Existing" name="genFile_mutate">
+                    <InputNumber min={0} onChange={onNumChange} />
+                </Form.Item>
+                <Form.Item label="Random Generated" name="genFile_random_generated">
+                    <InputNumber disabled />
+                </Form.Item>
+                <Row justify="center">
+                    <Button type="primary" htmlType="submit">
+                        Resume Job
+                    </Button>
+                </Row>
+            </Form>
             <FileSelectionModal
-                isModalVisibleState={{ isModalVisible, setIsModalVisible }}
-                jobSettingsState={{ jobSettings, setJobSettings }}
-                jobResultsState={{ jobResults, setJobResults }}
-                replacedUrl={replacedUrl}
+                    isModalVisibleState={{ isModalVisible, setIsModalVisible }}
+                    jobSettingsState={{ jobSettings, setJobSettings }}
+                    jobResultsState={{ jobResults, setJobResults }}
+                    replacedUrl={replacedUrl}
+                    replaceEvalCheck={replaceEvalCheck}
             />
         </>
     );

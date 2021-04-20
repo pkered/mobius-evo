@@ -29,9 +29,9 @@ function MainSection() {
       <Switch>
         <Route path="/" exact component={ Landing }/>
         <PrivateRoute path="/user" component={ User }/>
-        <PrivateRoute path="/new-exploration" component={ JobForm }/>
-        <PrivateRoute path="/explorations/search-results" component={ JobResults }/>
-        <PrivateRoute path="/explorations" component={ Explorations }/>
+        <PrivateRoute path="/new-job" component={ JobForm }/>
+        <PrivateRoute path="/jobs/search-results" component={ JobResults }/>
+        <PrivateRoute path="/jobs" component={ Explorations }/>
         <Route path="/404" component={ NotFound }/>
         <Redirect to="/404"/>
       </Switch>

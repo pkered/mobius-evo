@@ -43,11 +43,33 @@ export async function getS3Url(s3Key, resolved, rejected) {
 };
 
 export async function downloadS3(s3Key, resolved, rejected) {
+    try {
+      const s3Blob = await Storage.get(s3Key, { level: "protected", download: true });
+      const s3Text = await s3Blob.Body.text();
+      resolved(s3Text);
+    } catch (err) {
+      rejected();
+    }
+  };
+
+export async function downloadGIFile(s3Key, resolved, rejected) {
   try {
-    const s3Blob = await Storage.get(s3Key, { level: "protected", download: true });
+    const s3Blob = await Storage.get(s3Key, { level: "public", download: true });
     const s3Text = await s3Blob.Body.text();
     resolved(s3Text);
   } catch (err) {
     rejected();
   }
+};
+
+
+  export async function deleteS3(s3Key, rejected) {
+    const files = await Storage.list(s3Key, {level: 'public'}).catch( err => {
+        console.log(err)
+        return;
+    });
+    const allPromises = files.map(f => {
+        return Storage.remove(f.key, {level: 'public'}).catch( err => console.log(err))
+    })
+    await Promise.all(allPromises);
 };
