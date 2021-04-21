@@ -89,6 +89,7 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
                         score: null,
                         owner: result.owner,
                         expirationTime: null,
+                        errorMessage: ''
                     };
                     allPromises.push(
                         API.graphql(
@@ -170,6 +171,7 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
                     score: null,
                     owner: result.owner,
                     expirationTime: null,
+                    errorMessage: '',
                 };
                 allPromises.push(
                     API.graphql(
@@ -419,6 +421,7 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
                     params: null,
                     score: null,
                     expirationTime: null,
+                    errorMessage: '',
                 };
                 startingGenID++;
                 const itemParams = {};
@@ -475,7 +478,7 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
                     run: true,
                     expiration: newJobSettings.expiration,
                     description: jobSettings.description,
-                    maxDesigns: newJobSettings.maxDesigns,
+                    max_designs: newJobSettings.max_designs,
                     population_size: newJobSettings.population_size,
                     tournament_size: newJobSettings.tournament_size,
                     survival_size: newJobSettings.survival_size,
@@ -490,7 +493,7 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
             })
             .catch((err) => console.log(err));
         jobSettings.expiration = newJobSettings.expiration;
-        jobSettings.maxDesigns = newJobSettings.maxDesigns;
+        jobSettings.max_designs = newJobSettings.max_designs;
         jobSettings.population_size = newJobSettings.population_size;
         jobSettings.tournament_size = newJobSettings.tournament_size;
         jobSettings.survival_size = newJobSettings.survival_size;
@@ -499,7 +502,7 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
     function onNewDesignChange(e) {
         setTimeout(() => {
             const newDesigns = Number(form.getFieldValue("newDesigns"));
-            const formUpdate = { maxDesigns: jobSettings.maxDesigns + newDesigns };
+            const formUpdate = { max_designs: jobSettings.max_designs + newDesigns };
             form.setFieldsValue(formUpdate);
         }, 0);
     }
@@ -550,8 +553,8 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
         }, 0);
     }
     const formInitialValues = {
-        maxDesigns: jobSettings.maxDesigns * 2,
-        newDesigns: jobSettings.maxDesigns,
+        max_designs: jobSettings.max_designs * 2,
+        newDesigns: jobSettings.max_designs,
         population_size: jobSettings.population_size,
         tournament_size: jobSettings.tournament_size,
         survival_size: jobSettings.survival_size,
@@ -561,7 +564,7 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
         genFile_mutate: 0,
     };
     if (jobSettings.jobStatus === "cancelled") {
-        formInitialValues.maxDesigns = jobSettings.maxDesigns;
+        formInitialValues.max_designs = jobSettings.max_designs;
         formInitialValues.newDesigns = 0;
     }
     jobSettings.genUrl.forEach((url) => {
@@ -702,7 +705,7 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
                 initialValues={formInitialValues}
             >
                 <h2>Resume Job</h2>
-                <Form.Item label="New Max Designs" name="maxDesigns">
+                <Form.Item label="New Max Designs" name="max_designs">
                     <InputNumber disabled />
                 </Form.Item>
                 <Form.Item label="Number of New Designs" name="newDesigns">

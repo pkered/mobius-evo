@@ -94,14 +94,18 @@ async function getData(jobID, userID, setJobSettings, setJobResults, setIsLoadin
 function viewModel(url, contextURLs = null) {
     const iframe = document.getElementById("mobius_viewer").contentWindow;
     let urls = [url];
-    // if (contextURLs && Array.isArray(contextURLs)) {
-    //     for (const contextUrl of contextURLs) {
-    //         if (contextUrl && contextUrl!=='') {
-    //             urls.push(contextUrl);
-    //         }
-    //     }
-    // }
-    console.log("urls:", urls);
+    if (contextURLs && Array.isArray(contextURLs)) {
+        for (const contextUrl of contextURLs) {
+            if (contextUrl && contextUrl!=='') {
+                urls.push(contextUrl);
+            }
+        }
+    }
+    console.log("urls:", urls, contextURLs);
+    console.log('xxxxx\n',JSON.stringify({
+        messageType: "update",
+        url: urls,
+    }))
     iframe.postMessage(
         {
             messageType: "update",
@@ -286,8 +290,9 @@ function FilterForm({ modelParamsState, jobResultsState, filteredJobResultsState
     ) : null;
 }
 
-function ScorePlot({ jobResults }) {
+function ScorePlot({ jobResults, contextUrl, setModelText }) {
     const plotData = JSON.parse(JSON.stringify(jobResults));
+
     plotData.forEach((result) => (result.genFile = result.genUrl.split("/").pop() + " - " + (result.live ? "live" : "dead")));
     const config = {
         title: {
@@ -314,7 +319,9 @@ function ScorePlot({ jobResults }) {
             onReady={(plot) => {
                 plot.on("element:click", (arg) => {
                     const data = arg.data.data;
-                    viewModel(S3_MODEL_URL + data.owner + "/" + data.JobID + "/" + data.id + "_eval.gi");
+                    document.getElementById('hiddenInput').value = S3_MODEL_URL + data.owner + "/" + data.JobID + "/" + data.id + "_eval.gi";
+                    document.getElementById('hiddenButton').click();
+                    setModelText(data.evalResult);
                 });
             }}
         />
@@ -436,16 +443,17 @@ function JobResults() {
     const [modelParams, setModelParams] = useState([]);
     const [jobSettings, setJobSettings] = useState(null);
     const [jobResults, setJobResults] = useState([]);
-    const [filteredJobResults, setFilteredJobResults] = useState([]);
+    const [filteredJobResults, setFilteredJobResults] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const { cognitoPayload } = useContext(AuthContext);
     const [modelText, setModelText] = useState("");
     const [contextUrl, setContextUrl] = useState("");
-    let tempContextUrl = "";
     useEffect(() => {
         const jobID = QueryString.parse(window.location.hash).id;
         setJobID(jobID);
-        getData(jobID, cognitoPayload.sub, setJobSettings, setJobResults, setIsLoading, () => setIsLoading(false)).catch((err) => console.log(err));
+        getData(jobID, cognitoPayload.sub, setJobSettings, setJobResults, setIsLoading, () => setIsLoading(false))
+            .then()
+            .catch((err) => console.log(err));
     }, [cognitoPayload]);
 
     const CancelJob = () => {
@@ -510,7 +518,7 @@ function JobResults() {
             return genTableEntry;
         });
     }
-    const expandedSettings = ["maxDesigns", "population_size", "survival_size", "tournament_size", "expiration"];
+    const expandedSettings = ["max_designs", "population_size", "survival_size", "tournament_size", "expiration"];
 
     return (
         <Space direction="vertical" size="large" style={{ width: "inherit" }}>
@@ -535,22 +543,31 @@ function JobResults() {
                                             filteredJobResultsState={{ filteredJobResults, setFilteredJobResults }}
                                             setIsLoadingState={{ isLoading, setIsLoading }}
                                         />
-                                        <ScorePlot jobResults={filteredJobResults.length ? filteredJobResults : jobResults} />
+                                        <ScorePlot
+                                            jobResults={filteredJobResults ? filteredJobResults : jobResults}
+                                            contextUrl={contextUrl}
+                                            setModelText={setModelText}
+                                        />
                                         <Space direction="horizontal" size="large" align="start">
-                                            <Input
-                                                defaultValue={contextUrl}
-                                                onChange={(e) => {
-                                                    tempContextUrl = e.target.value;
-                                                }}
-                                            ></Input>
+                                            <Input id='contextUrlInput' defaultValue={contextUrl}></Input>
                                             <Button
                                                 onClick={() => {
-                                                    console.log("......", tempContextUrl);
-                                                    setContextUrl(tempContextUrl);
+                                                    const val = document.getElementById('contextUrlInput').value;
+                                                    setContextUrl(val);
                                                 }}
                                             >
                                                 apply
                                             </Button>
+                                            <Input id='hiddenInput' className='hiddenElement'></Input>
+                                            <Button id='hiddenButton' className='hiddenElement'
+                                                onClick={() => {
+                                                    const val = document.getElementById('hiddenInput').value;
+                                                    viewModel(val, [contextUrl])
+                                                }}
+                                            >
+                                                apply
+                                            </Button>
+
                                         </Space>
                                         <Iframe
                                             url="https://design-automation.github.io/mobius-viewer-dev-0-7/"
@@ -560,7 +577,7 @@ function JobResults() {
                                         />
                                         <Input.TextArea className="textArea" value={modelText}></Input.TextArea>
                                         <ResultTable
-                                            jobResults={filteredJobResults.length ? filteredJobResults : jobResults}
+                                            jobResults={filteredJobResults ? filteredJobResults : jobResults}
                                             contextUrl={contextUrl}
                                             setModelText={setModelText}
                                         />

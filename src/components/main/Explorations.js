@@ -11,7 +11,7 @@ import { AuthContext } from "../../Contexts";
 import "./Explorations.css";
 
 function JobTable({ isDataLoadingState, jobDataState }) {
-    const expandedSettings = ["maxDesigns", "population_size", "survival_size", "tournament_size"];
+    const expandedSettings = ["Max_Designs", "Population_Size", "Survival_Size", "Tournament_Size"];
     const { isDataLoading, setIsDataLoading } = isDataLoadingState;
     const { jobData, setjobData } = jobDataState;
     const sortProps = {
@@ -38,6 +38,7 @@ function JobTable({ isDataLoadingState, jobDataState }) {
             title: "Status",
             dataIndex: "jobStatus",
             key: "status",
+            ...sortProps,
             render: (text) => {
                 switch (text) {
                     case "inprogress":
@@ -66,16 +67,15 @@ function JobTable({ isDataLoadingState, jobDataState }) {
             render: (text) => text.split("/").pop(),
         },
         ...expandedSettings.map((dataKey) => ({
-            title: dataKey,
-            dataIndex: dataKey,
-            key: dataKey,
+            title: dataKey.replace(/_/g, ' '),
+            dataIndex: dataKey.toLowerCase(),
+            key: dataKey.toLowerCase(),
             ...sortProps,
         })),
         {
             title: "Action",
             dataIndex: "action",
             key: "action",
-            ...sortProps,
             render: (text, record) => 
             <button className='text-btn' onClick={() => deleteJobAndParams(record.id, record.owner)}>delete</button>
             ,
@@ -148,6 +148,35 @@ function JobTable({ isDataLoadingState, jobDataState }) {
         setIsDataLoading(false);
     }
 
+    const handleTableChange = (pagination, filters, sorter) => {
+        const compareAscend = (a, b) => {
+            if (a < b) {
+                return -1;
+            } else if (a > b) {
+                return 1;
+            } else {
+                return 0;
+            }
+        };
+        const compareDescend = (a, b) => {
+            if (a > b) {
+                return -1;
+            } else if (a < b) {
+                return 1;
+            } else {
+                return 0;
+            }
+        };
+        const [field, order] = [sorter.field, sorter.order];
+        const _jobData = [...jobData];
+        if (order === "ascend") {
+            _jobData.sort((a, b) => compareAscend(a[field], b[field]));
+        } else {
+            _jobData.sort((a, b) => compareDescend(a[field], b[field]));
+        }
+        setjobData(_jobData);
+    };
+
     function handleRowClick(rowData) {
         window.location.href = `/jobs/search-results#${QueryString.stringify({ id: rowData.id })}`;
     }
@@ -161,7 +190,7 @@ function JobTable({ isDataLoadingState, jobDataState }) {
             columns={columns}
             rowKey="key"
             showSorterTooltip={false}
-            // onChange={handleTableChange}
+            onChange={handleTableChange}
             expandable={{
                 defaultExpandAllRows: true,
             }}
@@ -171,190 +200,9 @@ function JobTable({ isDataLoadingState, jobDataState }) {
                 showQuickJumper: true,
                 showTotal: (total) => `${total} files`,
             }}
-            // onRow={(record) => {
-            //     return {
-            //       onClick: () => handleRowClick(record), // click row
-            //     };
-            //   }}
         />
     </>);
 }
-
-// function JobDrawer({ previewJobState, userID, setIsDataLoading, setjobData }) {
-//     const expandedSettings = ["maxDesigns", "population_size", "survival_size", "tournament_size", "expiration"];
-//     const { previewJob, setPreviewJob } = previewJobState;
-//     const JobStatus = () => {
-//         switch (previewJob.data.jobStatus) {
-//             case "inprogress":
-//                 return <Badge status="processing" text="In Progress" />;
-//             case "completed":
-//                 return <Badge status="success" text="Completed" />;
-//             case "error":
-//                 return <Badge status="error" text="Error" />;
-//             case "cancelled":
-//                 return <Badge status="default" text="Cancelled" />;
-//             case "expired":
-//                 return <Badge status="default" text="Expired" />;
-//             default:
-//                 return <Badge status="default" text={previewJob.data.jobStatus} />;
-//         }
-//     };
-//     const CancelJob = () => {
-//         function cancelJob() {
-//             API.graphql(
-//                 graphqlOperation(updateJob, {
-//                     input: {
-//                         id: previewJob.data.id,
-//                         jobStatus: "cancelling",
-//                         run: false,
-//                     },
-//                 })
-//             )
-//                 .then(() => {
-//                     setPreviewJob({
-//                         ...previewJob,
-//                         data: {
-//                             ...previewJob.data,
-//                             jobStatus: "cancelling",
-//                         },
-//                     });
-//                 })
-//                 .catch((err) => console.log({ cancelJobError: err }));
-//         }
-//         return (
-//             <Popconfirm placement="topRight" title="Cancel Search?" onConfirm={cancelJob} okText="Yes" cancelText="No">
-//                 <Button type="default">Cancel</Button>
-//             </Popconfirm>
-//         );
-//     };
-//     function getDisplayUrlString(data, isGen = false) {
-//         if (!data) {
-//             return "";
-//         }
-//         let urlString = "";
-//         if (isGen) {
-//             urlString = data.map((url) => url.split("/").pop()).join(", ");
-//             console.log(urlString);
-//             return urlString;
-//         }
-//         urlString = data.split("/").pop();
-//         return urlString;
-//     }
-//     async function getGenEvalParamByJobID(jobID, userID, resultList, nextToken = null) {
-//         await API.graphql(
-//             graphqlOperation(generationsByJobId, {
-//                 limit: 1000,
-//                 owner: { eq: userID },
-//                 JobID: jobID,
-//                 filter: null,
-//                 items: {},
-//                 nextToken,
-//             })
-//         )
-//             .then((queryResult) => {
-//                 let queriedJobResults = queryResult.data.generationsByJobID.items;
-//                 if (queryResult.data.generationsByJobID.nextToken) {
-//                     getGenEvalParamByJobID(jobID, userID, resultList, (nextToken = queryResult.data.generationsByJobID.nextToken)).catch((err) => {
-//                         throw err;
-//                     });
-//                 }
-//                 queriedJobResults.forEach((result) => resultList.push(result.id));
-//             })
-//             .catch((err) => {
-//                 console.log(err);
-//                 throw err;
-//             });
-//     }
-//     async function deleteJobAndParams(jobID, userID) {
-//         const genParamIDList = [];
-//         const promiseList = [];
-//         setPreviewJob(null);
-//         setIsDataLoading(true);
-//         await getGenEvalParamByJobID(jobID, userID, genParamIDList);
-//         genParamIDList.forEach((paramID) =>
-//             promiseList.push(
-//                 API.graphql(
-//                     graphqlOperation(deleteGenEvalParam, {
-//                         input: { id: paramID },
-//                     })
-//                 ).catch((err) => {
-//                     throw err;
-//                 })
-//             )
-//         );
-
-//         promiseList.push(
-//             API.graphql(
-//                 graphqlOperation(deleteJob, {
-//                     input: { id: jobID },
-//                 })
-//             ).catch((err) => {
-//                 throw err;
-//             })
-//         );
-
-//         promiseList.push(deleteS3(`${userID}/${jobID}`, () => {}))
-
-//         await Promise.all(promiseList);
-//         setjobData((jobData) => {
-//             const newjobData = [];
-//             jobData.forEach(treeObj => {
-//                 if (treeObj.data && treeObj.data.id === jobID) {
-//                     return;
-//                 }
-//                 newjobData.push(treeObj);
-//             });
-//             return newjobData;
-//         })
-//         setIsDataLoading(false);
-//     }
-//     return (
-//         <Drawer title="Search Settings" placement="right" mask={false} visible={previewJob} onClose={() => setPreviewJob(null)} width="40em">
-//             {previewJob ? (
-//                 <Space direction="vertical" size="large">
-//                     <h1>{previewJob.data.description}</h1>
-//                     <Descriptions
-//                         title={<p>ID: {previewJob.data.id}</p>}
-//                         bordered={true}
-//                         size="small"
-//                         column={1}
-//                         style={{
-//                             color: "rgba(0,0,0,0.5)",
-//                         }}
-//                     >
-//                         <Descriptions.Item label="genFile" key="genFile">
-//                             {getDisplayUrlString(previewJob.data.genUrl, true)}
-//                         </Descriptions.Item>
-//                         <Descriptions.Item label="evalFile" key="evalFile">
-//                             {getDisplayUrlString(previewJob.data.evalUrl)}
-//                         </Descriptions.Item>
-//                         {expandedSettings.map((dataKey) => (
-//                             <Descriptions.Item label={dataKey} key={dataKey}>
-//                                 {previewJob.data[dataKey]}
-//                             </Descriptions.Item>
-//                         ))}
-//                     </Descriptions>
-//                     <Row>
-//                         <Space direction="horizontal" size="middle">
-//                             <JobStatus />
-//                             {previewJob.data.jobStatus === "inprogress" ? <CancelJob /> : null}
-//                         </Space>
-//                     </Row>
-//                     <Row>
-//                         <Space direction="horizontal" size="large">
-//                             <Button type="primary">
-//                                 <Link to={`/jobs/search-results#${QueryString.stringify({ id: previewJob.data.id })}`}>View Results</Link>
-//                             </Button>
-//                             <Button type="default" onClick={() => deleteJobAndParams(previewJob.data.id, userID)}>
-//                                 Delete Job
-//                             </Button>
-//                         </Space>
-//                     </Row>
-//                 </Space>
-//             ) : null}
-//         </Drawer>
-//     );
-// }
 
 function Explorations() {
     const { cognitoPayload } = useContext(AuthContext);

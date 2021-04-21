@@ -13,7 +13,7 @@ export const createJob = /* GraphQL */ `
       genUrl
       expiration
       description
-      maxDesigns
+      max_designs
       population_size
       tournament_size
       survival_size
@@ -22,6 +22,7 @@ export const createJob = /* GraphQL */ `
       run
       jobStatus
       owner
+      errorMessage
       updatedAt
     }
   }
@@ -38,7 +39,7 @@ export const updateJob = /* GraphQL */ `
       genUrl
       expiration
       description
-      maxDesigns
+      max_designs
       population_size
       tournament_size
       survival_size
@@ -47,6 +48,7 @@ export const updateJob = /* GraphQL */ `
       run
       jobStatus
       owner
+      errorMessage
       updatedAt
     }
   }
@@ -63,7 +65,7 @@ export const deleteJob = /* GraphQL */ `
       genUrl
       expiration
       description
-      maxDesigns
+      max_designs
       population_size
       tournament_size
       survival_size
@@ -72,6 +74,7 @@ export const deleteJob = /* GraphQL */ `
       run
       jobStatus
       owner
+      errorMessage
       updatedAt
     }
   }
@@ -94,6 +97,7 @@ export const createGenEvalParam = /* GraphQL */ `
       score
       owner
       expirationTime
+      errorMessage
       createdAt
       updatedAt
     }
@@ -117,6 +121,7 @@ export const updateGenEvalParam = /* GraphQL */ `
       score
       owner
       expirationTime
+      errorMessage
       createdAt
       updatedAt
     }
@@ -140,6 +145,7 @@ export const deleteGenEvalParam = /* GraphQL */ `
       score
       owner
       expirationTime
+      errorMessage
       createdAt
       updatedAt
     }

@@ -14,6 +14,12 @@
     "categories": {
       "auth": {
         "mobiusevoe7b26413": {}
+      },
+      "function": {
+        "cognitoNewUser": {
+          "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
+          "s3Key": "amplify-builds/cognitoNewUser-52586461626f39445436-build.zip"
+        }
       }
     }
   }

@@ -5,7 +5,7 @@ type Job @model @auth(rules: [{ allow: owner }]) {
     genUrl: [String!]
     expiration: Int
     description: String
-    maxDesigns: Int
+    max_designs: Int
     population_size: Int
     tournament_size: Int
     survival_size: Int
@@ -14,6 +14,7 @@ type Job @model @auth(rules: [{ allow: owner }]) {
     run: Boolean
     jobStatus: JobStatus
     owner: String
+    errorMessage: String
     updatedAt: AWSDateTime
 }
 
@@ -39,4 +40,5 @@ type GenEvalParam @model @auth(rules: [{ allow: owner }]) @key(name: "byJobID", 
     score: Float
     owner: String
     expirationTime: Float
+    errorMessage: String
 }

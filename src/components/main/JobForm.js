@@ -11,7 +11,7 @@ import { Link } from "react-router-dom";
 import { Form, Input, InputNumber, Button, Steps, Table, Radio, Checkbox, Upload, message, Tag, Space, Spin, Row, Descriptions, Divider } from "antd";
 const testDefault = {
     description: `new test`,
-    maxDesigns: 12,
+    max_designs: 12,
     population_size: 3,
     tournament_size: 3,
     survival_size: 2,
@@ -27,7 +27,8 @@ function SettingsForm({ formValuesState }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [genFile, setGenFile] = useState([]);
     const [evalFile, setEvalFile] = useState(null);
-    const [s3Files, setS3Files] = useState([]);
+    const [genFiles, setGenFiles] = useState([]);
+    const [evalFiles, setEvalFiles] = useState([]);
     const [uploadedFiles, setUploadedFiles] = useState([]);
     const [isTableLoading, setIsTableLoading] = useState(true);
     const [genElements, setGenElements] = useState([]);
@@ -147,17 +148,13 @@ function SettingsForm({ formValuesState }) {
                             () => {}
                         );
                         setFormValues(formValues);
-                        // const genIndex = genFile.indexOf(event.target.value);
-                        // if (genIndex !== -1) {
-                        //     genFile.splice(genIndex, 1);
-                        //     setGenFile([...genFile]);
-                        // }
                     }}
                 ></Radio>
             ),
         },
     ];
     const listS3files = () => {
+        setIsTableLoading(true);
         const uploadedSet = new Set(uploadedFiles);
         let isSubscribed = true; // prevents memory leak on unmount
         const prepS3files = (files) => {
@@ -171,8 +168,9 @@ function SettingsForm({ formValuesState }) {
                         tag: uploadedSet.has(key.split("/").pop()) ? "new" : null,
                     };
                 });
-                fileList.sort((a, b) => b.lastModified - a.lastModified); // Default descending order
-                setS3Files([...fileList]);
+                fileList.sort((a, b) => b.lastModified - a.lastModified);
+                setGenFiles(fileList.filter((record) => record.fileType === "gen"));
+                setEvalFiles(fileList.filter((record) => record.fileType === "eval"));
                 setIsTableLoading(false);
             }
         }; // changes state if still subscribed
@@ -203,10 +201,7 @@ function SettingsForm({ formValuesState }) {
         );
     }
 
-    const genFiles = s3Files.filter((record) => record.fileType === "gen");
-    const evalFiles = s3Files.filter((record) => record.fileType === "eval");
-
-    const handleTableChange = (pagination, filters, sorter) => {
+    const handleGenTableChange = (pagination, filters, sorter) => {
         const compareAscend = (a, b) => {
             if (a < b) {
                 return -1;
@@ -226,13 +221,42 @@ function SettingsForm({ formValuesState }) {
             }
         };
         const [field, order] = [sorter.field, sorter.order];
-        const _s3Files = [...s3Files];
+        const _genFiles = [...genFiles];
         if (order === "ascend") {
-            _s3Files.sort((a, b) => compareAscend(a[field], b[field]));
+            _genFiles.sort((a, b) => compareAscend(a[field], b[field]));
         } else {
-            _s3Files.sort((a, b) => compareDescend(a[field], b[field]));
+            _genFiles.sort((a, b) => compareDescend(a[field], b[field]));
         }
-        setS3Files(_s3Files);
+        setGenFiles(_genFiles);
+    };
+
+    const handleEvalTableChange = (pagination, filters, sorter) => {
+        const compareAscend = (a, b) => {
+            if (a < b) {
+                return -1;
+            } else if (a > b) {
+                return 1;
+            } else {
+                return 0;
+            }
+        };
+        const compareDescend = (a, b) => {
+            if (a > b) {
+                return -1;
+            } else if (a < b) {
+                return 1;
+            } else {
+                return 0;
+            }
+        };
+        const [field, order] = [sorter.field, sorter.order];
+        const _evalFiles = [...evalFiles];
+        if (order === "ascend") {
+            _evalFiles.sort((a, b) => compareAscend(a[field], b[field]));
+        } else {
+            _evalFiles.sort((a, b) => compareDescend(a[field], b[field]));
+        }
+        setEvalFiles(_evalFiles);
     };
 
     async function initParams(jobID, jobSettings) {
@@ -293,6 +317,7 @@ function SettingsForm({ formValuesState }) {
                     params: null,
                     score: null,
                     expirationTime: null,
+                    errorMessage: ''
                 };
                 startingGenID++;
                 const itemParams = {};
@@ -338,10 +363,11 @@ function SettingsForm({ formValuesState }) {
                     genUrl: Object.values(jobSettings.genUrl),
                     expiration: jobSettings.expiration,
                     description: jobSettings.description,
-                    maxDesigns: jobSettings.maxDesigns,
+                    max_designs: jobSettings.max_designs,
                     population_size: jobSettings.population_size,
                     tournament_size: jobSettings.tournament_size,
                     survival_size: jobSettings.survival_size,
+                    errorMessage: ''
                 },
             })
         ).then(() => {
@@ -351,14 +377,14 @@ function SettingsForm({ formValuesState }) {
     }
     //   const formInitialValues = {
     //     description: `New Job`,
-    //     maxDesigns: 80,
+    //     max_designs: 80,
     //     population_size: 20,
     //     tournament_size: 5,
     //     survival_size: 2,
     //     expiration: 86400,
     //     genFile_random_generated: 40,
     //     genFile_total_items: 40,
-    //   //   maxDesigns: 10,
+    //   //   max_designs: 10,
     //   //   population_size: 2,
     //   //   tournament_size: 2,
     //   //   survival_size: 1,
@@ -438,7 +464,7 @@ function SettingsForm({ formValuesState }) {
                 <Form.Item label="Description" name="description">
                     <Input />
                 </Form.Item>
-                <Form.Item label="Number of Designs" name="maxDesigns" rules={[{ required: true }]}>
+                <Form.Item label="Number of Designs" name="max_designs" rules={[{ required: true }]}>
                     <InputNumber min={1} />
                 </Form.Item>
                 <Form.Item label="Population Size" name="population_size">
@@ -459,7 +485,7 @@ function SettingsForm({ formValuesState }) {
                     dataSource={genFiles}
                     columns={genColumns}
                     loading={isTableLoading}
-                    onChange={handleTableChange}
+                    onChange={handleGenTableChange}
                     showSorterTooltip={false}
                     pagination={{
                         total: genFiles.length,
@@ -468,12 +494,13 @@ function SettingsForm({ formValuesState }) {
                         showTotal: (total) => `${total} files`,
                     }}
                 ></Table>
+                <Divider />
                 <FileUpload uploadType={"Eval"} />
                 <Table
                     dataSource={evalFiles}
                     columns={evalColumns}
                     loading={isTableLoading}
-                    onChange={handleTableChange}
+                    onChange={handleEvalTableChange}
                     showSorterTooltip={false}
                     pagination={{
                         total: evalFiles.length,
