@@ -8,6 +8,7 @@ import { listJobs, generationsByJobId } from "../../graphql/queries";
 import { updateJob, deleteGenEvalParam, deleteJob } from "../../graphql/mutations";
 import { deleteS3 } from "../../amplify-apis/userFiles";
 import { AuthContext } from "../../Contexts";
+import Help from './utils/Help';
 import "./Explorations.css";
 
 function JobTable({ isDataLoadingState, jobDataState }) {
@@ -23,6 +24,7 @@ function JobTable({ isDataLoadingState, jobDataState }) {
             title: "Description",
             dataIndex: "description",
             key: "description",
+            fixed: "left",
             render: (text, record) => 
             <button className='text-btn' onClick={() => handleRowClick(record)}>{text}</button>
         },
@@ -38,6 +40,7 @@ function JobTable({ isDataLoadingState, jobDataState }) {
             title: "Status",
             dataIndex: "jobStatus",
             key: "status",
+            fixed: "left",
             ...sortProps,
             render: (text) => {
                 switch (text) {
@@ -57,7 +60,7 @@ function JobTable({ isDataLoadingState, jobDataState }) {
             dataIndex: "genUrl",
             key: "genFile",
             ...sortProps,
-            render: (urls) => {console.log(urls); return urls.map(text => text.split("/").pop()).join(', ')},
+            render: (urls) => urls.map(text => text.split("/").pop()).join(', '),
         },
         {
             title: "Eval File",
@@ -76,6 +79,7 @@ function JobTable({ isDataLoadingState, jobDataState }) {
             title: "Action",
             dataIndex: "action",
             key: "action",
+            fixed: "right",
             render: (text, record) => 
             <button className='text-btn' onClick={() => deleteJobAndParams(record.id, record.owner)}>delete</button>
             ,
@@ -181,9 +185,12 @@ function JobTable({ isDataLoadingState, jobDataState }) {
         window.location.href = `/jobs/search-results#${QueryString.stringify({ id: rowData.id })}`;
     }
     return ( <>
-        <Button type="primary">
-            <Link to={`/new-job`}>Create New Job</Link>
-        </Button>
+        <Space direction="horizontal" size="small" align='center'>
+            <Button type="primary">
+                <Link to={`/new-job`}>Create New Job</Link>
+            </Button>
+            <Help page='jobs_page' part='main'></Help>
+        </Space>
         <Table
             loading={isDataLoading}
             dataSource={jobData}
@@ -200,6 +207,7 @@ function JobTable({ isDataLoadingState, jobDataState }) {
                 showQuickJumper: true,
                 showTotal: (total) => `${total} files`,
             }}
+            scroll={{ x: 1500 }} sticky
         />
     </>);
 }
@@ -221,7 +229,6 @@ function Explorations() {
         )
             .then((queriedResults) => {
                 const jobList = queriedResults.data.listJobs.items;
-                console.log(jobList)
                 setjobData(jobList.map((data, index) => {
                         return {
                             key: index + 1,

@@ -1,7 +1,24 @@
-.textArea{
-    width: 600px;
-    height: 600px;
+.textArea {
+    width: 50vw;
+    /* height: 200px !important; */
 }
 .hiddenElement {
     display: none;
+}
+.error-row > td {
+    background-color: #fff1f0 !important;
+}
+.error-row:hover > td {
+    background-color: #ffccc7 !important;
+}
+.ant-alert {
+    max-height: 200px;
+    overflow-y: scroll;
+}
+.ant-alert::-webkit-scrollbar-track {
+    background: #fff1f0; /* color of the tracking area */
+}
+.ant-alert::-webkit-scrollbar-thumb {
+    background-color: #ffccc7; /* color of the scroll thumb */
+    border: 2px solid #fff1f0; /* creates padding around scroll thumb */
 }

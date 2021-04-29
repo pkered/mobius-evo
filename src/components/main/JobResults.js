@@ -4,19 +4,19 @@ import { generationsByJobId, getJob } from "../../graphql/queries";
 import { updateJob } from "../../graphql/mutations";
 import * as QueryString from "query-string";
 import { Link } from "react-router-dom";
-import { Row, Space, Button, Spin, Form, Col, Divider, Input, Checkbox, Table, Popconfirm, Tabs, Descriptions, Collapse } from "antd";
+import { Row, Space, Button, Spin, Form, Col, Divider, Input, Checkbox, Table, Popconfirm, Tabs, Descriptions, Collapse, Alert } from "antd";
 import { Column } from "@ant-design/charts";
 import { AuthContext } from "../../Contexts";
 import Iframe from "react-iframe";
 import { ReactComponent as Download } from "../../assets/download.svg";
 import { ReactComponent as View } from "../../assets/view.svg";
 import { ResumeForm } from "./JobResults_resume.js";
+import Help from "./utils/Help";
 
 import "./JobResults.css";
 
 const S3_MODEL_URL = "https://mobius-evo-userfiles131353-dev.s3.amazonaws.com/public/";
 const { TabPane } = Tabs;
-const { Panel } = Collapse;
 
 function paramsRegex(params) {
     return JSON.parse(params);
@@ -34,6 +34,32 @@ function paramsRegex(params) {
     // const ret = {};
     // result.forEach((match) => (ret[match[1]] = match[2]));
     // return ret;
+}
+function printJSONString(jsonString) {
+    if (!jsonString) {
+        return "";
+    }
+    try {
+        const formattedString = JSON.stringify(JSON.parse(jsonString), null, 4);
+        return formattedString.slice(1, -1);
+    } catch (ex) {
+        console.log("~~~~~~~~~~~~ JSON parsing error...", ex);
+        return jsonString;
+    }
+}
+function assembleModelText(data) {
+    return (
+        "ID: " +
+        data.id +
+        "\n\n" +
+        "Parameters: " +
+        printJSONString(data.params) +
+        "\n" +
+        "Evaluation Result: " +
+        printJSONString(data.evalResult) +
+        "\n" +
+        ""
+    );
 }
 async function getData(jobID, userID, setJobSettings, setJobResults, setIsLoading, callback, nextToken = null) {
     await API.graphql(
@@ -96,16 +122,11 @@ function viewModel(url, contextURLs = null) {
     let urls = [url];
     if (contextURLs && Array.isArray(contextURLs)) {
         for (const contextUrl of contextURLs) {
-            if (contextUrl && contextUrl!=='') {
+            if (contextUrl && contextUrl !== "") {
                 urls.push(contextUrl);
             }
         }
     }
-    console.log("urls:", urls, contextURLs);
-    console.log('xxxxx\n',JSON.stringify({
-        messageType: "update",
-        url: urls,
-    }))
     iframe.postMessage(
         {
             messageType: "update",
@@ -224,73 +245,72 @@ function FilterForm({ modelParamsState, jobResultsState, filteredJobResultsState
     //     }
     //   }
     // },[isLoading, isFiltering])
-    useEffect(() => form.resetFields(), [form, initialValues]);
+    // useEffect(() => {
+    //     console.log('reset field')
+    //     form.resetFields()
+    // }, [form, initialValues]);
 
     return !isLoading ? (
-        <Collapse>
-            <Panel header="Filter Form" key="1">
-                <Form form={form} onFinish={handleFinish} initialValues={initialValues}>
-                    <Space direction="vertical" size="large" style={{ width: "100%" }}>
-                        <Row>
-                            <Space
-                                size="large"
-                                style={{
-                                    width: "100%",
-                                    justifyContent: "flex-start",
-                                    height: "100%",
-                                    alignItems: "normal",
-                                }}
-                            >
-                                <Col>
-                                    <h3>parameters</h3>
-                                    {modelParams.map((param) => {
-                                        return (
-                                            <Row key={`${param}-group`}>
-                                                <Space>
-                                                    <Form.Item name={`${param}-min`} label={param}>
-                                                        <Input prefix="min" />
-                                                    </Form.Item>
-                                                    <Form.Item name={`${param}-max`}>
-                                                        <Input prefix="max" />
-                                                    </Form.Item>
-                                                </Space>
-                                            </Row>
-                                        );
-                                    })}
-                                </Col>
-                                <Divider type="vertical" />
-                                <Col>
-                                    <h3>score</h3>
-                                    <Space>
-                                        <Form.Item name={`score-min`} key={`score-min`}>
-                                            <Input prefix="min" />
-                                        </Form.Item>
-                                        <Form.Item name={`score-max`} key={`score-max`}>
-                                            <Input prefix="max" />
-                                        </Form.Item>
-                                    </Space>
-                                    <Form.Item name="show-group" label="Show">
-                                        <Checkbox.Group>
-                                            <Checkbox value="live">live</Checkbox>
-                                            <Checkbox value="dead">dead</Checkbox>
-                                        </Checkbox.Group>
-                                    </Form.Item>
-                                </Col>
+        <Form form={form} onFinish={handleFinish} initialValues={initialValues}>
+            <Space direction="vertical" size="large" style={{ width: "100%" }}>
+                <Row>
+                    <Space
+                        size="large"
+                        style={{
+                            width: "100%",
+                            justifyContent: "flex-start",
+                            height: "100%",
+                            alignItems: "normal",
+                        }}
+                    >
+                        <Col>
+                            <h3>parameters</h3>
+                            {modelParams.map((param) => {
+                                return (
+                                    <Row key={`${param}-group`}>
+                                        <Space>
+                                            <Form.Item name={`${param}-min`} label={param}>
+                                                <Input prefix="min" />
+                                            </Form.Item>
+                                            <Form.Item name={`${param}-max`}>
+                                                <Input prefix="max" />
+                                            </Form.Item>
+                                        </Space>
+                                    </Row>
+                                );
+                            })}
+                        </Col>
+                        <Divider type="vertical" />
+                        <Col>
+                            <h3>score</h3>
+                            <Space>
+                                <Form.Item name={`score-min`} key={`score-min`}>
+                                    <Input prefix="min" />
+                                </Form.Item>
+                                <Form.Item name={`score-max`} key={`score-max`}>
+                                    <Input prefix="max" />
+                                </Form.Item>
                             </Space>
-                        </Row>
-                        <Row style={{ justifyContent: "center" }}>
-                            <Button type="primary" htmlType="submit" disabled={isFiltering}>
-                                Filter
-                            </Button>
-                        </Row>
+                            <Form.Item name="show-group" label="Show">
+                                <Checkbox.Group>
+                                    <Checkbox value="live">live</Checkbox>
+                                    <Checkbox value="dead">dead</Checkbox>
+                                </Checkbox.Group>
+                            </Form.Item>
+                        </Col>
                     </Space>
-                </Form>
-            </Panel>
-        </Collapse>
+                </Row>
+                <Row style={{ justifyContent: "center" }}>
+                    <Button type="primary" htmlType="submit" disabled={isFiltering}>
+                        Filter
+                    </Button>
+                </Row>
+            </Space>
+        </Form>
     ) : null;
 }
 
-function ScorePlot({ jobResults, contextUrl, setModelText }) {
+function ScorePlot({ jobResults, setModelText }) {
     const plotData = JSON.parse(JSON.stringify(jobResults));
 
     plotData.forEach((result) => (result.genFile = result.genUrl.split("/").pop() + " - " + (result.live ? "live" : "dead")));
@@ -317,11 +337,24 @@ function ScorePlot({ jobResults, contextUrl, setModelText }) {
         <Column
             {...config}
             onReady={(plot) => {
-                plot.on("element:click", (arg) => {
-                    const data = arg.data.data;
-                    document.getElementById('hiddenInput').value = S3_MODEL_URL + data.owner + "/" + data.JobID + "/" + data.id + "_eval.gi";
-                    document.getElementById('hiddenButton').click();
-                    setModelText(data.evalResult);
+                // plot.on("element:click", (arg) => {
+                //     const data = arg.data.data;
+                //     document.getElementById("hiddenInput").value = S3_MODEL_URL + data.owner + "/" + data.JobID + "/" + data.id + "_eval.gi";
+                //     document.getElementById("hiddenButton").click();
+                //     const modelText = assembleModelText(data);
+                //     setModelText(modelText);
+                // });
+                plot.on("plot:click", (evt) => {
+                    const { x, y } = evt;
+                    const tooltipData = plot.chart.getTooltipItems({ x, y });
+                    if (tooltipData.length === 0) {
+                        return;
+                    }
+                    const data = tooltipData[0].data;
+                    document.getElementById("hiddenInput").value = S3_MODEL_URL + data.owner + "/" + data.JobID + "/" + data.id + "_eval.gi";
+                    document.getElementById("hiddenButton").click();
+                    const modelText = assembleModelText(data);
+                    setModelText(modelText);
                 });
             }}
         />
@@ -335,17 +368,21 @@ function ResultTable({ jobResults, contextUrl, setModelText }) {
             dataIndex: "genID",
             key: "genID",
             defaultSortOrder: "ascend",
+            width: 50,
+            fixed: "left",
             sorter: (a, b) => a.genID - b.genID,
-        },
-        {
-            title: "Gen File",
-            dataIndex: "genFile",
-            key: "genFile",
         },
         {
             title: "Parameters",
             dataIndex: "params",
             key: "params",
+            width: 300,
+            fixed: "left",
+        },
+        {
+            title: "Gen File",
+            dataIndex: "genFile",
+            key: "genFile",
         },
         {
             title: "Generation",
@@ -369,6 +406,8 @@ function ResultTable({ jobResults, contextUrl, setModelText }) {
             title: "Model",
             dataIndex: "genModel",
             key: "genModel",
+            width: 60,
+            fixed: "right",
             render: (modelData) => (
                 <div>
                     {/* <a href={modelData.model} target='_blank' download>
@@ -377,7 +416,7 @@ function ResultTable({ jobResults, contextUrl, setModelText }) {
                     <br></br> */}
                     <View
                         onClick={() => {
-                            console.log(modelData);
+                            document.getElementById("hiddenInput").value = modelData.model;
                             viewModel(modelData.model, [contextUrl]);
                             setModelText(modelData.resultText);
                             // setModelText(JSON.stringify(JSON.parse(modelData.resultText), null, 4))
@@ -390,11 +429,13 @@ function ResultTable({ jobResults, contextUrl, setModelText }) {
             title: "Eval",
             dataIndex: "evalModel",
             key: "evalModel",
+            width: 60,
+            fixed: "right",
             render: (modelData) => (
                 <div>
                     <View
                         onClick={async () => {
-                            console.log(modelData);
+                            document.getElementById("hiddenInput").value = modelData.model;
                             viewModel(modelData.model, [contextUrl]);
                             setModelText(modelData.resultText);
                         }}
@@ -403,6 +444,7 @@ function ResultTable({ jobResults, contextUrl, setModelText }) {
             ),
         },
     ];
+    const errorRows = [];
     const tableData = jobResults.map((entry) => {
         let paramsString = "";
         if (entry.params) {
@@ -418,23 +460,76 @@ function ResultTable({ jobResults, contextUrl, setModelText }) {
             generation: entry.generation,
             params: paramsString,
             score: entry.score,
+            rowClass: entry.errorMessage ? "error-row" : "default-row",
             genModel: {
                 model: S3_MODEL_URL + entry.owner + "/" + entry.JobID + "/" + entry.id + ".gi",
-                resultText: entry.evalResult,
+                resultText: assembleModelText(entry),
             },
             evalModel: {
                 model: S3_MODEL_URL + entry.owner + "/" + entry.JobID + "/" + entry.id + "_eval.gi",
-                resultText: entry.evalResult,
+                resultText: assembleModelText(entry),
             },
         };
+        if (entry.errorMessage) {
+            errorRows.push(entry.GenID);
+        }
         return tableEntry;
     });
     return (
-        <Collapse>
-            <Panel header="Result Table" key="1">
-                <Table style={{ whiteSpace: "pre" }} dataSource={tableData} columns={columns} rowKey="genID" size="small" />
-            </Panel>
-        </Collapse>
+        <Table
+            style={{ whiteSpace: "pre" }}
+            dataSource={tableData}
+            columns={columns}
+            rowKey="genID"
+            rowClassName={(record, index) => record.rowClass}
+            size="small"
+            scroll={{ x: 1000 }}
+            sticky
+        />
+    );
+}
+
+function ErrorList({ jobSettings, jobResults }) {
+    const [alertOpened, setAlertOpened] = useState(true);
+    const toggleAlert = () => setAlertOpened((currentState) => !currentState);
+    if (!alertOpened) {
+        return (
+            <Alert
+                message="ERRORS"
+                type="error"
+                description="..."
+                action={
+                    <Button size="small" type="text" onClick={toggleAlert} danger>
+                        Show More
+                    </Button>
+                }
+            />
+        );
+    }
+    let errors = [];
+    if (jobSettings.jobStatus !== "cancelled") {
+        return <></>;
+    }
+    let count = 0;
+    jobResults.forEach((result) => {
+        if (result.errorMessage) {
+            const errStr = "id-" + result.GenID + ": " + result.errorMessage;
+            errors.push(errStr);
+            errors.push(<br key={count.toString()} />);
+            count += 1;
+        }
+    });
+    return (
+        <Alert
+            message="ERRORS"
+            type="error"
+            description={<code>{errors}</code>}
+            action={
+                <Button size="small" type="text" onClick={toggleAlert} danger>
+                    Collapse
+                </Button>
+            }
+        />
     );
 }
 
@@ -448,6 +543,7 @@ function JobResults() {
     const { cognitoPayload } = useContext(AuthContext);
     const [modelText, setModelText] = useState("");
     const [contextUrl, setContextUrl] = useState("");
+    const [selectedJobResult, setSelectedJobResult] = useState(null);
     useEffect(() => {
         const jobID = QueryString.parse(window.location.hash).id;
         setJobID(jobID);
@@ -486,7 +582,7 @@ function JobResults() {
         urlString = data.split("/").pop();
         return urlString;
     }
-
+    const genExtra = (part) => <Help page="result_page" part={part}></Help>;
     const genTableColumns = [
         {
             title: "Gen File",
@@ -529,85 +625,112 @@ function JobResults() {
             </Row>
             {jobSettings ? (
                 <>
-                    <Row>
+                    <Space direction="horizontal" size="large" align="baseline">
                         <h1>{jobSettings.description}</h1>
-                    </Row>
-                    <Tabs defaultActiveKey="1">
+                        <Help page="result_page" part="main"></Help>
+                    </Space>
+                    <Tabs defaultActiveKey="1" size="large">
                         <TabPane tab="Results" key="1">
                             <Spin spinning={isLoading}>
                                 {!isLoading ? (
                                     <Space direction="vertical" size="large" style={{ width: "100%" }}>
-                                        <FilterForm
-                                            modelParamsState={{ modelParams, setModelParams }}
-                                            jobResultsState={{ jobResults, setJobResults }}
-                                            filteredJobResultsState={{ filteredJobResults, setFilteredJobResults }}
-                                            setIsLoadingState={{ isLoading, setIsLoading }}
-                                        />
-                                        <ScorePlot
-                                            jobResults={filteredJobResults ? filteredJobResults : jobResults}
-                                            contextUrl={contextUrl}
-                                            setModelText={setModelText}
-                                        />
-                                        <Space direction="horizontal" size="large" align="start">
-                                            <Input id='contextUrlInput' defaultValue={contextUrl}></Input>
-                                            <Button
-                                                onClick={() => {
-                                                    const val = document.getElementById('contextUrlInput').value;
-                                                    setContextUrl(val);
-                                                }}
-                                            >
-                                                apply
-                                            </Button>
-                                            <Input id='hiddenInput' className='hiddenElement'></Input>
-                                            <Button id='hiddenButton' className='hiddenElement'
-                                                onClick={() => {
-                                                    const val = document.getElementById('hiddenInput').value;
-                                                    viewModel(val, [contextUrl])
-                                                }}
-                                            >
-                                                apply
-                                            </Button>
-
-                                        </Space>
-                                        <Iframe
-                                            url="https://design-automation.github.io/mobius-viewer-dev-0-7/"
-                                            width="100%"
-                                            height="600px"
-                                            id="mobius_viewer"
-                                        />
-                                        <Input.TextArea className="textArea" value={modelText}></Input.TextArea>
-                                        <ResultTable
-                                            jobResults={filteredJobResults ? filteredJobResults : jobResults}
-                                            contextUrl={contextUrl}
-                                            setModelText={setModelText}
-                                        />
+                                        <ErrorList jobResults={jobResults} jobSettings={jobSettings}></ErrorList>
+                                        <Collapse defaultActiveKey={["2", "3"]}>
+                                            <Collapse.Panel header="Filter Form" key="1" extra={genExtra("result_filter_form")}>
+                                                <FilterForm
+                                                    modelParamsState={{ modelParams, setModelParams }}
+                                                    jobResultsState={{ jobResults, setJobResults }}
+                                                    filteredJobResultsState={{ filteredJobResults, setFilteredJobResults }}
+                                                    setIsLoadingState={{ isLoading, setIsLoading }}
+                                                />
+                                            </Collapse.Panel>
+                                            <Collapse.Panel header="Score Plot" key="2" extra={genExtra("result_score_plot")}>
+                                                <ScorePlot
+                                                    jobResults={filteredJobResults ? filteredJobResults : jobResults}
+                                                    setModelText={setModelText}
+                                                />
+                                            </Collapse.Panel>
+                                            <Collapse.Panel header="Mobius Viewer" key="3" extra={genExtra("result_mobius_viewer")}>
+                                                <Iframe
+                                                    url="https://design-automation.github.io/mobius-viewer-dev-0-7/"
+                                                    width="100%"
+                                                    height="600px"
+                                                    id="mobius_viewer"
+                                                />
+                                                <br></br>
+                                                <Space direction="horizontal" size="large" style={{ width: "100%" }} align="start">
+                                                    <Input.TextArea className="textArea" value={modelText} autoSize={true}></Input.TextArea>
+                                                    <Space direction="vertical">
+                                                        <Space direction="horizontal">
+                                                            Context Url
+                                                            <Input id="contextUrlInput" defaultValue={contextUrl}></Input>
+                                                            <Button
+                                                                onClick={() => {
+                                                                    const val = document.getElementById("contextUrlInput").value;
+                                                                    setContextUrl(val);
+                                                                }}
+                                                            >
+                                                                apply
+                                                            </Button>
+                                                            <Input id="hiddenInput" className="hiddenElement"></Input>
+                                                            <Button
+                                                                id="hiddenButton"
+                                                                className="hiddenElement"
+                                                                onClick={() => {
+                                                                    const val = document.getElementById("hiddenInput").value;
+                                                                    viewModel(val, [contextUrl]);
+                                                                }}
+                                                            >
+                                                                apply
+                                                            </Button>
+                                                        </Space>
+                                                        <Button>Download Gen</Button>
+                                                        <Button>Download Eval</Button>
+                                                        <Button>Open Viewer In New Browser</Button>
+                                                    </Space>
+                                                </Space>
+                                            </Collapse.Panel>
+                                            <Collapse.Panel header="Result Table" key="4" extra={genExtra("result_result_table")}>
+                                                <ResultTable
+                                                    jobResults={filteredJobResults ? filteredJobResults : jobResults}
+                                                    contextUrl={contextUrl}
+                                                    setModelText={setModelText}
+                                                />
+                                            </Collapse.Panel>
+                                        </Collapse>
                                     </Space>
                                 ) : null}
                             </Spin>
                         </TabPane>
                         <TabPane tab="Settings" key="2">
                             <Space direction="vertical" size="large" style={{ width: "100%" }}>
-                                <Descriptions
-                                    bordered={true}
-                                    size="small"
-                                    column={1}
-                                    style={{
-                                        color: "rgba(0,0,0,0.5)",
-                                    }}
-                                >
-                                    <Descriptions.Item label="genFile" key="genFile">
-                                        {getDisplayUrlString(jobSettings.genUrl, true)}
-                                    </Descriptions.Item>
-                                    <Descriptions.Item label="evalFile" key="evalFile">
-                                        {getDisplayUrlString(jobSettings.evalUrl)}
-                                    </Descriptions.Item>
-                                    {expandedSettings.map((dataKey) => (
-                                        <Descriptions.Item label={dataKey} key={dataKey}>
-                                            {jobSettings[dataKey]}
-                                        </Descriptions.Item>
-                                    ))}
-                                </Descriptions>
-                                <Table dataSource={genTableData} columns={genTableColumns} rowKey="genUrl"></Table>
+                                <Collapse defaultActiveKey={["1", "2"]}>
+                                    <Collapse.Panel header="Job Settings" key="1" extra={genExtra("settings_job_settings")}>
+                                        <Descriptions
+                                            bordered={true}
+                                            size="small"
+                                            column={1}
+                                            style={{
+                                                color: "rgba(0,0,0,0.5)",
+                                            }}
+                                        >
+                                            <Descriptions.Item label="genFile" key="genFile">
+                                                {getDisplayUrlString(jobSettings.genUrl, true)}
+                                            </Descriptions.Item>
+                                            <Descriptions.Item label="evalFile" key="evalFile">
+                                                {getDisplayUrlString(jobSettings.evalUrl)}
+                                            </Descriptions.Item>
+                                            {expandedSettings.map((dataKey) => (
+                                                <Descriptions.Item label={dataKey} key={dataKey}>
+                                                    {jobSettings[dataKey]}
+                                                </Descriptions.Item>
+                                            ))}
+                                        </Descriptions>
+                                    </Collapse.Panel>
+                                    <Collapse.Panel header="Gen Details" key="2" extra={genExtra("settings_gen_details")}>
+                                        <Table dataSource={genTableData} columns={genTableColumns} rowKey="genUrl"></Table>
+                                    </Collapse.Panel>
+                                </Collapse>
                             </Space>
                         </TabPane>
                         <TabPane tab="Resume" key="3">

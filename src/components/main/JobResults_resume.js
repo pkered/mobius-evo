@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Form, Space, Button, Radio, InputNumber, Upload, message, Tag, Table, Modal, Row, Divider } from "antd";
+import { Form, Space, Button, Radio, InputNumber, Upload, message, Tag, Table, Modal, Row, Collapse, Tooltip } from "antd";
 import { uploadS3, listS3, getS3Url, downloadS3 } from "../../amplify-apis/userFiles";
 import { UploadOutlined } from "@ant-design/icons";
 import { API, graphqlOperation } from "aws-amplify";
 import { createGenEvalParam, updateGenEvalParam, updateJob } from "../../graphql/mutations";
 import "./JobResults_resume.css";
+import Help from "./utils/Help";
+import helpJSON from "../../assets/help/help_text_json";
 
 function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsState, replacedUrl, replaceEvalCheck }) {
     const [s3Files, setS3Files] = useState([]);
@@ -53,9 +55,6 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
         const allPromises = [];
         if (okCheck) {
             setJobSettings(jobSettings);
-            console.log("replacedUrl", replacedUrl);
-            console.log("newUrl", newUrl);
-            console.log(jobSettings);
             let newID = jobResults.length;
             const newJobs = [];
             jobResults
@@ -89,7 +88,7 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
                         score: null,
                         owner: result.owner,
                         expirationTime: null,
-                        errorMessage: ''
+                        errorMessage: null,
                     };
                     allPromises.push(
                         API.graphql(
@@ -171,7 +170,7 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
                     score: null,
                     owner: result.owner,
                     expirationTime: null,
-                    errorMessage: '',
+                    errorMessage: null,
                 };
                 allPromises.push(
                     API.graphql(
@@ -258,9 +257,9 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
                 const fileList = [];
                 files.forEach(({ key, lastModified }, index) => {
                     const fileUrlSplit = key.split("/");
-                    if (replaceEvalCheck && fileUrlSplit[fileUrlSplit.length - 2] === 'gen') {
+                    if (replaceEvalCheck && fileUrlSplit[fileUrlSplit.length - 2] === "gen") {
                         return;
-                    } else if (!replaceEvalCheck && fileUrlSplit[fileUrlSplit.length - 2] === 'eval') {
+                    } else if (!replaceEvalCheck && fileUrlSplit[fileUrlSplit.length - 2] === "eval") {
                         return;
                     }
                     fileList.push({
@@ -268,7 +267,7 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
                         filename: key.split("/").pop(),
                         lastModified,
                         tag: uploadedSet.has(key.split("/").pop()) ? "new" : null,
-                    })
+                    });
                 });
                 fileList.sort((a, b) => b.lastModified - a.lastModified); // Default descending order
                 setS3Files([...fileList]);
@@ -421,7 +420,7 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
                     params: null,
                     score: null,
                     expirationTime: null,
-                    errorMessage: '',
+                    errorMessage: null,
                 };
                 startingGenID++;
                 const itemParams = {};
@@ -451,8 +450,6 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
     }
 
     async function handleFinish() {
-        console.log("submitting", form.getFieldsValue());
-        console.log("jobs settings", jobSettings);
         const newJobSettings = { ...form.getFieldsValue() };
         newJobSettings.description = jobSettings.description;
         newJobSettings.genUrl = {};
@@ -462,7 +459,6 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
             return genKey;
         });
         newJobSettings.genKeys.forEach((key) => {
-            console.log("... key:", "genFile_" + key, "val:", newJobSettings["genFile_" + key]);
             newJobSettings["genFile_" + key] -= jobResults.filter(
                 (result) => result.live === true && result.genUrl === newJobSettings.genUrl[key]
             ).length;
@@ -676,9 +672,9 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
             dataIndex: "fileAction",
             key: "fileAction",
             render: () => (
-                    <Button type="text" htmlType="button" onClick={() => showModalEval()}>
-                        replace
-                    </Button>
+                <Button type="text" htmlType="button" onClick={() => showModalEval()}>
+                    replace
+                </Button>
             ),
         },
     ];
@@ -692,6 +688,12 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
             fileAction: jobSettings.evalUrl,
         },
     ];
+    const genExtra = (part) => <Help page="result_page" part={part}></Help>;
+
+    let helpText = {};
+    try {
+        helpText = helpJSON.hover.result_page;
+    } catch (ex) {}
 
     return (
         <>
@@ -702,47 +704,83 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
                 labelCol={{ span: 6 }}
                 wrapperCol={{ span: 16 }}
                 layout="horizontal"
+                labelAlign="left"
                 initialValues={formInitialValues}
             >
-                <h2>Resume Job</h2>
-                <Form.Item label="New Max Designs" name="max_designs">
-                    <InputNumber disabled />
-                </Form.Item>
-                <Form.Item label="Number of New Designs" name="newDesigns">
-                    <InputNumber min={0} onChange={onNewDesignChange} />
-                </Form.Item>
-                <Form.Item label="Population Size" name="population_size">
-                    <InputNumber min={1} onChange={onPopChange} />
-                </Form.Item>
-                <Form.Item label="Tournament Size" name="tournament_size">
-                    <InputNumber min={1} />
-                </Form.Item>
-                <Form.Item label="Survival Size" name="survival_size">
-                    <InputNumber min={1} />
-                </Form.Item>
-                <Divider />
-                <Button htmlType="button" onClick={() => showModalGen(null)}>Add Gen File</Button>
-                <Table dataSource={genTableData} columns={genTableColumns} rowKey="genUrl"></Table>
-                <Button htmlType="button" onClick={() => showModalEval(null)}>Add Eval File</Button>
-                <Table dataSource={evalTableData} columns={evalTableColumns} rowKey="evalUrl"></Table>
-                <Divider />
-                <Form.Item label="Total Starting Items" name="genFile_total_items">
-                    <InputNumber disabled />
-                </Form.Item>
-                {jobSettings.genUrl.map((genUrl) => {
-                    const genFile = genUrl.split("/").pop();
-                    return (
-                        <Form.Item label={genFile} name={"genFile_" + genFile} key={"genFile_" + genFile} initialValue={0}>
-                            <InputNumber min={formInitialValues["genFile_" + genFile]} onChange={onNumChange} />
-                        </Form.Item>
-                    );
-                })}
-                <Form.Item label="Mutate from Existing" name="genFile_mutate">
-                    <InputNumber min={0} onChange={onNumChange} />
-                </Form.Item>
-                <Form.Item label="Random Generated" name="genFile_random_generated">
-                    <InputNumber disabled />
-                </Form.Item>
+                <Collapse defaultActiveKey={["1", "2", "3", "4"]}>
+                    <Collapse.Panel header="New Settings 1" key="1" extra={genExtra("resume_new_settings_1")}>
+                        <Tooltip placement="topLeft" title={helpText.max_designs}>
+                            <Form.Item label="New Max Designs" name="max_designs">
+                                <InputNumber disabled />
+                            </Form.Item>
+                        </Tooltip>
+
+                        <Tooltip placement="topLeft" title={helpText.new_designs}>
+                            <Form.Item label="Number of New Designs" name="newDesigns">
+                                <InputNumber min={0} onChange={onNewDesignChange} />
+                            </Form.Item>
+                        </Tooltip>
+
+                        <Tooltip placement="topLeft" title={helpText.population_size}>
+                            <Form.Item label="Population Size" name="population_size">
+                                <InputNumber min={1} onChange={onPopChange} />
+                            </Form.Item>
+                        </Tooltip>
+
+                        <Tooltip placement="topLeft" title={helpText.tournament_size}>
+                            <Form.Item label="Tournament Size" name="tournament_size">
+                                <InputNumber min={1} />
+                            </Form.Item>
+                        </Tooltip>
+
+                        <Tooltip placement="topLeft" title={helpText.survival_size}>
+                            <Form.Item label="Survival Size" name="survival_size">
+                                <InputNumber min={1} />
+                            </Form.Item>
+                        </Tooltip>
+                    </Collapse.Panel>
+                    <Collapse.Panel header="Gen File Settings" key="2" extra={genExtra("resume_gen_file")}>
+                        <Button htmlType="button" onClick={() => showModalGen(null)}>
+                            Add Gen File
+                        </Button>
+                        <Table dataSource={genTableData} columns={genTableColumns} rowKey="genUrl"></Table>
+                    </Collapse.Panel>
+                    <Collapse.Panel header="Gen File Settings" key="3" extra={genExtra("resume_eval_file")}>
+                        <Button htmlType="button" onClick={() => showModalEval(null)}>
+                            Add Eval File
+                        </Button>
+                        <Table dataSource={evalTableData} columns={evalTableColumns} rowKey="evalUrl"></Table>
+                    </Collapse.Panel>
+                    <Collapse.Panel header="New Settings 2" key="4" extra={genExtra("resume_new_settings_2")}>
+                        <Tooltip placement="topLeft" title={helpText.total_items}>
+                            <Form.Item label="Total Starting Items" name="genFile_total_items">
+                                <InputNumber disabled />
+                            </Form.Item>
+                        </Tooltip>
+
+                        {jobSettings.genUrl.map((genUrl) => {
+                            const genFile = genUrl.split("/").pop();
+                            return (
+                                <Form.Item label={genFile} name={"genFile_" + genFile} key={"genFile_" + genFile} initialValue={0}>
+                                    <InputNumber min={formInitialValues["genFile_" + genFile]} onChange={onNumChange} />
+                                </Form.Item>
+                            );
+                        })}
+
+                        <Tooltip placement="topLeft" title={helpText.mutate}>
+                            <Form.Item label="Mutate from Existing" name="genFile_mutate">
+                                <InputNumber min={0} onChange={onNumChange} />
+                            </Form.Item>
+                        </Tooltip>
+
+                        <Tooltip placement="topLeft" title={helpText.random_generated}>
+                            <Form.Item label="Random Generated" name="genFile_random_generated">
+                                <InputNumber disabled />
+                            </Form.Item>
+                        </Tooltip>
+                    </Collapse.Panel>
+                </Collapse>
+                <br />
                 <Row justify="center">
                     <Button type="primary" htmlType="submit">
                         Resume Job
@@ -750,11 +788,11 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
                 </Row>
             </Form>
             <FileSelectionModal
-                    isModalVisibleState={{ isModalVisible, setIsModalVisible }}
-                    jobSettingsState={{ jobSettings, setJobSettings }}
-                    jobResultsState={{ jobResults, setJobResults }}
-                    replacedUrl={replacedUrl}
-                    replaceEvalCheck={replaceEvalCheck}
+                isModalVisibleState={{ isModalVisible, setIsModalVisible }}
+                jobSettingsState={{ jobSettings, setJobSettings }}
+                jobResultsState={{ jobResults, setJobResults }}
+                replacedUrl={replacedUrl}
+                replaceEvalCheck={replaceEvalCheck}
             />
         </>
     );

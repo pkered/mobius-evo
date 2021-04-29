@@ -5,6 +5,7 @@ import { onAuthUIStateChange } from '@aws-amplify/ui-components';
 import { AuthContext } from '../../Contexts';
 import { AmplifyAuthenticator, AmplifySignIn } from '@aws-amplify/ui-react';
 import { Space } from 'antd';
+import helpJSON from '../../assets/help/help_text_json'
 
 function NotAuthenticated() {
   const setCognitoPayload = useContext(AuthContext).setCognitoPayload;
@@ -72,8 +73,8 @@ function NotAuthenticated() {
 function LandingArticle() {
   return(
     <article id='landing-article'>
-      <h1>Evolutionary Analysis of Mobius Parametric Models</h1>
-      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce id condimentum libero. Integer volutpat pharetra elementum. Quisque vel placerat leo. Morbi consequat leo dictum, feugiat massa in, sagittis tellus. Vestibulum facilisis sollicitudin dolor, quis porttitor ligula bibendum non. Phasellus bibendum sapien et risus sagittis, vitae ultrices odio porttitor. Duis tincidunt accumsan dui, pharetra hendrerit neque vehicula sit amet. Proin id malesuada libero, sed fringilla eros. Donec tristique quam eget eros vestibulum, at fringilla massa porttitor. Etiam gravida arcu sit amet lorem commodo, eget facilisis augue auctor.</p>
+      <h1>{helpJSON.front_page.title}</h1>
+      <p>{helpJSON.front_page.description}</p>
       <Space size="middle">
         <a
           href="https://mobius.design-automation.net/gallery"

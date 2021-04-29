@@ -8,7 +8,10 @@ import { uploadS3, listS3, getS3Url, downloadS3 } from "../../amplify-apis/userF
 import { UploadOutlined } from "@ant-design/icons";
 import { AuthContext } from "../../Contexts";
 import { Link } from "react-router-dom";
-import { Form, Input, InputNumber, Button, Steps, Table, Radio, Checkbox, Upload, message, Tag, Space, Spin, Row, Descriptions, Divider } from "antd";
+import { Form, Input, InputNumber, Button, Tooltip, Table, Radio, Checkbox, Upload, message, Tag, Space, Spin, Row, Collapse } from "antd";
+import Help from "./utils/Help";
+import helpJSON from "../../assets/help/help_text_json";
+
 const testDefault = {
     description: `new test`,
     max_designs: 12,
@@ -97,7 +100,6 @@ function SettingsForm({ formValuesState }) {
                                 () => {}
                             );
                         }
-                        console.log("___", genFile, genElements);
                         setFormValues(formValues);
                         setGenElements(genElements);
                     }}
@@ -317,7 +319,7 @@ function SettingsForm({ formValuesState }) {
                     params: null,
                     score: null,
                     expirationTime: null,
-                    errorMessage: ''
+                    errorMessage: null,
                 };
                 startingGenID++;
                 const itemParams = {};
@@ -367,7 +369,7 @@ function SettingsForm({ formValuesState }) {
                     population_size: jobSettings.population_size,
                     tournament_size: jobSettings.tournament_size,
                     survival_size: jobSettings.survival_size,
-                    errorMessage: ''
+                    errorMessage: null,
                 },
             })
         ).then(() => {
@@ -439,7 +441,11 @@ function SettingsForm({ formValuesState }) {
             form.setFieldsValue(formUpdate);
         }, 0);
     }
-
+    const genExtra = (part) => <Help page="start_new_job_page" part={part}></Help>;
+    let helpText = {};
+    try {
+        helpText = helpJSON.hover.start_new_job_page;
+    } catch (ex) {}
     // if (formValues.genKeys) {
     //     formValues.genKeys.forEach((genFile) => {
     //         formInitialValues["genFile_" + genFile] = 0;
@@ -458,65 +464,95 @@ function SettingsForm({ formValuesState }) {
                 form={form}
                 labelCol={{ span: 6 }}
                 wrapperCol={{ span: 16 }}
+                labelAlign="left"
                 layout="horizontal"
                 initialValues={formInitialValues}
             >
-                <Form.Item label="Description" name="description">
-                    <Input />
-                </Form.Item>
-                <Form.Item label="Number of Designs" name="max_designs" rules={[{ required: true }]}>
-                    <InputNumber min={1} />
-                </Form.Item>
-                <Form.Item label="Population Size" name="population_size">
-                    <InputNumber min={1} onChange={onPopChange} />
-                </Form.Item>
-                <Form.Item label="Tournament Size" name="tournament_size">
-                    <InputNumber />
-                </Form.Item>
-                <Form.Item label="Survival Size" name="survival_size">
-                    <InputNumber />
-                </Form.Item>
-                <Form.Item label="Expiration" name="expiration">
-                    <InputNumber />
-                </Form.Item>
-                <Divider />
-                <FileUpload uploadType={"Gen"} />
-                <Table
-                    dataSource={genFiles}
-                    columns={genColumns}
-                    loading={isTableLoading}
-                    onChange={handleGenTableChange}
-                    showSorterTooltip={false}
-                    pagination={{
-                        total: genFiles.length,
-                        showSizeChanger: true,
-                        showQuickJumper: true,
-                        showTotal: (total) => `${total} files`,
-                    }}
-                ></Table>
-                <Divider />
-                <FileUpload uploadType={"Eval"} />
-                <Table
-                    dataSource={evalFiles}
-                    columns={evalColumns}
-                    loading={isTableLoading}
-                    onChange={handleEvalTableChange}
-                    showSorterTooltip={false}
-                    pagination={{
-                        total: evalFiles.length,
-                        showSizeChanger: true,
-                        showQuickJumper: true,
-                        showTotal: (total) => `${total} files`,
-                    }}
-                ></Table>
-                <Divider />
-                <Form.Item label="Total Starting Items" name="genFile_total_items">
-                    <InputNumber disabled />
-                </Form.Item>
-                {genElements}
-                <Form.Item label="Random Generated" name="genFile_random_generated">
-                    <InputNumber disabled />
-                </Form.Item>
+                <Collapse defaultActiveKey={["1", "2", "3", "4"]}>
+                    <Collapse.Panel header="Settings 1" key="1" extra={genExtra("settings_1")}>
+                        <Tooltip placement="topLeft" title={helpText.description}>
+                            <Form.Item label="Description" name="description">
+                                <Input />
+                            </Form.Item>
+                        </Tooltip>
+
+                        <Tooltip placement="topLeft" title={helpText.max_designs}>
+                            <Form.Item label="Number of Designs" name="max_designs">
+                                <InputNumber min={1} />
+                            </Form.Item>
+                        </Tooltip>
+
+                        <Tooltip placement="topLeft" title={helpText.population_size}>
+                            <Form.Item label="Population Size" name="population_size">
+                                <InputNumber min={1} onChange={onPopChange} />
+                            </Form.Item>
+                        </Tooltip>
+
+                        <Tooltip placement="topLeft" title={helpText.tournament_size}>
+                            <Form.Item label="Tournament Size" name="tournament_size">
+                                <InputNumber />
+                            </Form.Item>
+                        </Tooltip>
+
+                        <Tooltip placement="topLeft" title={helpText.survival_size}>
+                            <Form.Item label="Survival Size" name="survival_size">
+                                <InputNumber />
+                            </Form.Item>
+                        </Tooltip>
+
+                        <Tooltip placement="topLeft" title={helpText.expiration}>
+                            <Form.Item label="Expiration" name="expiration">
+                                <InputNumber />
+                            </Form.Item>
+                        </Tooltip>
+                    </Collapse.Panel>
+                    <Collapse.Panel header="Gen File Settings" key="2" extra={genExtra("gen_file")}>
+                        <FileUpload uploadType={"Gen"} />
+                        <Table
+                            dataSource={genFiles}
+                            columns={genColumns}
+                            loading={isTableLoading}
+                            onChange={handleGenTableChange}
+                            showSorterTooltip={false}
+                            pagination={{
+                                total: genFiles.length,
+                                showSizeChanger: true,
+                                showQuickJumper: true,
+                                showTotal: (total) => `${total} files`,
+                            }}
+                        ></Table>
+                    </Collapse.Panel>
+                    <Collapse.Panel header="Eval File Settings" key="3" extra={genExtra("eval_file")}>
+                        <FileUpload uploadType={"Eval"} />
+                        <Table
+                            dataSource={evalFiles}
+                            columns={evalColumns}
+                            loading={isTableLoading}
+                            onChange={handleEvalTableChange}
+                            showSorterTooltip={false}
+                            pagination={{
+                                total: evalFiles.length,
+                                showSizeChanger: true,
+                                showQuickJumper: true,
+                                showTotal: (total) => `${total} files`,
+                            }}
+                        ></Table>
+                    </Collapse.Panel>
+                    <Collapse.Panel header="Settings 2" key="4" extra={genExtra("settings_2")}>
+                        <Tooltip placement="topLeft" title={helpText.total_items}>
+                            <Form.Item label="Total Starting Items" name="genFile_total_items">
+                                <InputNumber disabled />
+                            </Form.Item>
+                        </Tooltip>
+
+                        {genElements}
+                        <Tooltip placement="topLeft" title={helpText.random_generated}>
+                            <Form.Item label="Random Generated" name="genFile_random_generated">
+                                <InputNumber disabled />
+                            </Form.Item>
+                        </Tooltip>
+                    </Collapse.Panel>
+                </Collapse>
                 <br></br>
                 <Row justify="center">
                     <Button type="primary" htmlType="submit">
@@ -540,7 +576,11 @@ function JobForm() {
     return (
         <div className="jobForm-container">
             <Space direction="vertical" size="large" style={{ width: "inherit" }}>
-                <h1>Start New Job</h1>
+                <Space direction="horizontal" size="small" align="baseline">
+                    <h1>Start New Job</h1>
+                    <Help page="start_new_job_page" part="main"></Help>
+                </Space>
+
                 {/* <FileSelection nextStep={nextStep} formValuesState={{ formValues, setFormValues }} /> */}
                 <SettingsForm formValuesState={{ formValues, setFormValues }} />
                 {/* <FormToRender /> */}

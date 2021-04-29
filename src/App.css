@@ -4,3 +4,30 @@
 .ant-spin-container {
   height: 100%;
 }
+.ant-collapse-content {
+    background-color: #FAFAFB;
+}
+.ant-table-tbody > tr > td {
+    background-color: #FAFAFB;
+}
+.ant-table-tbody > tr.ant-table-row:hover > td {
+    background-color: #d6e4ff;
+}
+.ant-btn-text {
+    color: #1890ff;
+}
+.ant-tabs-large > .ant-tabs-nav .ant-tabs-tab {
+    font-size: 18px;
+}
+.ant-tabs-ink-bar {
+    height: 4px !important;
+}
+/* a {
+    color: #0050b3;
+}
+.ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+    color: #0050b3;
+}
+.ant-tabs-ink-bar {
+    background: #0050b3;
+} */
