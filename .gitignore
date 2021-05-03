@@ -23,6 +23,8 @@ yarn-debug.log*
 yarn-error.log*
 
 #amplify
+/.temp
+/.temps
 amplify/\#current-cloud-backend
 amplify/.config/local-*
 amplify/mock-data

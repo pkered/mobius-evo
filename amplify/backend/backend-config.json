@@ -65,8 +65,20 @@
             "GraphQLAPIIdOutput",
             "GraphQLAPIEndpointOutput"
           ]
+        },
+        {
+          "category": "function",
+          "resourceName": "genEvalModuleCode",
+          "attributes": [
+            "Arn"
+          ]
         }
       ]
+    },
+    "genEvalModuleCode": {
+      "providerPlugin": "awscloudformation",
+      "service": "LambdaLayer",
+      "build": true
     }
   }
 }

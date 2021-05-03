@@ -19,6 +19,46 @@
         "cognitoNewUser": {
           "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
           "s3Key": "amplify-builds/cognitoNewUser-52586461626f39445436-build.zip"
+        },
+        "genEvalController": {
+          "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
+          "s3Key": "amplify-builds/genEvalController-6f4f7a49592b3037426b-build.zip"
+        },
+        "genEvalModuleCode": {
+          "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
+          "s3Key": "amplify-builds/genEvalModuleCode-build.zip"
+        }
+      }
+    },
+    "nonCFNdata": {
+      "function": {
+        "genEvalModuleCode": {
+          "layerVersionMap": {
+            "1": {
+              "permissions": [
+                {
+                  "type": "private"
+                }
+              ],
+              "hash": "Ni7OfYphcDxWHLWryfgtDHYs2DzYbyFapzPYregcGYY="
+            },
+            "2": {
+              "permissions": [
+                {
+                  "type": "private"
+                }
+              ],
+              "hash": "AZXyCXzouxkU+Jqkw7NXQJ1fut2trrGBpNkaScrWDwI="
+            },
+            "3": {
+              "permissions": [
+                {
+                  "type": "private"
+                }
+              ],
+              "hash": "DyZ0Mv4tc7OAurW8Xf/HHlfKQKrHmvCZNwHjPhMCzU8="
+            }
+          }
         }
       }
     }

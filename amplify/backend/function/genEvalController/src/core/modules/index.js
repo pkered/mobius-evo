@@ -1,0 +1,96 @@
+"use strict";
+// functions used by mobius
+function __export(m) {
+    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
+}
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+// import * as Model from './Model';
+// export {Model};
+const _model = __importStar(require("./_model"));
+exports._model = _model;
+// import * as _model from './Model';
+// export {_model};
+// functions for end users
+const list = __importStar(require("./basic/list"));
+exports.list = list;
+const dict = __importStar(require("./basic/dict"));
+exports.dict = dict;
+const query = __importStar(require("./basic/query"));
+exports.query = query;
+const pattern = __importStar(require("./basic/pattern"));
+exports.pattern = pattern;
+const make = __importStar(require("./basic/make"));
+exports.make = make;
+const modify = __importStar(require("./basic/modify"));
+exports.modify = modify;
+const edit = __importStar(require("./basic/edit"));
+exports.edit = edit;
+const attrib = __importStar(require("./basic/attrib"));
+exports.attrib = attrib;
+const collection = __importStar(require("./basic/collection"));
+exports.collection = collection;
+const analyze = __importStar(require("./basic/analyze"));
+exports.analyze = analyze;
+const calc = __importStar(require("./basic/calc"));
+exports.calc = calc;
+const visualize = __importStar(require("./basic/visualize"));
+exports.visualize = visualize;
+const material = __importStar(require("./basic/material"));
+exports.material = material;
+const intersect = __importStar(require("./basic/intersect"));
+exports.intersect = intersect;
+const poly2d = __importStar(require("./basic/poly2d"));
+exports.poly2d = poly2d;
+const io = __importStar(require("./basic/io"));
+exports.io = io;
+const util = __importStar(require("./basic/util"));
+exports.util = util;
+// helpers
+const _math = __importStar(require("../inline/_math"));
+exports._math = _math;
+const _mathjs = __importStar(require("../inline/_mathjs"));
+exports._mathjs = _mathjs;
+const _types = __importStar(require("../inline/_types"));
+exports._types = _types;
+const _strs = __importStar(require("../inline/_strs"));
+exports._strs = _strs;
+const _rand = __importStar(require("../inline/_rand"));
+exports._rand = _rand;
+const _vec = __importStar(require("../inline/_vec"));
+exports._vec = _vec;
+const _ray = __importStar(require("../inline/_ray"));
+exports._ray = _ray;
+const _plane = __importStar(require("../inline/_plane"));
+exports._plane = _plane;
+const _geometry = __importStar(require("../inline/_geometry"));
+exports._geometry = _geometry;
+const _list = __importStar(require("../inline/_list"));
+exports._list = _list;
+const _common = __importStar(require("../inline/_common"));
+exports._common = _common;
+const _dict = __importStar(require("../inline/_dict"));
+exports._dict = _dict;
+const _set = __importStar(require("../inline/_set"));
+exports._set = _set;
+const _colors = __importStar(require("../inline/_colors"));
+exports._colors = _colors;
+const _conversion = __importStar(require("../inline/_conversion"));
+exports._conversion = _conversion;
+const _constants = __importStar(require("../inline/_constants"));
+exports._constants = _constants;
+const _util = __importStar(require("../inline/_util"));
+exports._util = _util;
+const _arithmetic = __importStar(require("../inline/_arithmetic"));
+exports._arithmetic = _arithmetic;
+// input, output ports
+const _Output = __importStar(require("./_output"));
+exports._Output = _Output;
+__export(require("../_parameterTypes"));
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi8uLi90cy9zcmMvY29yZS9tb2R1bGVzL2luZGV4LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7QUFBQSwyQkFBMkI7Ozs7Ozs7Ozs7OztBQUUzQixvQ0FBb0M7QUFDcEMsa0JBQWtCO0FBRWxCLGlEQUFtQztBQUMzQix3QkFBTTtBQUVkLHFDQUFxQztBQUNyQyxtQkFBbUI7QUFFbkIsMEJBQTBCO0FBRTFCLG1EQUFxQztBQUM3QixvQkFBSTtBQUVaLG1EQUFxQztBQUM3QixvQkFBSTtBQUVaLHFEQUF1QztBQUMvQixzQkFBSztBQUViLHlEQUEyQztBQUNuQywwQkFBTztBQUVmLG1EQUFxQztBQUM3QixvQkFBSTtBQUVaLHVEQUF5QztBQUNqQyx3QkFBTTtBQUVkLG1EQUFxQztBQUM3QixvQkFBSTtBQUVaLHVEQUF5QztBQUNqQyx3QkFBTTtBQUVkLCtEQUFpRDtBQUN6QyxnQ0FBVTtBQUVsQix5REFBMkM7QUFDbkMsMEJBQU87QUFFZixtREFBcUM7QUFDN0Isb0JBQUk7QUFFWiw2REFBK0M7QUFDdkMsOEJBQVM7QUFFakIsMkRBQTZDO0FBQ3JDLDRCQUFRO0FBRWhCLDZEQUErQztBQUN2Qyw4QkFBUztBQUVqQix1REFBeUM7QUFDakMsd0JBQU07QUFFZCwrQ0FBaUM7QUFDekIsZ0JBQUU7QUFFVixtREFBcUM7QUFDN0Isb0JBQUk7QUFJWixVQUFVO0FBRVYsdURBQXlDO0FBQ2pDLHNCQUFLO0FBRWIsMkRBQTZDO0FBQ3JDLDBCQUFPO0FBRWYseURBQTJDO0FBQ25DLHdCQUFNO0FBRWQsdURBQXlDO0FBQ2pDLHNCQUFLO0FBRWIsdURBQXlDO0FBQ2pDLHNCQUFLO0FBRWIscURBQXVDO0FBQy9CLG9CQUFJO0FBRVoscURBQXVDO0FBQy9CLG9CQUFJO0FBRVoseURBQTJDO0FBQ25DLHdCQUFNO0FBRWQsK0RBQWlEO0FBQ3pDLDhCQUFTO0FBRWpCLHVEQUF5QztBQUNqQyxzQkFBSztBQUViLDJEQUE2QztBQUNyQywwQkFBTztBQUVmLHVEQUF5QztBQUNqQyxzQkFBSztBQUViLHFEQUF1QztBQUMvQixvQkFBSTtBQUVaLDJEQUE2QztBQUNyQywwQkFBTztBQUVmLG1FQUFxRDtBQUM3QyxrQ0FBVztBQUVuQixpRUFBbUQ7QUFDM0MsZ0NBQVU7QUFFbEIsdURBQXlDO0FBQ2pDLHNCQUFLO0FBRWIsbUVBQXFEO0FBQzdDLGtDQUFXO0FBRW5CLHNCQUFzQjtBQUV0QixtREFBcUM7QUFDN0IsMEJBQU87QUFFZix3Q0FBbUMifQ==

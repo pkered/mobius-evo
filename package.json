@@ -27,7 +27,7 @@
     "build": "react-scripts --max_old_space_size=8192 build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "amplify:genEvalController": "cd amplify/backend/function/genEvalController/src && npm run tsc && cd -"
+    "amplify:genEvalController": "cd amplify/backend/function/genEvalController/ts && npm run tsc && cd ../../../../.."
   },
   "eslintConfig": {
     "extends": "react-app"
