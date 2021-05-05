@@ -20,19 +20,27 @@
           "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
           "s3Key": "amplify-builds/cognitoNewUser-52586461626f39445436-build.zip"
         },
-        "genEvalController": {
+        "evoNodeModule": {
           "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
-          "s3Key": "amplify-builds/genEvalController-6f4f7a49592b3037426b-build.zip"
+          "s3Key": "amplify-builds/evoNodeModule-build.zip"
         },
-        "genEvalModuleCode": {
+        "evoGenerate": {
           "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
-          "s3Key": "amplify-builds/genEvalModuleCode-build.zip"
+          "s3Key": "amplify-builds/evoGenerate-4d74547869376a394e38-build.zip"
+        },
+        "evoControl": {
+          "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
+          "s3Key": "amplify-builds/evoControl-586d51434b4334344941-build.zip"
+        },
+        "evoEvaluate": {
+          "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
+          "s3Key": "amplify-builds/evoEvaluate-357575466f6b36374332-build.zip"
         }
       }
     },
     "nonCFNdata": {
       "function": {
-        "genEvalModuleCode": {
+        "evoNodeModule": {
           "layerVersionMap": {
             "1": {
               "permissions": [
@@ -40,7 +48,7 @@
                   "type": "private"
                 }
               ],
-              "hash": "Ni7OfYphcDxWHLWryfgtDHYs2DzYbyFapzPYregcGYY="
+              "hash": "sm4MzVlAjuHEl8VrBBm+OZ/HOqZ/w5OdkDdvX2u0lBg="
             },
             "2": {
               "permissions": [
@@ -48,15 +56,7 @@
                   "type": "private"
                 }
               ],
-              "hash": "AZXyCXzouxkU+Jqkw7NXQJ1fut2trrGBpNkaScrWDwI="
-            },
-            "3": {
-              "permissions": [
-                {
-                  "type": "private"
-                }
-              ],
-              "hash": "DyZ0Mv4tc7OAurW8Xf/HHlfKQKrHmvCZNwHjPhMCzU8="
+              "hash": "sm4MzVlAjuHEl8VrBBm+OZ/HOqZ/w5OdkDdvX2u0lBg="
             }
           }
         }

@@ -53,32 +53,41 @@
         }
       ]
     },
-    "genEvalController": {
+    "evoNodeModule": {
+      "providerPlugin": "awscloudformation",
+      "service": "LambdaLayer",
+      "build": true
+    },
+    "evoGenerate": {
       "build": true,
       "providerPlugin": "awscloudformation",
       "service": "Lambda",
       "dependsOn": [
         {
-          "category": "api",
-          "resourceName": "MobiusEvoGraphQL",
+          "category": "storage",
+          "resourceName": "mobiusevoUserfiles",
           "attributes": [
-            "GraphQLAPIIdOutput",
-            "GraphQLAPIEndpointOutput"
+            "BucketName"
           ]
         },
         {
-          "category": "function",
-          "resourceName": "genEvalModuleCode",
+          "category": "api",
+          "resourceName": "MobiusEvoGraphQL",
           "attributes": [
-            "Arn"
+            "GraphQLAPIIdOutput"
           ]
         }
       ]
     },
-    "genEvalModuleCode": {
+    "evoEvaluate": {
+      "build": true,
       "providerPlugin": "awscloudformation",
-      "service": "LambdaLayer",
-      "build": true
+      "service": "Lambda"
+    },
+    "evoControl": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
     }
   }
 }

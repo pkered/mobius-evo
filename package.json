@@ -27,7 +27,18 @@
     "build": "react-scripts --max_old_space_size=8192 build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "amplify:genEvalController": "cd amplify/backend/function/genEvalController/ts && npm run tsc && cd ../../../../.."
+    "prepFunction1": "cd amplify/backend/function/evoControl/src && DEL /F/Q/S *.* > NUL",
+    "prepFunction2": "cd amplify/backend/function/evoGenerate/src && DEL /F/Q/S *.* > NUL",
+    "prepFunction3": "cd amplify/backend/function/evoEvaluate/src && DEL /F/Q/S *.* > NUL",
+    "prepFunction": "npm run prepFunction1 && npm run prepFunction2 && npm run prepFunction3",
+    "updateFunction0": "npm run prepFunction && cd gen_eval_process_backend && npm i && npm run tsc",
+    "updateFunction1": "cd gen_eval_process_backend && xcopy \"./dist\" \"../amplify/backend/function/evoControl/src\" /E/I/Y/Q > NUL",
+    "updateFunction2": "cd gen_eval_process_backend && xcopy \"./dist\" \"../amplify/backend/function/evoGenerate/src\" /E/I/Y/Q > NUL",
+    "updateFunction3": "cd gen_eval_process_backend && xcopy \"./dist\" \"../amplify/backend/function/evoEvaluate/src\" /E/I/Y/Q > NUL",
+    "updateFunction": "npm run updateFunction0 && npm run updateFunction1 && npm run updateFunction2 && npm run updateFunction3",
+    "updateFunctionTest": "npm run prepFunction2 && cd gen_eval_process_backend && npm i && npm run tsc && cd.. && npm run updateFunction2",
+    "updateLayer": "cd gen_eval_process_backend && copy \"./package.json\" \"../amplify/backend/function/evoNodeModule/lib/nodejs/package.json\" && copy \"./package-lock.json\" \"../amplify/backend/function/evoNodeModule/lib/nodejs/package-lock.json\" && cd ../amplify/backend/function/evoNodeModule/lib/nodejs && npm i && del package.json && del package-lock.json",
+    "backendUpdate": "npm run updateFunction && npm run updateLayer"
   },
   "eslintConfig": {
     "extends": "react-app"
