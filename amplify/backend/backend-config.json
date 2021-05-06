@@ -52,6 +52,11 @@
           ]
         }
       ]
+    },
+    "evoLayer": {
+      "providerPlugin": "awscloudformation",
+      "service": "LambdaLayer",
+      "build": true
     }
   }
 }

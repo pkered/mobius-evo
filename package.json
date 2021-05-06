@@ -38,7 +38,7 @@
     "updateFunction3": "cd gen_eval_process_backend && xcopy \"./dist\" \"../amplify/backend/function/evoEvaluate/src\" /E/I/Y/Q > NUL",
     "updateFunction": "npm run updateFunction0 && npm run updateFunction1 && npm run updateFunction2 && npm run updateFunction3",
     "updateFunctionTest": "npm run prepFunction2 && cd gen_eval_process_backend && npm i && npm run tsc && cd.. && npm run updateFunction2",
-    "updateLayer": "cd gen_eval_process_backend && copy \"./package.json\" \"../amplify/backend/function/evoNodeModule/lib/nodejs/package.json\" && copy \"./package-lock.json\" \"../amplify/backend/function/evoNodeModule/lib/nodejs/package-lock.json\" && cd ../amplify/backend/function/evoNodeModule/lib/nodejs && npm i && del package.json && del package-lock.json",
+    "updateLayer": "cd gen_eval_process_backend && copy \"./package.json\" \"../amplify/backend/function/evoLayer/lib/nodejs/package.json\" /y && copy \"./package-lock.json\" \"../amplify/backend/function/evoLayer/lib/nodejs/package-lock.json\" /y && cd ../amplify/backend/function/evoLayer/lib/nodejs && npm i",
     "backendUpdate": "npm run updateFunction && npm run updateLayer"
   },
   "eslintConfig": {

@@ -19,6 +19,26 @@
         "cognitoNewUser": {
           "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
           "s3Key": "amplify-builds/cognitoNewUser-52586461626f39445436-build.zip"
+        },
+        "evoLayer": {
+          "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
+          "s3Key": "amplify-builds/evoLayer-build.zip"
+        }
+      }
+    },
+    "nonCFNdata": {
+      "function": {
+        "evoLayer": {
+          "layerVersionMap": {
+            "1": {
+              "permissions": [
+                {
+                  "type": "private"
+                }
+              ],
+              "hash": "yUGkACxP+E6PzBug6bf1kLCK/3pa9flkuv0Xz++NZ0w="
+            }
+          }
         }
       }
     }
