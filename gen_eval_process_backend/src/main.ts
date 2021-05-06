@@ -3,7 +3,6 @@ import AWS from "aws-sdk";
 import fetch from "node-fetch";
 import JSZip from "jszip";
 import { XMLHttpRequest } from "xmlhttprequest";
-import { Storage } from 'aws-amplify';
 // import * as fs from "fs";
 // import * as circularJSON from "circular-json";
 
