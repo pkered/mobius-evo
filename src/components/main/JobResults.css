@@ -19,6 +19,6 @@
     background: #fff1f0; /* color of the tracking area */
 }
 .ant-alert::-webkit-scrollbar-thumb {
-    background-color: #ffccc7; /* color of the scroll thumb */
-    border: 2px solid #fff1f0; /* creates padding around scroll thumb */
+    background-color: #ffa39e; /* color of the scroll thumb */
+    border: 2px solid #ffccc7; /* creates padding around scroll thumb */
 }
