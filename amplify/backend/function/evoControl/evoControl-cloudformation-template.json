@@ -15,6 +15,26 @@
     },
     "s3Key": {
       "Type": "String"
+    },
+    "storagemobiusevoUserfilesBucketName": {
+      "Type": "String",
+      "Default": "storagemobiusevoUserfilesBucketName"
+    },
+    "apiMobiusEvoGraphQLGraphQLAPIIdOutput": {
+      "Type": "String",
+      "Default": "apiMobiusEvoGraphQLGraphQLAPIIdOutput"
+    },
+    "functionevoGenerateName": {
+      "Type": "String",
+      "Default": "functionevoGenerateName"
+    },
+    "functionevoEvaluateName": {
+      "Type": "String",
+      "Default": "functionevoEvaluateName"
+    },
+    "functionevoNodeModuleArn": {
+      "Type": "String",
+      "Default": "functionevoNodeModuleArn"
     }
   },
   "Conditions": {
@@ -43,7 +63,7 @@
             "Ref": "s3Key"
           }
         },
-        "Handler": "index.handler",
+        "Handler": "main.runGenEvalController",
         "FunctionName": {
           "Fn::If": [
             "ShouldNotCreateEnvResources",
@@ -69,6 +89,70 @@
             },
             "REGION": {
               "Ref": "AWS::Region"
+            },
+            "STORAGE_MOBIUSEVOUSERFILES_BUCKETNAME": {
+              "Ref": "storagemobiusevoUserfilesBucketName"
+            },
+            "API_MOBIUSEVOGRAPHQL_JOBTABLE_NAME": {
+              "Fn::ImportValue": {
+                "Fn::Sub": "${apiMobiusEvoGraphQLGraphQLAPIIdOutput}:GetAtt:JobTable:Name"
+              }
+            },
+            "API_MOBIUSEVOGRAPHQL_JOBTABLE_ARN": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:aws:dynamodb:",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  ":",
+                  {
+                    "Ref": "AWS::AccountId"
+                  },
+                  ":table/",
+                  {
+                    "Fn::ImportValue": {
+                      "Fn::Sub": "${apiMobiusEvoGraphQLGraphQLAPIIdOutput}:GetAtt:JobTable:Name"
+                    }
+                  }
+                ]
+              ]
+            },
+            "API_MOBIUSEVOGRAPHQL_GRAPHQLAPIIDOUTPUT": {
+              "Ref": "apiMobiusEvoGraphQLGraphQLAPIIdOutput"
+            },
+            "API_MOBIUSEVOGRAPHQL_GENEVALPARAMTABLE_NAME": {
+              "Fn::ImportValue": {
+                "Fn::Sub": "${apiMobiusEvoGraphQLGraphQLAPIIdOutput}:GetAtt:GenEvalParamTable:Name"
+              }
+            },
+            "API_MOBIUSEVOGRAPHQL_GENEVALPARAMTABLE_ARN": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:aws:dynamodb:",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  ":",
+                  {
+                    "Ref": "AWS::AccountId"
+                  },
+                  ":table/",
+                  {
+                    "Fn::ImportValue": {
+                      "Fn::Sub": "${apiMobiusEvoGraphQLGraphQLAPIIdOutput}:GetAtt:GenEvalParamTable:Name"
+                    }
+                  }
+                ]
+              ]
+            },
+            "FUNCTION_EVOGENERATE_NAME": {
+              "Ref": "functionevoGenerateName"
+            },
+            "FUNCTION_EVOEVALUATE_NAME": {
+              "Ref": "functionevoEvaluateName"
             }
           }
         },
@@ -79,8 +163,13 @@
           ]
         },
         "Runtime": "nodejs14.x",
-        "Layers": [],
-        "Timeout": "25"
+        "Layers": [
+          {
+            "Fn::Sub": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:layer:evoNodeModule-dev:1"
+          }
+        ],
+        "Timeout": "900",
+        "MemorySize": 1024
       }
     },
     "LambdaExecutionRole": {
@@ -160,6 +249,246 @@
                   }
                 ]
               }
+            }
+          ]
+        }
+      }
+    },
+    "AmplifyResourcesPolicy": {
+      "DependsOn": [
+        "LambdaExecutionRole"
+      ],
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "amplify-lambda-execution-policy",
+        "Roles": [
+          {
+            "Ref": "LambdaExecutionRole"
+          }
+        ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": "s3:ListBucket",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:s3:::",
+                      {
+                        "Ref": "storagemobiusevoUserfilesBucketName"
+                      }
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:DeleteObject"
+              ],
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:s3:::",
+                      {
+                        "Ref": "storagemobiusevoUserfilesBucketName"
+                      },
+                      "/*"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "dynamodb:Put*",
+                "dynamodb:Create*",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:Get*",
+                "dynamodb:BatchGetItem",
+                "dynamodb:List*",
+                "dynamodb:Describe*",
+                "dynamodb:Scan",
+                "dynamodb:Query",
+                "dynamodb:Update*",
+                "dynamodb:RestoreTable*",
+                "dynamodb:Delete*"
+              ],
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:dynamodb:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":table/",
+                      {
+                        "Fn::ImportValue": {
+                          "Fn::Sub": "${apiMobiusEvoGraphQLGraphQLAPIIdOutput}:GetAtt:JobTable:Name"
+                        }
+                      }
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:dynamodb:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":table/",
+                      {
+                        "Fn::ImportValue": {
+                          "Fn::Sub": "${apiMobiusEvoGraphQLGraphQLAPIIdOutput}:GetAtt:JobTable:Name"
+                        }
+                      },
+                      "/index/*"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "dynamodb:Put*",
+                "dynamodb:Create*",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:Get*",
+                "dynamodb:BatchGetItem",
+                "dynamodb:List*",
+                "dynamodb:Describe*",
+                "dynamodb:Scan",
+                "dynamodb:Query",
+                "dynamodb:Update*",
+                "dynamodb:RestoreTable*",
+                "dynamodb:Delete*"
+              ],
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:dynamodb:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":table/",
+                      {
+                        "Fn::ImportValue": {
+                          "Fn::Sub": "${apiMobiusEvoGraphQLGraphQLAPIIdOutput}:GetAtt:GenEvalParamTable:Name"
+                        }
+                      }
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:dynamodb:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":table/",
+                      {
+                        "Fn::ImportValue": {
+                          "Fn::Sub": "${apiMobiusEvoGraphQLGraphQLAPIIdOutput}:GetAtt:GenEvalParamTable:Name"
+                        }
+                      },
+                      "/index/*"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "lambda:Get*",
+                "lambda:List*",
+                "lambda:Invoke*"
+              ],
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:lambda:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":function:",
+                      {
+                        "Ref": "functionevoGenerateName"
+                      }
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "lambda:Get*",
+                "lambda:List*",
+                "lambda:Invoke*"
+              ],
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:lambda:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":function:",
+                      {
+                        "Ref": "functionevoEvaluateName"
+                      }
+                    ]
+                  ]
+                }
+              ]
             }
           ]
         }

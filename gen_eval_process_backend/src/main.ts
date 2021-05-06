@@ -78,10 +78,6 @@ function printFunc(_console, name, value){
 }
 `;
 
-const JOB_DB = "Job-t3vtntjcprhkbk4lak5sqtfcpm-dev";
-const GEN_EVAL_PARAM_DB = "GenEvalParam-t3vtntjcprhkbk4lak5sqtfcpm-dev";
-const GEN_EVAL_MODEL_BUCKET = "mobius-evo-userfiles131353-dev";
-
 
 function getModelString(model: GIModel): string {
     let model_data = model.exportGI(null);
@@ -658,13 +654,14 @@ export async function runGenEvalController(input) {
             xhrAsync: true,
         },
     });
-    console.log("~~~ input: ", input);
-    const record = input.Records[0];
-    if (record.eventName !== "INSERT" && record.eventName !== "MODIFY") {
-        return;
-    }
-    console.log("DynamoDB Record: %j", record.dynamodb);
-    const event = AWS.DynamoDB.Converter.unmarshall(record.dynamodb.NewImage);
+    // console.log("~~~ input: ", input);
+    // const record = input.Records[0];
+    // if (record.eventName !== "INSERT" && record.eventName !== "MODIFY") {
+    //     return;
+    // }
+    // console.log("DynamoDB Record: %j", record.dynamodb);
+    // const event = AWS.DynamoDB.Converter.unmarshall(record.dynamodb.NewImage);
+    const event = input;
     console.log("Unmarshalled Record: %j", event);
     if (!event.genUrl || !event.evalUrl || !event.run) {
         return false;
@@ -787,7 +784,7 @@ export async function runGenEvalController(input) {
                     // run gen
                     lambda.invoke(
                         {
-                            FunctionName: "generate_design_func",
+                            FunctionName: process.env.FUNCTION_EVOGENERATE_NAME,
                             Payload: entryBlob,
                         },
                         (err, genResponse) => {
@@ -811,7 +808,7 @@ export async function runGenEvalController(input) {
                             // run eval
                             lambda.invoke(
                                 {
-                                    FunctionName: "evaluate_design_func",
+                                    FunctionName: process.env.FUNCTION_EVOEVALUATE_NAME,
                                     Payload: entryBlob,
                                 },
                                 (err, evalResponse) => {
@@ -995,49 +992,4 @@ export async function runGenEvalController(input) {
     }
     console.log("process complete");
     return true;
-}
-
-export async function funcTest( inp ) {
-    console.log('~~~~~~~~~', process.env)
-    console.log('_________', inp)
-    // const docClient = new AWS.DynamoDB.DocumentClient({region: "us-east-1"});
-    // const params = {
-    //     TableName: process.env.API_MOBIUSEVOGRAPHQL_GENEVALPARAMTABLE_NAME,
-    //     Item: {
-    //         id: "1ddffb13-67d4-4d5a-ae0d-344528fe9a8111_0",
-    //         JobID: "1ddffb13-67d4-4d5a-ae0d-344528fe9a8111",
-    //         GenID: "0",
-    //         generation: 1,
-    //         genUrl: "https://mobius-evo-userfiles131353-dev.s3.amazonaws.com/protected/us-east-1%3A38251718-48f1-4886-80bf-1ccbc733da77/files/gen/eaGen_0_7_003.js",
-    //         evalUrl: "https://mobius-evo-userfiles131353-dev.s3.amazonaws.com/protected/us-east-1%3A38251718-48f1-4886-80bf-1ccbc733da77/files/eval/eaEval_0_7.js",
-    //         params: JSON.stringify({"ROTATE1":97,"ROTATE2":156,"HEIGHT_RATIO":0.42}),
-    //         owner: "08ddd4db-71a5-43eb-8fc7-264901cb16dd",
-    //         live: true,
-    //         createdAt: new Date().toISOString(),
-    //         updatedAt: new Date().toISOString(),
-    //         errorMessage: null
-    //     },
-    // };
-    // await docClient.put(params, function (err, result) {
-    //     if (err) {
-    //         console.log("Error placing gen data:", err);
-    //     } else {
-    //         console.log("success");
-    //     }
-    // }).promise();
-    const s3 = new AWS.S3({ region: "us-east-1" });
-    await s3.putObject({
-        Bucket: process.env.STORAGE_MOBIUSEVOUSERFILES_BUCKETNAME,
-        Key: "public/testtest.gi",
-        Body: "...........................",
-        ContentType: "text/plain",
-        // ACL: "public-read",
-    }, function (err, data) {
-        if (err) {
-            console.log("Error placing data:", err);
-        }
-        else {
-            console.log("successfully placed data");
-        }
-    }).promise();
 }

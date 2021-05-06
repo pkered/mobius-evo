@@ -1,3 +1,39 @@
 {
-  "lambdaLayers": []
+  "lambdaLayers": [
+    {
+      "type": "ProjectLayer",
+      "resourceName": "evoNodeModule",
+      "version": 1
+    }
+  ],
+  "permissions": {
+    "storage": {
+      "mobiusevoUserfiles": [
+        "create",
+        "read",
+        "update",
+        "delete"
+      ],
+      "Job:@model(appsync)": [
+        "create",
+        "read",
+        "update",
+        "delete"
+      ],
+      "GenEvalParam:@model(appsync)": [
+        "create",
+        "read",
+        "update",
+        "delete"
+      ]
+    },
+    "function": {
+      "evoGenerate": [
+        "read"
+      ],
+      "evoEvaluate": [
+        "read"
+      ]
+    }
+  }
 }

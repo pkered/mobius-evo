@@ -11,6 +11,8 @@ import { Link } from "react-router-dom";
 import { Form, Input, InputNumber, Button, Tooltip, Table, Radio, Checkbox, Upload, message, Tag, Space, Spin, Row, Collapse } from "antd";
 import Help from "./utils/Help";
 import helpJSON from "../../assets/help/help_text_json";
+import Auth from '@aws-amplify/auth';
+import Lambda from 'aws-sdk/clients/lambda'; // npm install aws-sdk
 
 const testDefault = {
     description: `new test`,
@@ -569,10 +571,35 @@ function SettingsForm({ formValuesState }) {
 
 function JobForm() {
     const [formValues, setFormValues] = useState({});
-    const [currentStep, setCurrentStep] = useState(0);
-    const steps = ["1. Select Files", `2. Job Settings`, "3. Summary"];
-    const nextStep = () => setCurrentStep(Math.min(steps.length - 1, currentStep + 1));
 
+    // Auth.currentCredentials().then(credentials => {
+    //     const params = {
+    //         "errorMessage": null,
+    //         "evalUrl": "https://mobius-evo-userfiles131353-dev.s3.amazonaws.com/protected/us-east-1%3A38251718-48f1-4886-80bf-1ccbc733da77/files/eval/eaEval_0_7.js",
+    //         "generation": 1,
+    //         "GenID": "0",
+    //         "genUrl": "https://mobius-evo-userfiles131353-dev.s3.amazonaws.com/protected/us-east-1%3A38251718-48f1-4886-80bf-1ccbc733da77/files/gen/eaGen_0_7_003.js",
+    //         "id": "1ddffb13-67d4-4d5a-ae0d-344528fe9a8112_3",
+    //         "JobID": "1ddffb13-67d4-4d5a-ae0d-344528fe9a8112",
+    //         "live": true,
+    //         "owner": "08ddd4db-71a5-43eb-8fc7-264901cb16dd",
+    //         "params": {
+    //           "ROTATE1": 97,
+    //           "ROTATE2": 156,
+    //           "HEIGHT_RATIO": 0.42
+    //         },
+    //         "updatedAt": "2021-05-05T07:05:41.770Z"
+    //       }
+    //     const lambda = new Lambda({
+    //         region: 'us-east-1',
+    //         credentials: Auth.essentialCredentials(credentials)
+    //     });
+    //     return lambda.invoke({
+    //         FunctionName: 'evoGenerate-dev',
+    //         Payload: JSON.stringify(params),
+    //     }).promise().then(()=> console.log('~~~~~~~~'));
+    // })
+      
     return (
         <div className="jobForm-container">
             <Space direction="vertical" size="large" style={{ width: "inherit" }}>
