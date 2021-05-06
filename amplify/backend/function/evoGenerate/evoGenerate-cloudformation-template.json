@@ -55,7 +55,7 @@
             "Ref": "s3Key"
           }
         },
-        "Handler": "main.funcTest",
+        "Handler": "main.runGen",
         "FunctionName": {
           "Fn::If": [
             "ShouldNotCreateEnvResources",

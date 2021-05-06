@@ -271,7 +271,7 @@ export async function runGen(data): Promise<{__success__: boolean, __error__?: s
                     Key: "public/" + data.owner + "/" + data.JobID + "/" + data.id + ".gi",
                     Body: model,
                     ContentType: "text/plain",
-                    ACL: "public-read",
+                    // ACL: "public-read",
                 },
                 function (err, result) {
                     if (err) {
@@ -287,7 +287,7 @@ export async function runGen(data): Promise<{__success__: boolean, __error__?: s
                 }
             );
             const params = {
-                TableName: GEN_EVAL_PARAM_DB,
+                TableName: process.env.API_MOBIUSEVOGRAPHQL_GENEVALPARAMTABLE_NAME,
                 Item: {
                     id: data.id,
                     JobID: data.JobID,
@@ -373,7 +373,7 @@ export async function runEval(recordInfo): Promise<{__error__?: string}> {
                     Key: "public/" + recordInfo.owner + "/" + recordInfo.JobID + "/" + recordInfo.id + "_eval.gi",
                     Body: model,
                     ContentType: "text/plain",
-                    ACL: "public-read",
+                    // ACL: "public-read",
                 },
                 function (err, data) {
                     if (err) {
@@ -536,7 +536,7 @@ async function updateJobDB(jobID: string, run: boolean, status: string) {
     const jobDBUpdatePromise = new Promise<boolean>((resolve) => {
         docClient.update(
             {
-                TableName: JOB_DB,
+                TableName: process.env.API_MOBIUSEVOGRAPHQL_JOBTABLE_NAME,
                 Key: {
                     id: jobID,
                 },
@@ -569,7 +569,7 @@ async function updateJobDB(jobID: string, run: boolean, status: string) {
 function updateJobError(jobID: string, docClient: AWS.DynamoDB.DocumentClient, msg: string) {
     docClient.update(
         {
-            TableName: JOB_DB,
+            TableName: process.env.API_MOBIUSEVOGRAPHQL_JOBTABLE_NAME,
             Key: {
                 id: jobID,
             },
@@ -598,7 +598,7 @@ async function getJobEntries(jobID, allEntries, liveEntries, existingParams) {
     const p = new Promise((resolve) => {
         docClient.query(
             {
-                TableName: GEN_EVAL_PARAM_DB,
+                TableName: process.env.API_MOBIUSEVOGRAPHQL_GENEVALPARAMTABLE_NAME,
                 IndexName: "byJobID",
                 KeyConditionExpression: "JobID = :job ",
                 ExpressionAttributeValues: {
@@ -734,7 +734,7 @@ export async function runGenEvalController(input) {
         const runCheckPromise = new Promise((resolve) => {
             docClient.get(
                 {
-                    TableName: JOB_DB,
+                    TableName: process.env.API_MOBIUSEVOGRAPHQL_JOBTABLE_NAME,
                     Key: {
                         id: event.id,
                     },
@@ -876,7 +876,7 @@ export async function runGenEvalController(input) {
                             deadEntries.push(entry);
                             hasError = true;
                             const params = {
-                                TableName: GEN_EVAL_PARAM_DB,
+                                TableName: process.env.API_MOBIUSEVOGRAPHQL_GENEVALPARAMTABLE_NAME,
                                 Item: {
                                     id: entry.id,
                                     JobID: entry.JobID,
@@ -917,7 +917,7 @@ export async function runGenEvalController(input) {
             if (!entry.scoreWritten) {
                 entry.scoreWritten = true;
                 const updateParamEntry = {
-                    TableName: GEN_EVAL_PARAM_DB,
+                    TableName: process.env.API_MOBIUSEVOGRAPHQL_GENEVALPARAMTABLE_NAME,
                     Key: {
                         id: entry.id,
                     },
@@ -951,7 +951,7 @@ export async function runGenEvalController(input) {
             if (!entry.deadWritten) {
                 entry.deadWritten = true;
                 const updateParamEntry = {
-                    TableName: GEN_EVAL_PARAM_DB,
+                    TableName: process.env.API_MOBIUSEVOGRAPHQL_GENEVALPARAMTABLE_NAME,
                     Key: {
                         id: entry.id,
                     },
@@ -1002,7 +1002,7 @@ export async function funcTest( inp ) {
     console.log('_________', inp)
     // const docClient = new AWS.DynamoDB.DocumentClient({region: "us-east-1"});
     // const params = {
-    //     TableName: GEN_EVAL_PARAM_DB,
+    //     TableName: process.env.API_MOBIUSEVOGRAPHQL_GENEVALPARAMTABLE_NAME,
     //     Item: {
     //         id: "1ddffb13-67d4-4d5a-ae0d-344528fe9a8111_0",
     //         JobID: "1ddffb13-67d4-4d5a-ae0d-344528fe9a8111",
@@ -1031,7 +1031,7 @@ export async function funcTest( inp ) {
         Key: "public/testtest.gi",
         Body: "...........................",
         ContentType: "text/plain",
-        ACL: "public-read",
+        // ACL: "public-read",
     }, function (err, data) {
         if (err) {
             console.log("Error placing data:", err);

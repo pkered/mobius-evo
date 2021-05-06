@@ -4,7 +4,7 @@ import { generationsByJobId, getJob } from "../../graphql/queries";
 import { updateJob } from "../../graphql/mutations";
 import * as QueryString from "query-string";
 import { Link } from "react-router-dom";
-import { Row, Space, Button, Spin, Form, Col, Divider, Input, Checkbox, Table, Popconfirm, Tabs, Descriptions, Collapse, Alert } from "antd";
+import { Row, Space, Button, Spin, Form, Col, Divider, Input, Checkbox, Table, Popconfirm, Tabs, Descriptions, Collapse, Alert, notification } from "antd";
 import { Column } from "@ant-design/charts";
 import { AuthContext } from "../../Contexts";
 import Iframe from "react-iframe";
@@ -16,6 +16,7 @@ import Help from "./utils/Help";
 import "./JobResults.css";
 
 const S3_MODEL_URL = "https://mobius-evo-userfiles131353-dev.s3.amazonaws.com/public/";
+const MOBIUS_VIEWER_URL = 'https://design-automation.github.io/mobius-viewer-dev-0-7/';
 const { TabPane } = Tabs;
 
 function paramsRegex(params) {
@@ -310,7 +311,7 @@ function FilterForm({ modelParamsState, jobResultsState, filteredJobResultsState
     ) : null;
 }
 
-function ScorePlot({ jobResults, setModelText }) {
+function ScorePlot({ jobResults, setModelText, setSelectedJobResult }) {
     const plotData = JSON.parse(JSON.stringify(jobResults));
 
     plotData.forEach((result) => (result.genFile = result.genUrl.split("/").pop() + " - " + (result.live ? "live" : "dead")));
@@ -355,13 +356,17 @@ function ScorePlot({ jobResults, setModelText }) {
                     document.getElementById("hiddenButton").click();
                     const modelText = assembleModelText(data);
                     setModelText(modelText);
+                    if (evt.data && evt.data.data ) {
+                        console.log('*', evt.data.data)
+                        setSelectedJobResult(evt.data.data);
+                    }
                 });
             }}
         />
     );
 }
 
-function ResultTable({ jobResults, contextUrl, setModelText }) {
+function ResultTable({ jobResults, contextUrl, setModelText, setSelectedJobResult }) {
     const columns = [
         {
             title: "ID",
@@ -408,7 +413,7 @@ function ResultTable({ jobResults, contextUrl, setModelText }) {
             key: "genModel",
             width: 60,
             fixed: "right",
-            render: (modelData) => (
+            render: (genModel, allData) => (
                 <div>
                     {/* <a href={modelData.model} target='_blank' download>
                         <Download />
@@ -416,10 +421,10 @@ function ResultTable({ jobResults, contextUrl, setModelText }) {
                     <br></br> */}
                     <View
                         onClick={() => {
-                            document.getElementById("hiddenInput").value = modelData.model;
-                            viewModel(modelData.model, [contextUrl]);
-                            setModelText(modelData.resultText);
-                            // setModelText(JSON.stringify(JSON.parse(modelData.resultText), null, 4))
+                            document.getElementById("hiddenInput").value = genModel;
+                            viewModel(genModel, [contextUrl]);
+                            setModelText(allData.resultText);
+                            setSelectedJobResult(allData);
                         }}
                     />
                 </div>
@@ -431,13 +436,14 @@ function ResultTable({ jobResults, contextUrl, setModelText }) {
             key: "evalModel",
             width: 60,
             fixed: "right",
-            render: (modelData) => (
+            render: (evalModel, allData) => (
                 <div>
                     <View
                         onClick={async () => {
-                            document.getElementById("hiddenInput").value = modelData.model;
-                            viewModel(modelData.model, [contextUrl]);
-                            setModelText(modelData.resultText);
+                            document.getElementById("hiddenInput").value = evalModel;
+                            viewModel(evalModel, [contextUrl]);
+                            setModelText(allData.resultText);
+                            setSelectedJobResult(allData);
                         }}
                     />
                 </div>
@@ -454,6 +460,7 @@ function ResultTable({ jobResults, contextUrl, setModelText }) {
                 .replace(/:/g, ": ");
         }
         const tableEntry = {
+            id: entry.id,
             genID: entry.GenID,
             genFile: entry.genUrl.split("/").pop(),
             live: entry.live ? "True" : "False",
@@ -461,14 +468,9 @@ function ResultTable({ jobResults, contextUrl, setModelText }) {
             params: paramsString,
             score: entry.score,
             rowClass: entry.errorMessage ? "error-row" : "default-row",
-            genModel: {
-                model: S3_MODEL_URL + entry.owner + "/" + entry.JobID + "/" + entry.id + ".gi",
-                resultText: assembleModelText(entry),
-            },
-            evalModel: {
-                model: S3_MODEL_URL + entry.owner + "/" + entry.JobID + "/" + entry.id + "_eval.gi",
-                resultText: assembleModelText(entry),
-            },
+            genModel: S3_MODEL_URL + entry.owner + "/" + entry.JobID + "/" + entry.id + ".gi",
+            evalModel: S3_MODEL_URL + entry.owner + "/" + entry.JobID + "/" + entry.id + "_eval.gi",
+            resultText: assembleModelText(entry)
         };
         if (entry.errorMessage) {
             errorRows.push(entry.GenID);
@@ -552,6 +554,20 @@ function JobResults() {
             .catch((err) => console.log(err));
     }, [cognitoPayload]);
 
+    const notify = (title, text, isWarn = false) => {
+        if (isWarn) {
+            notification.error({
+                message: title,
+                description: text,
+            });
+            return;
+        }
+        notification.open({
+          message: title,
+          description: text,
+        });
+    };
+
     const CancelJob = () => {
         function cancelJob() {
             API.graphql(
@@ -582,6 +598,60 @@ function JobResults() {
         urlString = data.split("/").pop();
         return urlString;
     }
+    async function downloadSelectedModel(isGen = false) {
+        if (!selectedJobResult) { 
+            notify('Unable to Download!', 'No result was selected, unable to download gi model.', true)
+            return;
+        }
+        let url;
+        if (isGen) {
+            if (selectedJobResult.genModel) {
+                url = selectedJobResult.genModel;
+            } else {
+                url = S3_MODEL_URL + selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + ".gi";
+            }
+        } else {
+            if (selectedJobResult.evalModel) {
+                url = selectedJobResult.evalModel;
+            } else {
+                url = S3_MODEL_URL + selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + "_eval.gi";
+            }
+        }
+        await fetch(url).then(t => {
+            return t.blob().then((b)=>{
+                const a = document.getElementById("hiddenLink");
+                a.href = URL.createObjectURL(b);
+                a.setAttribute("download", selectedJobResult.id + (isGen? '_gen': '_eval') + '.gi');
+                a.click();
+            });
+        })
+    }
+    function openViewerInNewTab(isGen = false) {
+        if (!selectedJobResult) { 
+            notify('Unable to Download!', 'No result was selected, unable to download gi model.', true)
+            return;
+        }
+        let url;
+        if (isGen) {
+            if (selectedJobResult.genModel) {
+                url = selectedJobResult.genModel;
+            } else {
+                url = S3_MODEL_URL + selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + ".gi";
+            }
+        } else {
+            if (selectedJobResult.evalModel) {
+                url = selectedJobResult.evalModel;
+            } else {
+                url = S3_MODEL_URL + selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + "_eval.gi";
+            }
+        }
+        const a = document.getElementById("hiddenLink");
+        a.href = MOBIUS_VIEWER_URL + '?file=' + url;
+        a.setAttribute("download", null);
+        a.target = '_blank';
+        a.click();
+    }
+
     const genExtra = (part) => <Help page="result_page" part={part}></Help>;
     const genTableColumns = [
         {
@@ -615,7 +685,6 @@ function JobResults() {
         });
     }
     const expandedSettings = ["max_designs", "population_size", "survival_size", "tournament_size", "expiration"];
-
     return (
         <Space direction="vertical" size="large" style={{ width: "inherit" }}>
             <Row>
@@ -648,11 +717,12 @@ function JobResults() {
                                                 <ScorePlot
                                                     jobResults={filteredJobResults ? filteredJobResults : jobResults}
                                                     setModelText={setModelText}
+                                                    setSelectedJobResult={setSelectedJobResult}
                                                 />
                                             </Collapse.Panel>
                                             <Collapse.Panel header="Mobius Viewer" key="3" extra={genExtra("result_mobius_viewer")}>
                                                 <Iframe
-                                                    url="https://design-automation.github.io/mobius-viewer-dev-0-7/"
+                                                    url={MOBIUS_VIEWER_URL}
                                                     width="100%"
                                                     height="600px"
                                                     id="mobius_viewer"
@@ -684,9 +754,10 @@ function JobResults() {
                                                                 apply
                                                             </Button>
                                                         </Space>
-                                                        <Button>Download Gen</Button>
-                                                        <Button>Download Eval</Button>
-                                                        <Button>Open Viewer In New Browser</Button>
+                                                        <Button onClick={() => downloadSelectedModel(true)}>Download Gen</Button>
+                                                        <Button onClick={() => downloadSelectedModel()}>Download Eval</Button>
+                                                        <Button onClick={() => openViewerInNewTab(true)}>Open Gen model In New Browser</Button>
+                                                        <Button onClick={() => openViewerInNewTab()}>Open Eval model In New Browser</Button>
                                                     </Space>
                                                 </Space>
                                             </Collapse.Panel>
@@ -695,6 +766,7 @@ function JobResults() {
                                                     jobResults={filteredJobResults ? filteredJobResults : jobResults}
                                                     contextUrl={contextUrl}
                                                     setModelText={setModelText}
+                                                    setSelectedJobResult={setSelectedJobResult}
                                                 />
                                             </Collapse.Panel>
                                         </Collapse>
@@ -752,8 +824,10 @@ function JobResults() {
                     </Tabs>
                     <br />
                     <br />
+                    <a id='hiddenLink' className='hiddenElement'></a>
                 </>
             ) : null}
+
         </Space>
     );
 }
