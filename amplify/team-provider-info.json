@@ -19,46 +19,6 @@
         "cognitoNewUser": {
           "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
           "s3Key": "amplify-builds/cognitoNewUser-52586461626f39445436-build.zip"
-        },
-        "evoNodeModule": {
-          "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
-          "s3Key": "amplify-builds/evoNodeModule-build.zip"
-        },
-        "evoGenerate": {
-          "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
-          "s3Key": "amplify-builds/evoGenerate-51436a374957366e704e-build.zip"
-        },
-        "evoControl": {
-          "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
-          "s3Key": "amplify-builds/evoControl-51436a374957366e704e-build.zip"
-        },
-        "evoEvaluate": {
-          "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
-          "s3Key": "amplify-builds/evoEvaluate-51436a374957366e704e-build.zip"
-        }
-      }
-    },
-    "nonCFNdata": {
-      "function": {
-        "evoNodeModule": {
-          "layerVersionMap": {
-            "1": {
-              "permissions": [
-                {
-                  "type": "private"
-                }
-              ],
-              "hash": "sm4MzVlAjuHEl8VrBBm+OZ/HOqZ/w5OdkDdvX2u0lBg="
-            },
-            "2": {
-              "permissions": [
-                {
-                  "type": "private"
-                }
-              ],
-              "hash": "sm4MzVlAjuHEl8VrBBm+OZ/HOqZ/w5OdkDdvX2u0lBg="
-            }
-          }
         }
       }
     }

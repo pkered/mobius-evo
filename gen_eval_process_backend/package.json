@@ -49,8 +49,8 @@
         "xmlhttprequest": "^1.8.0"
     },
     "_moduleAliases": {
-        "@libs": "dist/src/libs",
-        "@assets": "dist/src",
-        "@models": "dist/src/model"
+        "@libs": "./libs",
+        "@assets": ".",
+        "@models": "./model"
     }
 }
