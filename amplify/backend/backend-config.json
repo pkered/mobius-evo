@@ -21,10 +21,6 @@
     }
   },
   "storage": {
-    "MobiusEvoDynamo": {
-      "service": "DynamoDB",
-      "providerPlugin": "awscloudformation"
-    },
     "mobiusevoUserfiles": {
       "service": "S3",
       "providerPlugin": "awscloudformation"
