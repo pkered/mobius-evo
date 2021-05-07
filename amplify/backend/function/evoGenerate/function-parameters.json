@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "storage": {
+      "mobiusevoUserfiles": [
+        "create",
+        "read",
+        "update",
+        "delete"
+      ],
+      "Job:@model(appsync)": [
+        "create",
+        "read",
+        "update",
+        "delete"
+      ],
+      "GenEvalParam:@model(appsync)": [
+        "create",
+        "read",
+        "update",
+        "delete"
+      ]
+    }
+  },
+  "lambdaLayers": [
+    {
+      "type": "ProjectLayer",
+      "resourceName": "evoLayer",
+      "version": 5
+    }
+  ]
+}

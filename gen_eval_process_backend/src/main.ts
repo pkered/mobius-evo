@@ -7,9 +7,9 @@ import { XMLHttpRequest } from "xmlhttprequest";
 // import * as circularJSON from "circular-json";
 
 
-import * as Modules from "./core/modules";
+import * as Modules from "@assets/core/modules";
+import { _parameterTypes, _varString } from "@assets/core/modules";
 import { GIModel } from "@libs/geo-info/GIModel";
-import { _parameterTypes, _varString } from "./core/modules";
 
 // import { CodeUtils } from "./model/code/code.utils";
 // import { IFlowchart, FlowchartUtils } from "./model/flowchart";

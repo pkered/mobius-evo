@@ -23,6 +23,10 @@
         "evoLayer": {
           "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
           "s3Key": "amplify-builds/evoLayer-build.zip"
+        },
+        "evoGenerate": {
+          "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
+          "s3Key": "amplify-builds/evoGenerate-5a2f4b434e3741425539-build.zip"
         }
       }
     },
@@ -37,6 +41,46 @@
                 }
               ],
               "hash": "yUGkACxP+E6PzBug6bf1kLCK/3pa9flkuv0Xz++NZ0w="
+            },
+            "2": {
+              "permissions": [
+                {
+                  "type": "private"
+                }
+              ],
+              "hash": "2CgZoyOYnS5ttKuBMzRiBk9w0+G3llmi1b2/vqdRoGc="
+            },
+            "3": {
+              "permissions": [
+                {
+                  "type": "private"
+                }
+              ],
+              "hash": "f6X5Hrg7ezjxycTM3Xp5YxDf0XoTISpeAptbY4XznT8="
+            },
+            "4": {
+              "permissions": [
+                {
+                  "type": "private"
+                }
+              ],
+              "hash": "4iDGdV4MjlSCSYdDsKGQB63YYeiFYvB5e0qtyuB/s20="
+            },
+            "5": {
+              "permissions": [
+                {
+                  "type": "private"
+                }
+              ],
+              "hash": "BIO8aEAjpq3EkWAFJHPXUQbb9xdjn7Qw/sy1pXuQOcQ="
+            },
+            "6": {
+              "permissions": [
+                {
+                  "type": "private"
+                }
+              ],
+              "hash": "TMtoZ8DDLtf2N5KaSQsV0Q70lxNyklw9H8Qt2HVCLys="
             }
           }
         }
