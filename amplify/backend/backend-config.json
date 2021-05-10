@@ -81,6 +81,76 @@
           ]
         }
       ]
+    },
+    "evoEvaluate": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda",
+      "dependsOn": [
+        {
+          "category": "function",
+          "resourceName": "evoLayer",
+          "attributes": [
+            "Arn"
+          ]
+        },
+        {
+          "category": "storage",
+          "resourceName": "mobiusevoUserfiles",
+          "attributes": [
+            "BucketName"
+          ]
+        },
+        {
+          "category": "api",
+          "resourceName": "MobiusEvoGraphQL",
+          "attributes": [
+            "GraphQLAPIIdOutput"
+          ]
+        }
+      ]
+    },
+    "evoControl": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda",
+      "dependsOn": [
+        {
+          "category": "storage",
+          "resourceName": "mobiusevoUserfiles",
+          "attributes": [
+            "BucketName"
+          ]
+        },
+        {
+          "category": "api",
+          "resourceName": "MobiusEvoGraphQL",
+          "attributes": [
+            "GraphQLAPIIdOutput"
+          ]
+        },
+        {
+          "category": "function",
+          "resourceName": "evoGenerate",
+          "attributes": [
+            "Name"
+          ]
+        },
+        {
+          "category": "function",
+          "resourceName": "evoEvaluate",
+          "attributes": [
+            "Name"
+          ]
+        },
+        {
+          "category": "function",
+          "resourceName": "evoLayer",
+          "attributes": [
+            "Arn"
+          ]
+        }
+      ]
     }
   }
 }

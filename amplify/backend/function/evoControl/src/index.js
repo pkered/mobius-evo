@@ -10,9 +10,17 @@
 	REGION
 	STORAGE_MOBIUSEVOUSERFILES_BUCKETNAME
 Amplify Params - DO NOT EDIT */
-require("module-alias/register");
-Object.defineProperty(exports, "__esModule", { value: true });
-const main = require("@assets/main");
-exports.runGen = main.runGen;
-exports.runEval = main.runEval;
-exports.runGenEvalController = main.runGenEvalController;
+
+exports.handler = async (event) => {
+    // TODO implement
+    const response = {
+        statusCode: 200,
+    //  Uncomment below to enable CORS requests
+    //  headers: {
+    //      "Access-Control-Allow-Origin": "*",
+    //      "Access-Control-Allow-Headers": "*"
+    //  }, 
+        body: JSON.stringify('Hello from Lambda!'),
+    };
+    return response;
+};

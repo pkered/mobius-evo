@@ -26,7 +26,15 @@
         },
         "evoGenerate": {
           "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
-          "s3Key": "amplify-builds/evoGenerate-5a2f4b434e3741425539-build.zip"
+          "s3Key": "amplify-builds/evoGenerate-692b53506e6e45635869-build.zip"
+        },
+        "evoEvaluate": {
+          "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
+          "s3Key": "amplify-builds/evoEvaluate-32453031504f522b6a37-build.zip"
+        },
+        "evoControl": {
+          "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
+          "s3Key": "amplify-builds/evoControl-4c38486c2f695a554259-build.zip"
         }
       }
     },
