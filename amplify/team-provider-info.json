@@ -20,10 +20,6 @@
           "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
           "s3Key": "amplify-builds/cognitoNewUser-52586461626f39445436-build.zip"
         },
-        "evoLayer": {
-          "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
-          "s3Key": "amplify-builds/evoLayer-build.zip"
-        },
         "evoGenerate": {
           "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
           "s3Key": "amplify-builds/evoGenerate-692b53506e6e45635869-build.zip"
@@ -34,13 +30,17 @@
         },
         "evoControl": {
           "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
-          "s3Key": "amplify-builds/evoControl-4c38486c2f695a554259-build.zip"
+          "s3Key": "amplify-builds/evoControl-33523156592b534e572b-build.zip"
+        },
+        "evoBackend": {
+          "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
+          "s3Key": "amplify-builds/evoBackend-build.zip"
         }
       }
     },
     "nonCFNdata": {
       "function": {
-        "evoLayer": {
+        "evoBackend": {
           "layerVersionMap": {
             "1": {
               "permissions": [
@@ -48,47 +48,7 @@
                   "type": "private"
                 }
               ],
-              "hash": "yUGkACxP+E6PzBug6bf1kLCK/3pa9flkuv0Xz++NZ0w="
-            },
-            "2": {
-              "permissions": [
-                {
-                  "type": "private"
-                }
-              ],
-              "hash": "2CgZoyOYnS5ttKuBMzRiBk9w0+G3llmi1b2/vqdRoGc="
-            },
-            "3": {
-              "permissions": [
-                {
-                  "type": "private"
-                }
-              ],
-              "hash": "f6X5Hrg7ezjxycTM3Xp5YxDf0XoTISpeAptbY4XznT8="
-            },
-            "4": {
-              "permissions": [
-                {
-                  "type": "private"
-                }
-              ],
-              "hash": "4iDGdV4MjlSCSYdDsKGQB63YYeiFYvB5e0qtyuB/s20="
-            },
-            "5": {
-              "permissions": [
-                {
-                  "type": "private"
-                }
-              ],
-              "hash": "BIO8aEAjpq3EkWAFJHPXUQbb9xdjn7Qw/sy1pXuQOcQ="
-            },
-            "6": {
-              "permissions": [
-                {
-                  "type": "private"
-                }
-              ],
-              "hash": "TMtoZ8DDLtf2N5KaSQsV0Q70lxNyklw9H8Qt2HVCLys="
+              "hash": "JSoxIFTtDhfxg/0VL2BLgneyBKPVk9TUHXY6Z98Vp+4="
             }
           }
         }

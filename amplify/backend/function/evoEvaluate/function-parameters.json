@@ -24,8 +24,8 @@
   "lambdaLayers": [
     {
       "type": "ProjectLayer",
-      "resourceName": "evoLayer",
-      "version": 7
+      "resourceName": "evoBackend",
+      "version": 1
     }
   ]
 }
