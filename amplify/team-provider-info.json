@@ -18,7 +18,7 @@
       "function": {
         "cognitoNewUser": {
           "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
-          "s3Key": "amplify-builds/cognitoNewUser-52586461626f39445436-build.zip"
+          "s3Key": "amplify-builds/cognitoNewUser-69687443393165464533-build.zip"
         },
         "evoGenerate": {
           "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
@@ -48,7 +48,7 @@
                   "type": "private"
                 }
               ],
-              "hash": "JSoxIFTtDhfxg/0VL2BLgneyBKPVk9TUHXY6Z98Vp+4="
+              "hash": "NTXaoLUsodTyhyVXCu4ZB0S0WGWzMuk6SjACjOiWqdY="
             }
           }
         }

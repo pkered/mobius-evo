@@ -351,6 +351,25 @@ function SettingsForm({ formValuesState }) {
     }
 
     async function handleFinish() {
+        const myInit = {
+            body: JSON.stringify({
+                test1: '1',
+                test2: 2,
+                test3: {
+                    testa: 333,
+                    testb: "aaaaaaa"
+                }
+            }),
+            headers: {
+            },
+        };
+        try {
+            const res = await API.put('evoControlHandler', '/callControl', myInit);
+            console.log(res)
+        } catch (ex) {
+            console.log('~~~~~~',ex)
+        }
+        return;
         setIsSubmitting(true);
         const jobID = uuidv4();
         const jobSettings = { ...formValues, ...form.getFieldsValue() };
