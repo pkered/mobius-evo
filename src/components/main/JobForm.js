@@ -351,51 +351,41 @@ function SettingsForm({ formValuesState }) {
     }
 
     async function handleFinish() {
-        const myInit = {
-            body: JSON.stringify({
-                test1: '1',
-                test2: 2,
-                test3: {
-                    testa: 333,
-                    testb: "aaaaaaa"
-                }
-            }),
-            headers: {
-            },
-        };
-        try {
-            const res = await API.put('evoControlHandler', '/callControl', myInit);
-            console.log(res)
-        } catch (ex) {
-            console.log('~~~~~~',ex)
-        }
-        return;
-        setIsSubmitting(true);
         const jobID = uuidv4();
         const jobSettings = { ...formValues, ...form.getFieldsValue() };
+        if (!jobSettings.genUrl || !jobSettings.evalUrl) {
+            return;
+        }
+        setIsSubmitting(true);
         await initParams(jobID, jobSettings);
+        const jobParam = {
+            id: jobID,
+            userID: cognitoPayload.sub,
+            jobStatus: "inprogress",
+            owner: cognitoPayload.sub,
+            run: true,
+            evalUrl: jobSettings.evalUrl,
+            genUrl: Object.values(jobSettings.genUrl),
+            expiration: jobSettings.expiration,
+            description: jobSettings.description,
+            max_designs: jobSettings.max_designs,
+            population_size: jobSettings.population_size,
+            tournament_size: jobSettings.tournament_size,
+            survival_size: jobSettings.survival_size,
+            errorMessage: null,
+        };
+        API.put('evoControlHandler', '/callControl', {
+            body: JSON.stringify(jobParam)
+        });
         API.graphql(
             graphqlOperation(createJob, {
-                input: {
-                    id: jobID,
-                    userID: cognitoPayload.sub,
-                    jobStatus: "inprogress",
-                    owner: cognitoPayload.sub,
-                    run: true,
-                    evalUrl: jobSettings.evalUrl,
-                    genUrl: Object.values(jobSettings.genUrl),
-                    expiration: jobSettings.expiration,
-                    description: jobSettings.description,
-                    max_designs: jobSettings.max_designs,
-                    population_size: jobSettings.population_size,
-                    tournament_size: jobSettings.tournament_size,
-                    survival_size: jobSettings.survival_size,
-                    errorMessage: null,
-                },
+                input: jobParam,
             })
         ).then(() => {
-            setIsSubmitting(false);
-            window.location.href = `/jobs/search-results#${QueryString.stringify({ id: jobID })}`;
+            setTimeout(() => {
+                setIsSubmitting(false);
+                window.location.href = `/jobs/search-results#${QueryString.stringify({ id: jobID })}`;
+            }, 1000);
         });
     }
     //   const formInitialValues = {

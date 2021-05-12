@@ -466,6 +466,16 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
         newJobSettings.evalUrl = jobSettings.evalUrl;
         setIsLoading(true);
         await initParams(jobSettings.id, newJobSettings);
+
+        jobSettings.jobStatus = "inprogress";
+        jobSettings.run = true;
+        jobSettings.max_designs = newJobSettings.max_designs;
+        jobSettings.population_size = newJobSettings.population_size;
+        jobSettings.tournament_size = newJobSettings.tournament_size;
+        jobSettings.survival_size = newJobSettings.survival_size;
+        API.put('evoControlHandler', '/callControl', {
+            body: JSON.stringify(jobSettings)
+        });
         API.graphql(
             graphqlOperation(updateJob, {
                 input: {
@@ -488,7 +498,7 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
                 );
             })
             .catch((err) => console.log(err));
-        jobSettings.expiration = newJobSettings.expiration;
+        // jobSettings.expiration = newJobSettings.expiration;
         jobSettings.max_designs = newJobSettings.max_designs;
         jobSettings.population_size = newJobSettings.population_size;
         jobSettings.tournament_size = newJobSettings.tournament_size;
@@ -761,7 +771,7 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
                         {jobSettings.genUrl.map((genUrl) => {
                             const genFile = genUrl.split("/").pop();
                             return (
-                                <Form.Item label={genFile} name={"genFile_" + genFile} key={"genFile_" + genFile} initialValue={0}>
+                                <Form.Item label={genFile} name={"genFile_" + genFile} key={"genFile_" + genFile}>
                                     <InputNumber min={formInitialValues["genFile_" + genFile]} onChange={onNumChange} />
                                 </Form.Item>
                             );

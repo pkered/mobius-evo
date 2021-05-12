@@ -660,8 +660,16 @@ export async function runGenEvalController(input) {
     // }
     // console.log("DynamoDB Record: %j", record.dynamodb);
     // const event = AWS.DynamoDB.Converter.unmarshall(record.dynamodb.NewImage);
-    const event = input.body;
-    console.log("Unmarshalled Record: %j", event);
+    let inputJSON;
+    console.log("~~~ input: ", input);
+    console.log("~~~ input type: ", typeof input);
+    try {
+        inputJSON = JSON.parse(input);
+    } catch (ex) {
+        inputJSON = input;
+    }
+    const event = inputJSON;
+    console.log("Unmarshalled Record:", event);
     if (!event.genUrl || !event.evalUrl || !event.run) {
         return false;
     }

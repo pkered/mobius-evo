@@ -106,7 +106,7 @@ async function getData(jobID, userID, setJobSettings, setJobResults, setIsLoadin
     )
         .then((queryResult) => {
             setJobSettings(queryResult.data.getJob);
-            if (queryResult.data.getJob.jobStatus === "inprogress") {
+            if (!queryResult.data.getJob || queryResult.data.getJob.jobStatus === "inprogress") {
                 setTimeout(() => {
                     // setIsLoading(true);
                     setJobResults([]);
