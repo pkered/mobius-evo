@@ -1,0 +1,40 @@
+{
+    "paths": [
+        {
+            "name": "/callControl",
+            "lambdaFunction": "evoControl",
+            "privacy": {
+                "private": true,
+                "auth": [
+                    "/PUT",
+                    "/PATCH"
+                ]
+            },
+            "policyResourceName": "/callControl"
+        }
+    ],
+    "resourceName": "evoControlHandler",
+    "apiName": "evoControlHandler",
+    "functionArns": [
+        {
+            "lambdaFunction": "evoControl"
+        }
+    ],
+    "privacy": {
+        "auth": 1,
+        "unauth": 0,
+        "authRoleName": "amplify-mobiusevo-dev-131353-authRole",
+        "unAuthRoleName": "amplify-mobiusevo-dev-131353-unauthRole"
+    },
+    "dependsOn": [
+        {
+            "category": "function",
+            "resourceName": "evoControl",
+            "attributes": [
+                "Name",
+                "Arn"
+            ]
+        }
+    ],
+    "uuid": "3cf7c2ea"
+}

@@ -1,0 +1,11 @@
+{
+  "AppSyncApiName": "MobiusEvoGraphQL",
+  "DynamoDBBillingMode": "PAY_PER_REQUEST",
+  "DynamoDBEnableServerSideEncryption": "false",
+  "AuthCognitoUserPoolId": {
+    "Fn::GetAtt": [
+      "authmobiusevoe7b26413",
+      "Outputs.UserPoolId"
+    ]
+  }
+}
