@@ -53,7 +53,7 @@ function NotAuthenticated() {
           <AmplifySignIn
             slot="sign-in"
             usernameAlias="email"
-            headerText="Get started!"
+            headerText="Sign In!"
           />
         </AmplifyAuthenticator>
         // <AmplifyAuthenticator usernameAlias="email">
