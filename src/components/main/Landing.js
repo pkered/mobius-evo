@@ -28,7 +28,7 @@ function NotAuthenticated() {
           <AmplifySignUp
             slot="sign-up"
             usernameAlias="email"s
-            headerText="Create a Mobius-exo Account"
+            headerText="Create a Mobius-evo Account"
             formFields={[
               {
                 type: "email",
