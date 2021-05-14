@@ -69,6 +69,13 @@
       "service": "Lambda",
       "dependsOn": [
         {
+          "category": "function",
+          "resourceName": "evoBackendLayer",
+          "attributes": [
+            "Arn"
+          ]
+        },
+        {
           "category": "storage",
           "resourceName": "mobiusevoUserfiles",
           "attributes": [
@@ -90,6 +97,13 @@
       "service": "Lambda",
       "dependsOn": [
         {
+          "category": "function",
+          "resourceName": "evoBackendLayer",
+          "attributes": [
+            "Arn"
+          ]
+        },
+        {
           "category": "storage",
           "resourceName": "mobiusevoUserfiles",
           "attributes": [
@@ -110,6 +124,13 @@
       "providerPlugin": "awscloudformation",
       "service": "Lambda",
       "dependsOn": [
+        {
+          "category": "function",
+          "resourceName": "evoBackendLayer",
+          "attributes": [
+            "Arn"
+          ]
+        },
         {
           "category": "storage",
           "resourceName": "mobiusevoUserfiles",

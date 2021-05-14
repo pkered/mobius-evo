@@ -45,9 +45,6 @@
             "1": {
               "permissions": [
                 {
-                  "type": "public"
-                },
-                {
                   "type": "private"
                 }
               ],
@@ -55,9 +52,6 @@
             },
             "2": {
               "permissions": [
-                {
-                  "type": "public"
-                },
                 {
                   "type": "private"
                 }
