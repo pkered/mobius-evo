@@ -155,7 +155,16 @@
         "Runtime": "nodejs14.x",
         "Layers": [
           {
-            "Fn::Sub": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:layer:evoBackend-dev:1"
+            "Fn::Sub": [
+                "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:layer:${layerName}-${env}:${layerVersion}",
+                {
+                  "layerName": "evoBackend",
+                  "env": {
+                    "Ref": "env"
+                  },
+                  "layerVersion": "1"
+                }
+            ]
           }
         ],
         "Timeout": "120",
