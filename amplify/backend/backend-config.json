@@ -140,11 +140,6 @@
         }
       ]
     },
-    "evoBackend": {
-      "providerPlugin": "awscloudformation",
-      "service": "LambdaLayer",
-      "build": true
-    },
     "evoBackendLayer": {
       "providerPlugin": "awscloudformation",
       "service": "LambdaLayer",
