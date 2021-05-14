@@ -32,9 +32,9 @@
           "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
           "s3Key": "amplify-builds/evoControl-62364c573459464e5672-build.zip"
         },
-        "evoBackend": {
+        "evoBackendLayer": {
           "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
-          "s3Key": "amplify-builds/evoBackend-build.zip"
+          "s3Key": "amplify-builds/evoBackendLayer-build.zip"
         }
       }
     },
@@ -61,10 +61,39 @@
             "3": {
               "permissions": [
                 {
+                  "type": "public"
+                },
+                {
                   "type": "private"
                 }
               ],
               "hash": "06OYOnsd/XbWaZvqh/R4wYg+Qo/bQ7X7kb8krEZrawc="
+            }
+          }
+        },
+        "evoBackendLayer": {
+          "layerVersionMap": {
+            "1": {
+              "permissions": [
+                {
+                  "type": "public"
+                },
+                {
+                  "type": "private"
+                }
+              ],
+              "hash": "06OYOnsd/XbWaZvqh/R4wYg+Qo/bQ7X7kb8krEZrawc="
+            },
+            "2": {
+              "permissions": [
+                {
+                  "type": "public"
+                },
+                {
+                  "type": "private"
+                }
+              ],
+              "hash": "Zys0kkxFaAv2+fTRtbIYtWnyuqVCcn2QWaaF2KnubeY="
             }
           }
         }

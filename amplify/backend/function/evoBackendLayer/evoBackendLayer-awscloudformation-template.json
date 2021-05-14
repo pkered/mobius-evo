@@ -43,7 +43,7 @@
         },
         "LayerName": {
           "Fn::Sub": [
-            "evoBackend-${env}",
+            "evoBackendLayer-${env}",
             {
               "env": {
                 "Ref": "env"
@@ -55,7 +55,7 @@
       "DeletionPolicy": "Retain",
       "UpdateReplacePolicy": "Retain"
     },
-    "LambdaLayerPermissionprivate1": {
+    "LambdaLayerPermissionpublic1": {
       "Type": "AWS::Lambda::LayerVersionPermission",
       "Properties": {
         "Action": "lambda:GetLayerVersion",
@@ -63,7 +63,7 @@
           "Fn::Sub": [
             "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:layer:${layerName}-${env}:${layerVersion}",
             {
-              "layerName": "evoBackend",
+              "layerName": "evoBackendLayer",
               "env": {
                 "Ref": "env"
               },
@@ -71,42 +71,17 @@
             }
           ]
         },
-        "Principal": {
-          "Ref": "AWS::AccountId"
-        }
+        "Principal": "*"
       }
     },
-    "LambdaLayerPermissionprivate2": {
-      "Type": "AWS::Lambda::LayerVersionPermission",
-      "Properties": {
-        "Action": "lambda:GetLayerVersion",
-        "LayerVersionArn": {
-          "Fn::Sub": [
-            "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:layer:${layerName}-${env}:${layerVersion}",
-            {
-              "layerName": "evoBackend",
-              "env": {
-                "Ref": "env"
-              },
-              "layerVersion": "2"
-            }
-          ]
-        },
-        "Principal": {
-          "Ref": "AWS::AccountId"
-        }
-      }
-    },
-    "LambdaLayerPermissionprivate3": {
+    "LambdaLayerPermissionpublic2": {
       "Type": "AWS::Lambda::LayerVersionPermission",
       "Properties": {
         "Action": "lambda:GetLayerVersion",
         "LayerVersionArn": {
           "Ref": "LambdaLayer"
         },
-        "Principal": {
-          "Ref": "AWS::AccountId"
-        }
+        "Principal": "*"
       }
     }
   },

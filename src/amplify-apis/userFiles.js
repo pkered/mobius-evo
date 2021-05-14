@@ -42,6 +42,15 @@ export async function getS3Url(s3Key, resolved, rejected) {
   }
 };
 
+export async function getS3Public(s3Key, resolved, rejected) {
+    try {
+      const s3Url = await Storage.get(s3Key, { level: "public"});
+      resolved(s3Url);
+    } catch (err) {
+      rejected();
+    }
+};
+
 export async function downloadS3(s3Key, resolved, rejected) {
     try {
       const s3Blob = await Storage.get(s3Key, { level: "protected", download: true });
