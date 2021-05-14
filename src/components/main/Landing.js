@@ -22,6 +22,7 @@ function NotAuthenticated() {
     }
     useEffect(() => onAuthUIStateChange(authUser));
 
+
     return (
         <AmplifyAuthenticator usernameAlias="email">
           <AmplifySignUp
