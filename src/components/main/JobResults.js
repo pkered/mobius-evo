@@ -12,10 +12,10 @@ import { ReactComponent as Download } from "../../assets/download.svg";
 import { ReactComponent as View } from "../../assets/view.svg";
 import { ResumeForm } from "./JobResults_resume.js";
 import Help from "./utils/Help";
+import { getS3Public } from "../../amplify-apis/userFiles";
 
 import "./JobResults.css";
 
-const S3_MODEL_URL = "https://mobius-evo-userfiles131353-dev.s3.amazonaws.com/public/";
 const MOBIUS_VIEWER_URL = 'https://design-automation.github.io/mobius-viewer-dev-0-7/';
 const { TabPane } = Tabs;
 
@@ -338,13 +338,6 @@ function ScorePlot({ jobResults, setModelText, setSelectedJobResult }) {
         <Column
             {...config}
             onReady={(plot) => {
-                // plot.on("element:click", (arg) => {
-                //     const data = arg.data.data;
-                //     document.getElementById("hiddenInput").value = S3_MODEL_URL + data.owner + "/" + data.JobID + "/" + data.id + "_eval.gi";
-                //     document.getElementById("hiddenButton").click();
-                //     const modelText = assembleModelText(data);
-                //     setModelText(modelText);
-                // });
                 plot.on("plot:click", (evt) => {
                     const { x, y } = evt;
                     const tooltipData = plot.chart.getTooltipItems({ x, y });
@@ -352,8 +345,10 @@ function ScorePlot({ jobResults, setModelText, setSelectedJobResult }) {
                         return;
                     }
                     const data = tooltipData[0].data;
-                    document.getElementById("hiddenInput").value = S3_MODEL_URL + data.owner + "/" + data.JobID + "/" + data.id + "_eval.gi";
-                    document.getElementById("hiddenButton").click();
+                    getS3Public(data.owner + "/" + data.JobID + "/" + data.id + "_eval.gi", url => {
+                        document.getElementById("hiddenInput").value = url;
+                        document.getElementById("hiddenButton").click();
+                    }, () => {})
                     const modelText = assembleModelText(data);
                     setModelText(modelText);
                     if (evt.data && evt.data.data ) {
@@ -366,7 +361,7 @@ function ScorePlot({ jobResults, setModelText, setSelectedJobResult }) {
     );
 }
 
-function ResultTable({ jobResults, contextUrl, setModelText, setSelectedJobResult }) {
+async function ResultTable({ jobResults, contextUrl, setModelText, setSelectedJobResult }) {
     const columns = [
         {
             title: "ID",
@@ -451,7 +446,7 @@ function ResultTable({ jobResults, contextUrl, setModelText, setSelectedJobResul
         },
     ];
     const errorRows = [];
-    const tableData = jobResults.map((entry) => {
+    const tableData = await jobResults.map(async (entry) => {
         let paramsString = "";
         if (entry.params) {
             paramsString = entry.params
@@ -468,10 +463,16 @@ function ResultTable({ jobResults, contextUrl, setModelText, setSelectedJobResul
             params: paramsString,
             score: entry.score,
             rowClass: entry.errorMessage ? "error-row" : "default-row",
-            genModel: S3_MODEL_URL + entry.owner + "/" + entry.JobID + "/" + entry.id + ".gi",
-            evalModel: S3_MODEL_URL + entry.owner + "/" + entry.JobID + "/" + entry.id + "_eval.gi",
+            genModel: '',
+            evalModel: '',
             resultText: assembleModelText(entry)
         };
+        await getS3Public(entry.owner + "/" + entry.JobID + "/" + entry.id,
+        data => {
+            tableEntry.genModel = data + '.gi';
+            tableEntry.evalModel = data + '_eval.gi';
+        }, () => {})
+
         if (entry.errorMessage) {
             errorRows.push(entry.GenID);
         }
@@ -608,13 +609,15 @@ function JobResults() {
             if (selectedJobResult.genModel) {
                 url = selectedJobResult.genModel;
             } else {
-                url = S3_MODEL_URL + selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + ".gi";
+                await getS3Public(selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + ".gi",
+                data => url = data, () => url = '')
             }
         } else {
             if (selectedJobResult.evalModel) {
                 url = selectedJobResult.evalModel;
             } else {
-                url = S3_MODEL_URL + selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + "_eval.gi";
+                await getS3Public(selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + "_eval.gi",
+                data => url = data, () => url = '')
             }
         }
         await fetch(url).then(t => {
@@ -626,7 +629,7 @@ function JobResults() {
             });
         })
     }
-    function openViewerInNewTab(isGen = false) {
+    async function openViewerInNewTab(isGen = false) {
         if (!selectedJobResult) { 
             notify('Unable to Download!', 'No result was selected, unable to download gi model.', true)
             return;
@@ -636,13 +639,15 @@ function JobResults() {
             if (selectedJobResult.genModel) {
                 url = selectedJobResult.genModel;
             } else {
-                url = S3_MODEL_URL + selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + ".gi";
+                await getS3Public(selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + ".gi",
+                data => url = data, () => url = '')
             }
         } else {
             if (selectedJobResult.evalModel) {
                 url = selectedJobResult.evalModel;
             } else {
-                url = S3_MODEL_URL + selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + "_eval.gi";
+                await getS3Public(selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + "_eval.gi",
+                data => url = data, () => url = '')
             }
         }
         const a = document.getElementById("hiddenLink");
