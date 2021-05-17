@@ -154,7 +154,7 @@
         },
         "Runtime": "nodejs14.x",
         "Layers": [
-          "arn:aws:lambda:us-east-1:114056409474:layer:evoBackendLayer-dev:6"
+          "arn:aws:lambda:us-east-1:114056409474:layer:evoBackendLayer-dev:1"
         ],
         "Timeout": "120",
         "MemorySize": 3008
