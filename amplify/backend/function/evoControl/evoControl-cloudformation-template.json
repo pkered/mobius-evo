@@ -172,16 +172,7 @@
         },
         "Runtime": "nodejs14.x",
         "Layers": [
-          {
-            "Fn::Sub": [
-              "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:layer:evoBackendLayer-${env}:1",
-              {
-                "env": {
-                  "Ref": "env"
-                }
-              }
-            ]
-          }
+          "arn:aws:lambda:us-east-1:114056409474:layer:evo_layer:2"
         ],
         "Timeout": "900",
         "MemorySize": 1024

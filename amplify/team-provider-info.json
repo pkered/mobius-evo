@@ -27,29 +27,6 @@
         "evoControl": {
           "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
           "s3Key": "amplify-builds/evoControl-62364c573459464e5672-build.zip"
-        },
-        "evoBackendLayer": {
-          "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
-          "s3Key": "amplify-builds/evoBackendLayer-build.zip"
-        }
-      }
-    },
-    "nonCFNdata": {
-      "function": {
-        "evoBackendLayer": {
-          "layerVersionMap": {
-            "1": {
-              "permissions": [
-                {
-                  "type": "public"
-                },
-                {
-                  "type": "public"
-                }
-              ],
-              "hash": "06OYOnsd/XbWaZvqh/R4wYg+Qo/bQ7X7kb8krEZrawc="
-            }
-          }
         }
       }
     }
