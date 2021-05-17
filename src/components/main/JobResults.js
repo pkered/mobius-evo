@@ -361,7 +361,7 @@ function ScorePlot({ jobResults, setModelText, setSelectedJobResult }) {
     );
 }
 
-async function ResultTable({ jobResults, contextUrl, setModelText, setSelectedJobResult }) {
+function ResultTable({ jobResults, contextUrl, setModelText, setSelectedJobResult }) {
     const columns = [
         {
             title: "ID",
@@ -446,7 +446,7 @@ async function ResultTable({ jobResults, contextUrl, setModelText, setSelectedJo
         },
     ];
     const errorRows = [];
-    const tableData = await jobResults.map(async (entry) => {
+    const tableData = jobResults.map((entry) => {
         let paramsString = "";
         if (entry.params) {
             paramsString = entry.params
@@ -467,7 +467,7 @@ async function ResultTable({ jobResults, contextUrl, setModelText, setSelectedJo
             evalModel: '',
             resultText: assembleModelText(entry)
         };
-        await getS3Public(entry.owner + "/" + entry.JobID + "/" + entry.id,
+        getS3Public(entry.owner + "/" + entry.JobID + "/" + entry.id,
         data => {
             tableEntry.genModel = data + '.gi';
             tableEntry.evalModel = data + '_eval.gi';
@@ -609,14 +609,14 @@ function JobResults() {
             if (selectedJobResult.genModel) {
                 url = selectedJobResult.genModel;
             } else {
-                await getS3Public(selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + ".gi",
+                getS3Public(selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + ".gi",
                 data => url = data, () => url = '')
             }
         } else {
             if (selectedJobResult.evalModel) {
                 url = selectedJobResult.evalModel;
             } else {
-                await getS3Public(selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + "_eval.gi",
+                getS3Public(selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + "_eval.gi",
                 data => url = data, () => url = '')
             }
         }
@@ -639,14 +639,14 @@ function JobResults() {
             if (selectedJobResult.genModel) {
                 url = selectedJobResult.genModel;
             } else {
-                await getS3Public(selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + ".gi",
+                getS3Public(selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + ".gi",
                 data => url = data, () => url = '')
             }
         } else {
             if (selectedJobResult.evalModel) {
                 url = selectedJobResult.evalModel;
             } else {
-                await getS3Public(selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + "_eval.gi",
+                getS3Public(selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + "_eval.gi",
                 data => url = data, () => url = '')
             }
         }

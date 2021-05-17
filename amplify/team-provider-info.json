@@ -16,10 +16,6 @@
         "mobiusevoe7b26413": {}
       },
       "function": {
-        "cognitoNewUser": {
-          "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
-          "s3Key": "amplify-builds/cognitoNewUser-69687443393165464533-build.zip"
-        },
         "evoGenerate": {
           "deploymentBucketName": "amplify-mobiusevo-dev-131353-deployment",
           "s3Key": "amplify-builds/evoGenerate-692b53506e6e45635869-build.zip"
@@ -45,18 +41,13 @@
             "1": {
               "permissions": [
                 {
-                  "type": "private"
+                  "type": "public"
+                },
+                {
+                  "type": "public"
                 }
               ],
               "hash": "06OYOnsd/XbWaZvqh/R4wYg+Qo/bQ7X7kb8krEZrawc="
-            },
-            "2": {
-              "permissions": [
-                {
-                  "type": "private"
-                }
-              ],
-              "hash": "Zys0kkxFaAv2+fTRtbIYtWnyuqVCcn2QWaaF2KnubeY="
             }
           }
         }

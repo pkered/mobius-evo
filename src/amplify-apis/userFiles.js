@@ -42,13 +42,23 @@ export async function getS3Url(s3Key, resolved, rejected) {
   }
 };
 
-export async function getS3Public(s3Key, resolved, rejected) {
+export function getS3Public(s3Key, resolved, rejected) {
     try {
-      const s3Url = await Storage.get(s3Key, { level: "public"});
-      resolved(s3Url);
+        console.log('Storage',Storage._config);
+        const url = "https://" + Storage._config.AWSS3.bucket + ".s3." + 
+                    Storage._config.AWSS3.region + ".amazonaws.com/public/" + s3Key;
+        resolved(url);
     } catch (err) {
-      rejected();
+        rejected();
     }
+    // try {
+    //   const s3Url = await Storage.get(s3Key, { level: "public"});
+    //   console.log(s3Url)
+    //   console.log(s3Key)
+    //   resolved(s3Url);
+    // } catch (err) {
+    //   rejected();
+    // }
 };
 
 export async function downloadS3(s3Key, resolved, rejected) {

@@ -48,21 +48,6 @@
     }
   },
   "function": {
-    "cognitoNewUser": {
-      "build": true,
-      "providerPlugin": "awscloudformation",
-      "service": "Lambda",
-      "dependsOn": [
-        {
-          "category": "api",
-          "resourceName": "MobiusEvoGraphQL",
-          "attributes": [
-            "GraphQLAPIIdOutput",
-            "GraphQLAPIEndpointOutput"
-          ]
-        }
-      ]
-    },
     "evoGenerate": {
       "build": true,
       "providerPlugin": "awscloudformation",
