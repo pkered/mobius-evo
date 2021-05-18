@@ -314,7 +314,15 @@ function FilterForm({ modelParamsState, jobResultsState, filteredJobResultsState
 function ScorePlot({ jobResults, setModelText, setSelectedJobResult }) {
     const plotData = JSON.parse(JSON.stringify(jobResults));
 
-    plotData.forEach((result) => (result.genFile = result.genUrl.split("/").pop() + " - " + (result.live ? "live" : "dead")));
+    let minY, maxY = 0;
+    plotData.forEach((result) => {
+        if (result.score) {
+            if (!minY) { minY = result.score; }
+            minY = Math.min(minY, result.score);
+            maxY = Math.max(maxY, result.score);
+        }
+        result.genFile = result.genUrl.split("/").pop() + " - " + (result.live ? "live" : "dead")
+    });
     const config = {
         title: {
             visible: true,
@@ -327,6 +335,12 @@ function ScorePlot({ jobResults, setModelText, setSelectedJobResult }) {
         data: plotData,
         xField: "GenID",
         yField: "score",
+        meta: {
+            score: {
+                min: Math.floor(minY),
+                max: Math.ceil(maxY),
+            },
+        },
         seriesField: "genFile",
         slider: {
             start: 0,
