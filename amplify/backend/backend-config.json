@@ -124,6 +124,49 @@
           ]
         }
       ]
+    },
+    "evoController": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda",
+      "dependsOn": [
+        {
+          "category": "api",
+          "resourceName": "MobiusEvoGraphQL",
+          "attributes": [
+            "GraphQLAPIIdOutput",
+            "GraphQLAPIEndpointOutput"
+          ]
+        },
+        {
+          "category": "storage",
+          "resourceName": "mobiusevoUserfiles",
+          "attributes": [
+            "BucketName"
+          ]
+        },
+        {
+          "category": "api",
+          "resourceName": "MobiusEvoGraphQL",
+          "attributes": [
+            "GraphQLAPIIdOutput"
+          ]
+        },
+        {
+          "category": "function",
+          "resourceName": "evoGenerate",
+          "attributes": [
+            "Name"
+          ]
+        },
+        {
+          "category": "function",
+          "resourceName": "evoEvaluate",
+          "attributes": [
+            "Name"
+          ]
+        }
+      ]
     }
   }
 }

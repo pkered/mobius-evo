@@ -374,18 +374,16 @@ function SettingsForm({ formValuesState }) {
             survival_size: jobSettings.survival_size,
             errorMessage: null,
         };
-        API.put('evoControlHandler', '/callControl', {
-            body: JSON.stringify(jobParam)
-        });
+        // API.put('evoControlHandler', '/callControl', {
+        //     body: JSON.stringify(jobParam)
+        // });
         API.graphql(
             graphqlOperation(createJob, {
                 input: jobParam,
             })
         ).then(() => {
-            setTimeout(() => {
-                setIsSubmitting(false);
-                window.location.href = `/jobs/search-results#${QueryString.stringify({ id: jobID })}`;
-            }, 1000);
+            setIsSubmitting(false);
+            window.location.href = `/jobs/search-results#${QueryString.stringify({ id: jobID })}`;
         });
     }
     //   const formInitialValues = {
