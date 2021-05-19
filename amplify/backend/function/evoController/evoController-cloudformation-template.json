@@ -532,7 +532,7 @@
         "LambdaExecutionRole"
       ],
       "Properties": {
-        "BatchSize": 100,
+        "BatchSize": 1,
         "Enabled": true,
         "EventSourceArn": {
           "Fn::ImportValue": {
