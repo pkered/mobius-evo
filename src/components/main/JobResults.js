@@ -16,7 +16,7 @@ import { getS3Public } from "../../amplify-apis/userFiles";
 
 import "./JobResults.css";
 
-const MOBIUS_VIEWER_URL = 'https://design-automation.github.io/mobius-viewer-dev-0-7/';
+const MOBIUS_VIEWER_URL = "https://design-automation.github.io/mobius-viewer-dev-0-7/";
 const { TabPane } = Tabs;
 
 function paramsRegex(params) {
@@ -111,7 +111,7 @@ async function getData(jobID, userID, setJobSettings, setJobResults, setIsLoadin
                     // setIsLoading(true);
                     setJobResults([]);
                     getData(jobID, userID, setJobSettings, setJobResults, setIsLoading, callback);
-                }, 3000);
+                }, 5000);
             }
         })
         .catch((err) => {
@@ -311,17 +311,20 @@ function FilterForm({ modelParamsState, jobResultsState, filteredJobResultsState
     ) : null;
 }
 
-function ScorePlot({ jobResults, setModelText, setSelectedJobResult }) {
+function ScorePlot({jobSettings, jobResults, setModelText, setSelectedJobResult }) {
     const plotData = JSON.parse(JSON.stringify(jobResults));
 
-    let minY, maxY = 0;
+    let minY,
+        maxY = 0;
     plotData.forEach((result) => {
         if (result.score) {
-            if (!minY) { minY = result.score; }
+            if (!minY) {
+                minY = result.score;
+            }
             minY = Math.min(minY, result.score);
             maxY = Math.max(maxY, result.score);
         }
-        result.genFile = result.genUrl.split("/").pop() + " - " + (result.live ? "live" : "dead")
+        result.genFile = result.genUrl.split("/").pop() + " - " + (result.live ? "live" : "dead");
     });
     const config = {
         title: {
@@ -335,12 +338,6 @@ function ScorePlot({ jobResults, setModelText, setSelectedJobResult }) {
         data: plotData,
         xField: "GenID",
         yField: "score",
-        meta: {
-            score: {
-                min: Math.floor(minY),
-                max: Math.ceil(maxY),
-            },
-        },
         seriesField: "genFile",
         slider: {
             start: 0,
@@ -348,6 +345,14 @@ function ScorePlot({ jobResults, setModelText, setSelectedJobResult }) {
         },
         responsive: true,
     };
+    if (jobSettings.jobStatus === "completed") {
+        config.meta = {
+            score: {
+                min: Math.floor(minY),
+                max: Math.ceil(maxY),
+            },
+        };
+    }
     return (
         <Column
             {...config}
@@ -359,14 +364,18 @@ function ScorePlot({ jobResults, setModelText, setSelectedJobResult }) {
                         return;
                     }
                     const data = tooltipData[0].data;
-                    getS3Public(data.owner + "/" + data.JobID + "/" + data.id + "_eval.gi", url => {
-                        document.getElementById("hiddenInput").value = url;
-                        document.getElementById("hiddenButton").click();
-                    }, () => {})
+                    getS3Public(
+                        data.owner + "/" + data.JobID + "/" + data.id + "_eval.gi",
+                        (url) => {
+                            document.getElementById("hiddenInput").value = url;
+                            document.getElementById("hiddenButton").click();
+                        },
+                        () => {}
+                    );
                     const modelText = assembleModelText(data);
                     setModelText(modelText);
-                    if (evt.data && evt.data.data ) {
-                        console.log('*', evt.data.data)
+                    if (evt.data && evt.data.data) {
+                        console.log("*", evt.data.data);
                         setSelectedJobResult(evt.data.data);
                     }
                 });
@@ -477,15 +486,18 @@ function ResultTable({ jobResults, contextUrl, setModelText, setSelectedJobResul
             params: paramsString,
             score: entry.score,
             rowClass: entry.errorMessage ? "error-row" : "default-row",
-            genModel: '',
-            evalModel: '',
-            resultText: assembleModelText(entry)
+            genModel: "",
+            evalModel: "",
+            resultText: assembleModelText(entry),
         };
-        getS3Public(entry.owner + "/" + entry.JobID + "/" + entry.id,
-        data => {
-            tableEntry.genModel = data + '.gi';
-            tableEntry.evalModel = data + '_eval.gi';
-        }, () => {})
+        getS3Public(
+            entry.owner + "/" + entry.JobID + "/" + entry.id,
+            (data) => {
+                tableEntry.genModel = data + ".gi";
+                tableEntry.evalModel = data + "_eval.gi";
+            },
+            () => {}
+        );
 
         if (entry.errorMessage) {
             errorRows.push(entry.GenID);
@@ -578,8 +590,8 @@ function JobResults() {
             return;
         }
         notification.open({
-          message: title,
-          description: text,
+            message: title,
+            description: text,
         });
     };
 
@@ -614,8 +626,8 @@ function JobResults() {
         return urlString;
     }
     async function downloadSelectedModel(isGen = false) {
-        if (!selectedJobResult) { 
-            notify('Unable to Download!', 'No result was selected, unable to download gi model.', true)
+        if (!selectedJobResult) {
+            notify("Unable to Download!", "No result was selected, unable to download gi model.", true);
             return;
         }
         let url;
@@ -623,29 +635,35 @@ function JobResults() {
             if (selectedJobResult.genModel) {
                 url = selectedJobResult.genModel;
             } else {
-                getS3Public(selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + ".gi",
-                data => url = data, () => url = '')
+                getS3Public(
+                    selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + ".gi",
+                    (data) => (url = data),
+                    () => (url = "")
+                );
             }
         } else {
             if (selectedJobResult.evalModel) {
                 url = selectedJobResult.evalModel;
             } else {
-                getS3Public(selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + "_eval.gi",
-                data => url = data, () => url = '')
+                getS3Public(
+                    selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + "_eval.gi",
+                    (data) => (url = data),
+                    () => (url = "")
+                );
             }
         }
-        await fetch(url).then(t => {
-            return t.blob().then((b)=>{
+        await fetch(url).then((t) => {
+            return t.blob().then((b) => {
                 const a = document.getElementById("hiddenLink");
                 a.href = URL.createObjectURL(b);
-                a.setAttribute("download", selectedJobResult.id + (isGen? '_gen': '_eval') + '.gi');
+                a.setAttribute("download", selectedJobResult.id + (isGen ? "_gen" : "_eval") + ".gi");
                 a.click();
             });
-        })
+        });
     }
     async function openViewerInNewTab(isGen = false) {
-        if (!selectedJobResult) { 
-            notify('Unable to Download!', 'No result was selected, unable to download gi model.', true)
+        if (!selectedJobResult) {
+            notify("Unable to Download!", "No result was selected, unable to download gi model.", true);
             return;
         }
         let url;
@@ -653,21 +671,27 @@ function JobResults() {
             if (selectedJobResult.genModel) {
                 url = selectedJobResult.genModel;
             } else {
-                getS3Public(selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + ".gi",
-                data => url = data, () => url = '')
+                getS3Public(
+                    selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + ".gi",
+                    (data) => (url = data),
+                    () => (url = "")
+                );
             }
         } else {
             if (selectedJobResult.evalModel) {
                 url = selectedJobResult.evalModel;
             } else {
-                getS3Public(selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + "_eval.gi",
-                data => url = data, () => url = '')
+                getS3Public(
+                    selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + "_eval.gi",
+                    (data) => (url = data),
+                    () => (url = "")
+                );
             }
         }
         const a = document.getElementById("hiddenLink");
-        a.href = MOBIUS_VIEWER_URL + '?file=' + url;
+        a.href = MOBIUS_VIEWER_URL + "?file=" + url;
         a.setAttribute("download", null);
-        a.target = '_blank';
+        a.target = "_blank";
         a.click();
     }
 
@@ -734,18 +758,14 @@ function JobResults() {
                                             </Collapse.Panel>
                                             <Collapse.Panel header="Score Plot" key="2" extra={genExtra("result_score_plot")}>
                                                 <ScorePlot
+                                                    jobSettings={jobSettings}
                                                     jobResults={filteredJobResults ? filteredJobResults : jobResults}
                                                     setModelText={setModelText}
                                                     setSelectedJobResult={setSelectedJobResult}
                                                 />
                                             </Collapse.Panel>
                                             <Collapse.Panel header="Mobius Viewer" key="3" extra={genExtra("result_mobius_viewer")}>
-                                                <Iframe
-                                                    url={MOBIUS_VIEWER_URL}
-                                                    width="100%"
-                                                    height="600px"
-                                                    id="mobius_viewer"
-                                                />
+                                                <Iframe url={MOBIUS_VIEWER_URL} width="100%" height="600px" id="mobius_viewer" />
                                                 <br></br>
                                                 <Space direction="horizontal" size="large" style={{ width: "100%" }} align="start">
                                                     <Input.TextArea className="textArea" value={modelText} autoSize={true}></Input.TextArea>
@@ -843,10 +863,9 @@ function JobResults() {
                     </Tabs>
                     <br />
                     <br />
-                    <a id='hiddenLink' className='hiddenElement'></a>
+                    <a id="hiddenLink" className="hiddenElement"></a>
                 </>
             ) : null}
-
         </Space>
     );
 }
