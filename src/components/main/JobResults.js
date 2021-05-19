@@ -128,6 +128,7 @@ function viewModel(url, contextURLs = null) {
             }
         }
     }
+    console.log('~~~~',urls)
     iframe.postMessage(
         {
             messageType: "update",
@@ -776,17 +777,21 @@ function JobResults() {
                                                             <Button
                                                                 onClick={() => {
                                                                     const val = document.getElementById("contextUrlInput").value;
+                                                                    document.getElementById("hiddenContextUrl").value = val;
                                                                     setContextUrl(val);
+                                                                    document.getElementById("hiddenButton").click();
                                                                 }}
                                                             >
                                                                 apply
                                                             </Button>
-                                                            <Input id="hiddenInput" className="hiddenElement"></Input>
+                                                            <input id="hiddenInput" className="hiddenElement"></input>
+                                                            <input id="hiddenContextUrl" className="hiddenElement"></input>
                                                             <Button
                                                                 id="hiddenButton"
                                                                 className="hiddenElement"
                                                                 onClick={() => {
                                                                     const val = document.getElementById("hiddenInput").value;
+                                                                    const contextUrl = document.getElementById("hiddenContextUrl").value;
                                                                     viewModel(val, [contextUrl]);
                                                                 }}
                                                             >
