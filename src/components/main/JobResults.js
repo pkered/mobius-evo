@@ -5,8 +5,8 @@ import { updateJob } from "../../graphql/mutations";
 import * as QueryString from "query-string";
 import { Link } from "react-router-dom";
 import { Row, Space, Button, Spin, Form, Col, Divider, Input, Checkbox, Table, 
-    Popconfirm, Tabs, Descriptions, Collapse, Alert, notification, Scatter } from "antd";
-import { Column } from "@ant-design/charts";
+    Popconfirm, Tabs, Descriptions, Collapse, Alert, notification } from "antd";
+import { Column, Scatter } from "@ant-design/charts";
 import { AuthContext } from "../../Contexts";
 import Iframe from "react-iframe";
 import { ReactComponent as Download } from "../../assets/download.svg";
@@ -331,21 +331,19 @@ function ProgressPlot({jobSettings, jobResults, setModelText, setSelectedJobResu
     const config = {
         title: {
             visible: true,
-            text: "Score Plot",
+            text: "Progress Plot",
         },
         description: {
             visible: true,
-            text: "Evaluated score over generations",
+            text: "Score Progression over Generations",
         },
         data: plotData,
-        xField: "GenID",
+        xField: "generation",
         yField: "score",
-        seriesField: "genFile",
-        slider: {
-            start: 0,
-            end: 1,
-        },
-        responsive: true,
+        shape: 'circle',
+        colorField: "genFile",
+        appendPadding: 10,
+        size: 4,
     };
     if (jobSettings.jobStatus === "completed") {
         config.meta = {
@@ -356,33 +354,7 @@ function ProgressPlot({jobSettings, jobResults, setModelText, setSelectedJobResu
         };
     }
     return (
-        <Column
-            {...config}
-            onReady={(plot) => {
-                plot.on("plot:click", (evt) => {
-                    const { x, y } = evt;
-                    const tooltipData = plot.chart.getTooltipItems({ x, y });
-                    if (tooltipData.length === 0) {
-                        return;
-                    }
-                    const data = tooltipData[0].data;
-                    getS3Public(
-                        data.owner + "/" + data.JobID + "/" + data.id + "_eval.gi",
-                        (url) => {
-                            document.getElementById("hiddenInput").value = url;
-                            document.getElementById("hiddenButton").click();
-                        },
-                        () => {}
-                    );
-                    const modelText = assembleModelText(data);
-                    setModelText(modelText);
-                    if (evt.data && evt.data.data) {
-                        console.log("*", evt.data.data);
-                        setSelectedJobResult(evt.data.data);
-                    }
-                });
-            }}
-        />
+        <Scatter {...config} />
     );
 }
 
@@ -418,7 +390,6 @@ function ScorePlot({jobSettings, jobResults, setModelText, setSelectedJobResult 
             start: 0,
             end: 1,
         },
-        responsive: true,
     };
     if (jobSettings.jobStatus === "completed") {
         config.meta = {
@@ -831,14 +802,14 @@ function JobResults() {
                                                     setIsLoadingState={{ isLoading, setIsLoading }}
                                                 />
                                             </Collapse.Panel>
-                                            {/* <Collapse.Panel header="Progress Plot" key="2" extra={genExtra("progress_score_plot")}>
+                                            <Collapse.Panel header="Progress Plot" key="2" extra={genExtra("progress_score_plot")}>
                                                 <ProgressPlot
                                                     jobSettings={jobSettings}
                                                     jobResults={filteredJobResults ? filteredJobResults : jobResults}
                                                     setModelText={setModelText}
                                                     setSelectedJobResult={setSelectedJobResult}
                                                 />
-                                            </Collapse.Panel> */}
+                                            </Collapse.Panel>
                                             <Collapse.Panel header="Score Plot" key="3" extra={genExtra("result_score_plot")}>
                                                 <ScorePlot
                                                     jobSettings={jobSettings}
