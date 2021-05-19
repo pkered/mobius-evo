@@ -129,7 +129,6 @@ function viewModel(url, contextURLs = null) {
             }
         }
     }
-    console.log('~~~~',urls)
     iframe.postMessage(
         {
             messageType: "update",
@@ -360,7 +359,6 @@ function ProgressPlot({jobSettings, jobResults, setModelText, setSelectedJobResu
 
 function ScorePlot({jobSettings, jobResults, setModelText, setSelectedJobResult }) {
     const plotData = JSON.parse(JSON.stringify(jobResults));
-
     let minY,
         maxY = 0;
     plotData.forEach((result) => {
@@ -421,7 +419,6 @@ function ScorePlot({jobSettings, jobResults, setModelText, setSelectedJobResult 
                     const modelText = assembleModelText(data);
                     setModelText(modelText);
                     if (evt.data && evt.data.data) {
-                        console.log("*", evt.data.data);
                         setSelectedJobResult(evt.data.data);
                     }
                 });
@@ -802,14 +799,14 @@ function JobResults() {
                                                     setIsLoadingState={{ isLoading, setIsLoading }}
                                                 />
                                             </Collapse.Panel>
-                                            <Collapse.Panel header="Progress Plot" key="2" extra={genExtra("progress_score_plot")}>
+                                            {/* <Collapse.Panel header="Progress Plot" key="2" extra={genExtra("progress_score_plot")}>
                                                 <ProgressPlot
                                                     jobSettings={jobSettings}
                                                     jobResults={filteredJobResults ? filteredJobResults : jobResults}
                                                     setModelText={setModelText}
                                                     setSelectedJobResult={setSelectedJobResult}
                                                 />
-                                            </Collapse.Panel>
+                                            </Collapse.Panel> */}
                                             <Collapse.Panel header="Score Plot" key="3" extra={genExtra("result_score_plot")}>
                                                 <ScorePlot
                                                     jobSettings={jobSettings}

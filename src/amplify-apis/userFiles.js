@@ -44,7 +44,6 @@ export async function getS3Url(s3Key, resolved, rejected) {
 
 export function getS3Public(s3Key, resolved, rejected) {
     try {
-        console.log('Storage',Storage._config);
         const url = "https://" + Storage._config.AWSS3.bucket + ".s3." + 
                     Storage._config.AWSS3.region + ".amazonaws.com/public/" + s3Key;
         resolved(url);
