@@ -9,11 +9,12 @@ import { Row, Space, Button, Spin, Form, Col, Divider, Input, Checkbox, Table,
 import { Column, Scatter } from "@ant-design/charts";
 import { AuthContext } from "../../Contexts";
 import Iframe from "react-iframe";
-import { ReactComponent as Download } from "../../assets/download.svg";
+// import { ReactComponent as Download } from "../../assets/download.svg";
 import { ReactComponent as View } from "../../assets/view.svg";
 import { ResumeForm } from "./JobResults_resume.js";
 import Help from "./utils/Help";
 import { getS3Public } from "../../amplify-apis/userFiles";
+import { QuestionCircleOutlined } from '@ant-design/icons';
 
 import "./JobResults.css";
 
@@ -121,7 +122,7 @@ async function getData(jobID, userID, setJobSettings, setJobResults, setIsLoadin
 }
 function viewModel(url, contextURLs = null) {
     const iframe = document.getElementById("mobius_viewer").contentWindow;
-    let urls = [url];
+    let urls = [];
     if (contextURLs && Array.isArray(contextURLs)) {
         for (const contextUrl of contextURLs) {
             if (contextUrl && contextUrl !== "") {
@@ -129,6 +130,7 @@ function viewModel(url, contextURLs = null) {
             }
         }
     }
+    urls.push(url);
     iframe.postMessage(
         {
             messageType: "update",
@@ -161,7 +163,6 @@ function FilterForm({ modelParamsState, jobResultsState, filteredJobResultsState
             }
             processedValues[vals[0]][vals[1]] = values[i];
         }
-        console.log(processedValues);
 
         jobResults.forEach((result) => {
             const params = JSON.parse(result.params);
@@ -247,10 +248,9 @@ function FilterForm({ modelParamsState, jobResultsState, filteredJobResultsState
     //     }
     //   }
     // },[isLoading, isFiltering])
-    // useEffect(() => {
-    //     console.log('reset field')
-    //     form.resetFields()
-    // }, [form, initialValues]);
+    useEffect(() => {
+        form.resetFields()
+    }, [form, initialValues]);
 
     return !isLoading ? (
         <Form form={form} onFinish={handleFinish} initialValues={initialValues}>
@@ -389,13 +389,11 @@ function ScorePlot({jobSettings, jobResults, setModelText, setSelectedJobResult 
             end: 1,
         },
     };
-    if (jobSettings.jobStatus === "completed") {
-        config.meta = {
-            score: {
-                min: Math.floor(minY * 10) / 10,
-                max: Math.ceil(maxY * 10) / 10,
-            },
-        };
+    if (minY && maxY) {
+        config.yAxis= {
+            min: Math.floor(minY),
+            max: Math.ceil(maxY)
+        }
     }
     return (
         <Column
@@ -651,8 +649,10 @@ function JobResults() {
             ).catch((err) => console.log({ cancelJobError: err }));
         }
         return (
-            <Popconfirm placement="topRight" title="Cancel Search?" onConfirm={cancelJob} okText="Yes" cancelText="No">
-                <Button type="default">Cancel</Button>
+            <Popconfirm placement="topRight" title="Stop Process?" onConfirm={cancelJob}
+            icon={<QuestionCircleOutlined style={{ color: 'red' }}/>}
+            okText="Yes" cancelText="No">
+                <Button type="primary" danger>Stop Process</Button>
             </Popconfirm>
         );
     };

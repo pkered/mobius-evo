@@ -8,7 +8,7 @@ import { uploadS3, listS3, getS3Url, downloadS3 } from "../../amplify-apis/userF
 import { UploadOutlined } from "@ant-design/icons";
 import { AuthContext } from "../../Contexts";
 import { Link } from "react-router-dom";
-import { Form, Input, InputNumber, Button, Tooltip, Table, Radio, Checkbox, Upload, message, Tag, Space, Spin, Row, Collapse } from "antd";
+import { Form, Input, InputNumber, Button, Tooltip, Table, Radio, Checkbox, Upload, message, Tag, Space, Spin, Row, Collapse, notification } from "antd";
 import Help from "./utils/Help";
 import helpJSON from "../../assets/help/help_text_json";
 import Auth from '@aws-amplify/auth';
@@ -23,6 +23,19 @@ const testDefault = {
     expiration: 86400,
     genFile_random_generated: 6,
     genFile_total_items: 6,
+};
+const notify = (title, text, isWarn = false) => {
+    if (isWarn) {
+        notification.error({
+            message: title,
+            description: text,
+        });
+        return;
+    }
+    notification.open({
+        message: title,
+        description: text,
+    });
 };
 
 function SettingsForm({ formValuesState }) {
@@ -94,7 +107,7 @@ function SettingsForm({ formValuesState }) {
                                     formValues.genUrl[genF] = s3Url;
                                     formValues.genKeys.push(genF);
                                     genElements.push(
-                                        <Form.Item label={genF} name={"genFile_" + genF} key={genF} initialValue={0}>
+                                        <Form.Item label={genF} name={"genFile_" + genF} key={genF} initialValue={0} rules={[{required: true}, {validator: checkGenFile}]}>
                                             <InputNumber min={0} onChange={onNumChange} />
                                         </Form.Item>
                                     );
@@ -354,6 +367,7 @@ function SettingsForm({ formValuesState }) {
         const jobID = uuidv4();
         const jobSettings = { ...formValues, ...form.getFieldsValue() };
         if (!jobSettings.genUrl || !jobSettings.evalUrl) {
+            notify('Unable to Start Job', 'Please select at least one Gen File and one Eval File!', true);
             return;
         }
         setIsSubmitting(true);
@@ -385,6 +399,9 @@ function SettingsForm({ formValuesState }) {
             setIsSubmitting(false);
             window.location.href = `/jobs/search-results#${QueryString.stringify({ id: jobID })}`;
         });
+    }
+    function handleFinishFail() {
+        notify('Unable to Start Job', 'Please check for Errors in form!', true);
     }
     //   const formInitialValues = {
     //     description: `New Job`,
@@ -419,37 +436,70 @@ function SettingsForm({ formValuesState }) {
             let countDiff = starting_population - totalCount;
             const formUpdate = { genFile_total_items: starting_population };
             if (countDiff < 0) {
-                if (e !== null) {
-                    const inpID = document.activeElement.id.split("jobSettings_")[1];
-                    formUpdate[inpID] = countDiff + Number(form.getFieldValue(inpID));
-                    document.activeElement.value = formUpdate[inpID];
-                    countDiff = 0;
-                } else {
-                    if (formValues.genKeys) {
-                        formValues.genKeys.forEach((genFile) => {
-                            if (countDiff >= 0) {
-                                return;
-                            }
-                            const inpID = "genFile_" + genFile;
-                            const inpCount = Number(form.getFieldValue(inpID));
-                            if (inpCount === 0) {
-                                return;
-                            }
-                            if (inpCount + countDiff >= 0) {
-                                formUpdate[inpID] = inpCount + countDiff;
-                                countDiff = 0;
-                                return;
-                            }
-                            formUpdate[inpID] = 0;
-                            countDiff += inpCount;
-                        });
-                    }
-                }
+                countDiff = 0;
+                // if (e !== null) {
+                //     const inpID = document.activeElement.id.split("jobSettings_")[1];
+                //     formUpdate[inpID] = countDiff + Number(form.getFieldValue(inpID));
+                //     countDiff = 0;
+                // } else {
+                //     if (formValues.genKeys) {
+                //         formValues.genKeys.forEach((genFile) => {
+                //             if (countDiff >= 0) {
+                //                 return;
+                //             }
+                //             const inpID = "genFile_" + genFile;
+                //             const inpCount = Number(form.getFieldValue(inpID));
+                //             if (inpCount === 0) {
+                //                 return;
+                //             }
+                //             if (inpCount + countDiff >= 0) {
+                //                 formUpdate[inpID] = inpCount + countDiff;
+                //                 countDiff = 0;
+                //                 return;
+                //             }
+                //             formUpdate[inpID] = 0;
+                //             countDiff += inpCount;
+                //         });
+                //     }
+                // }
             }
             formUpdate["genFile_random_generated"] = countDiff;
             form.setFieldsValue(formUpdate);
         }, 0);
     }
+    function checkTournament(_, value) {
+        const popVal = form.getFieldValue('population_size');
+        const survivalVal = form.getFieldValue('survival_size');
+        if (value > popVal * 2) {
+            return Promise.reject(new Error('Tournament size must not be larger than 2 * population_size!'));
+        }
+        if (value > survivalVal) {
+            return Promise.resolve();
+        }
+        return Promise.reject(new Error('Tournament size must be larger than Survival size!'));
+    }
+    function checkSurvival(_, value) {
+        const tournamentVal = form.getFieldValue('tournament_size');
+        if (value < tournamentVal) {
+            return Promise.resolve();
+        }
+        return Promise.reject(new Error('Survival size must be smaller than Tournament size!'));
+    }
+    function checkGenFile(_) {
+        const formVal = form.getFieldsValue();
+        const totalVal = Number(formVal.genFile_total_items);
+        let totalCount = 0;
+        Object.keys(formVal).forEach(k => {
+            if (k.startsWith('genFile_') && k !== 'genFile_total_items' && k !== 'genFile_random_generated') {
+                totalCount += Number(formVal[k]);
+            }
+        })
+        if (totalVal < totalCount) {
+            return Promise.reject(new Error('Total number of genFile parameters cannot be higher than Total Starting Items'));
+        }
+        return Promise.resolve();
+    }
+
     const genExtra = (part) => <Help page="start_new_job_page" part={part}></Help>;
     let helpText = {};
     try {
@@ -465,11 +515,15 @@ function SettingsForm({ formValuesState }) {
     //         );
     //     });
     // }
+    const rules = [{required: true}]
     return (
         <Spin spinning={isSubmitting} tip="Starting Job...">
             <Form
                 name="jobSettings"
                 onFinish={handleFinish}
+                onFinishFailed={handleFinishFail}
+                scrollToFirstError={true}
+                requiredMark={false}
                 form={form}
                 labelCol={{ span: 6 }}
                 wrapperCol={{ span: 16 }}
@@ -486,31 +540,31 @@ function SettingsForm({ formValuesState }) {
                         </Tooltip>
 
                         <Tooltip placement="topLeft" title={helpText.max_designs}>
-                            <Form.Item label="Number of Designs" name="max_designs">
+                            <Form.Item label="Number of Designs" name="max_designs" rules={rules}>
                                 <InputNumber min={1} />
                             </Form.Item>
                         </Tooltip>
 
                         <Tooltip placement="topLeft" title={helpText.population_size}>
-                            <Form.Item label="Population Size" name="population_size">
+                            <Form.Item label="Population Size" name="population_size" rules={rules}>
                                 <InputNumber min={1} onChange={onPopChange} />
                             </Form.Item>
                         </Tooltip>
 
                         <Tooltip placement="topLeft" title={helpText.tournament_size}>
-                            <Form.Item label="Tournament Size" name="tournament_size">
+                            <Form.Item label="Tournament Size" name="tournament_size" rules={[...rules, { validator: checkTournament }]}>
                                 <InputNumber />
                             </Form.Item>
                         </Tooltip>
 
                         <Tooltip placement="topLeft" title={helpText.survival_size}>
-                            <Form.Item label="Survival Size" name="survival_size">
+                            <Form.Item label="Survival Size" name="survival_size" rules={[...rules, { validator: checkSurvival }]}>
                                 <InputNumber />
                             </Form.Item>
                         </Tooltip>
 
                         <Tooltip placement="topLeft" title={helpText.expiration}>
-                            <Form.Item label="Expiration" name="expiration">
+                            <Form.Item label="Expiration" name="expiration" rules={rules}>
                                 <InputNumber />
                             </Form.Item>
                         </Tooltip>

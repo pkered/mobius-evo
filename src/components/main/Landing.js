@@ -22,43 +22,42 @@ function NotAuthenticated() {
     }
     useEffect(() => onAuthUIStateChange(authUser));
 
-
     return (
-        <AmplifyAuthenticator usernameAlias="email">
-          <AmplifySignUp
-            slot="sign-up"
-            usernameAlias="email"s
-            headerText="Create a Mobius-evo Account"
-            formFields={[
-              {
-                type: "email",
-                label: "E-mail",
-                placeholder: "email@email.mail",
-                required: true
-              },
-              {
-                type: "password",
-                label: "Password",
-                placeholder: "********",
-                required: true
-              },
-              {
-                type: "nickname",
-                label: "How should we address you?",
-                placeholder: "nickname",
-                required: true
-              }
-            ]}
-          />
-          <AmplifySignIn
-            slot="sign-in"
-            usernameAlias="email"
-            headerText="Sign In!"
-          />
-        </AmplifyAuthenticator>
         // <AmplifyAuthenticator usernameAlias="email">
-        //     <AmplifySignIn slot="sign-in" usernameAlias="email" headerText="Get started!" hideSignUp />
+        //   <AmplifySignUp
+        //     slot="sign-up"
+        //     usernameAlias="email"s
+        //     headerText="Create a Mobius-exo Account"
+        //     formFields={[
+        //       {
+        //         type: "email",
+        //         label: "E-mail",
+        //         placeholder: "email@email.mail",
+        //         required: true
+        //       },
+        //       {
+        //         type: "password",
+        //         label: "Password",
+        //         placeholder: "********",
+        //         required: true
+        //       },
+        //       {
+        //         type: "nickname",
+        //         label: "How should we address you?",
+        //         placeholder: "nickname",
+        //         required: true
+        //       }
+        //     ]}
+        //   />
+        //   <AmplifySignIn
+        //     slot="sign-in"
+        //     usernameAlias="email"
+        //     headerText="Get started!"
+        //   />
         // </AmplifyAuthenticator>
+        <AmplifyAuthenticator usernameAlias="email">
+            <AmplifySignIn slot="sign-in" usernameAlias="email" headerText="Get started!" hideSignUp />
+        </AmplifyAuthenticator>
     );
 }
 

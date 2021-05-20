@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Form, Space, Button, Radio, InputNumber, Upload, message, Tag, Table, Modal, Row, Collapse, Tooltip } from "antd";
+import { Form, Space, Button, Radio, InputNumber, Upload, message, Tag, Table, Modal, Row, Collapse, Tooltip, notification } from "antd";
 import { uploadS3, listS3, getS3Url, downloadS3 } from "../../amplify-apis/userFiles";
 import { UploadOutlined } from "@ant-design/icons";
 import { API, graphqlOperation } from "aws-amplify";
@@ -7,6 +7,20 @@ import { createGenEvalParam, updateGenEvalParam, updateJob } from "../../graphql
 import "./JobResults_resume.css";
 import Help from "./utils/Help";
 import helpJSON from "../../assets/help/help_text_json";
+
+const notify = (title, text, isWarn = false) => {
+    if (isWarn) {
+        notification.error({
+            message: title,
+            description: text,
+        });
+        return;
+    }
+    notification.open({
+        message: title,
+        description: text,
+    });
+};
 
 function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsState, replacedUrl, replaceEvalCheck }) {
     const [s3Files, setS3Files] = useState([]);
@@ -16,6 +30,7 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
     const { jobSettings, setJobSettings } = jobSettingsState;
     const { jobResults, setJobResults } = jobResultsState;
     const [newFile, setnewFile] = useState(null);
+
 
     const handleOk = async () => {
         if (!replaceEvalCheck) {
@@ -37,6 +52,10 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
         );
         let okCheck = false;
         if (!replacedUrl) {
+            if (jobSettings.genUrl.indexOf(newUrl) !== -1) {
+                notify('Unable to add gen file!', 'Job already contains Gen file to be added.')
+                return;
+            }
             jobSettings.genUrl.push(newUrl);
             okCheck = true;
         } else {
@@ -450,6 +469,10 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
     }
 
     async function handleFinish() {
+        if (jobSettings.genUrl.length === 0) {
+            notify('Unable to Resume Job', 'Please add least one Gen File!', true);
+            return;
+        }
         const newJobSettings = { ...form.getFieldsValue() };
         newJobSettings.description = jobSettings.description;
         newJobSettings.genUrl = {};
@@ -502,6 +525,9 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
         jobSettings.survival_size = newJobSettings.survival_size;
         setJobSettings(jobSettings);
     }
+    function handleFinishFail() {
+        notify('Unable to Resume Job', 'Please check for Errors in form!', true);
+    }
     function onNewDesignChange(e) {
         setTimeout(() => {
             const newDesigns = Number(form.getFieldValue("newDesigns"));
@@ -524,36 +550,44 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
             totalCount += Number(form.getFieldValue("genFile_mutate"));
             let countDiff = starting_population - totalCount;
             const formUpdate = { genFile_total_items: starting_population };
-            if (countDiff < 0) {
-                if (e !== null) {
-                    const inpID = document.activeElement.id.split("ResumeJob_")[1];
-                    formUpdate[inpID] = countDiff + Number(form.getFieldValue(inpID));
-                    document.activeElement.value = formUpdate[inpID];
-                    countDiff = 0;
-                } else {
-                    jobSettings.genUrl.forEach((genUrl) => {
-                        if (countDiff >= 0) {
-                            return;
-                        }
-                        const genFile = genUrl.split("/").pop();
-                        const inpID = "genFile_" + genFile;
-                        const inpCount = Number(form.getFieldValue(inpID));
-                        if (inpCount === 0) {
-                            return;
-                        }
-                        if (inpCount + countDiff >= 0) {
-                            formUpdate[inpID] = inpCount + countDiff;
-                            countDiff = 0;
-                            return;
-                        }
-                        formUpdate[inpID] = 0;
-                        countDiff += inpCount;
-                    });
-                }
-            }
+            if (countDiff < 0) { countDiff = 0; }
             formUpdate["genFile_random_generated"] = countDiff;
             form.setFieldsValue(formUpdate);
         }, 0);
+    }
+    function checkTournament(_, value) {
+        const popVal = form.getFieldValue('population_size');
+        const survivalVal = form.getFieldValue('survival_size');
+        if (value > popVal * 2) {
+            return Promise.reject(new Error('Tournament size must not be larger than 2 * population_size!'));
+        }
+        if (value > survivalVal) {
+            return Promise.resolve();
+        }
+        return Promise.reject(new Error('Tournament size must be larger than Survival size!'));
+    }
+    function checkSurvival(_, value) {
+        const tournamentVal = form.getFieldValue('tournament_size');
+        if (value < tournamentVal) {
+            return Promise.resolve();
+        }
+        return Promise.reject(new Error('Survival size must be smaller than Tournament size!'));
+    }
+    function checkGenFile(_) {
+        const formVal = form.getFieldsValue();
+        const totalVal = Number(formVal.genFile_total_items);
+        let totalCount = 0;
+        jobSettings.genUrl.forEach((genUrl) => {
+            const genFile = genUrl.split("/").pop();
+            const inpID = "genFile_" + genFile;
+            totalCount += Number(formVal[inpID]);
+        });
+        totalCount += Number(form.getFieldValue("genFile_mutate"));
+
+        if (totalVal < totalCount) {
+            return Promise.reject(new Error('Total number of genFile parameters cannot be higher than Total Starting Items'));
+        }
+        return Promise.resolve();
     }
     const formInitialValues = {
         max_designs: jobSettings.max_designs * 2,
@@ -605,6 +639,7 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
             )
                 .then()
                 .catch((err) => console.log(err));
+            setJobSettings(null);
             setJobSettings(jobSettings);
         }
     };
@@ -702,11 +737,15 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
         helpText = helpJSON.hover.result_page;
     } catch (ex) {}
 
+    const rules = [{required: true}]
     return (
         <>
             <Form
                 name="ResumeJob"
                 onFinish={handleFinish}
+                onFinishFailed={handleFinishFail}
+                scrollToFirstError={true}
+                requiredMark={false}
                 form={form}
                 labelCol={{ span: 6 }}
                 wrapperCol={{ span: 16 }}
@@ -717,31 +756,31 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
                 <Collapse defaultActiveKey={["1", "2", "3", "4"]}>
                     <Collapse.Panel header="New Settings 1" key="1" extra={genExtra("resume_new_settings_1")}>
                         <Tooltip placement="topLeft" title={helpText.max_designs}>
-                            <Form.Item label="New Max Designs" name="max_designs">
+                            <Form.Item label="New Max Designs" name="max_designs" rules={rules}>
                                 <InputNumber disabled />
                             </Form.Item>
                         </Tooltip>
 
                         <Tooltip placement="topLeft" title={helpText.new_designs}>
-                            <Form.Item label="Number of New Designs" name="newDesigns">
+                            <Form.Item label="Number of New Designs" name="newDesigns" rules={rules}>
                                 <InputNumber min={0} onChange={onNewDesignChange} />
                             </Form.Item>
                         </Tooltip>
 
                         <Tooltip placement="topLeft" title={helpText.population_size}>
-                            <Form.Item label="Population Size" name="population_size">
+                            <Form.Item label="Population Size" name="population_size" rules={rules}>
                                 <InputNumber min={1} onChange={onPopChange} />
                             </Form.Item>
                         </Tooltip>
 
                         <Tooltip placement="topLeft" title={helpText.tournament_size}>
-                            <Form.Item label="Tournament Size" name="tournament_size">
+                            <Form.Item label="Tournament Size" name="tournament_size" rules={[...rules,{ validator: checkTournament }]}>
                                 <InputNumber min={1} />
                             </Form.Item>
                         </Tooltip>
 
                         <Tooltip placement="topLeft" title={helpText.survival_size}>
-                            <Form.Item label="Survival Size" name="survival_size">
+                            <Form.Item label="Survival Size" name="survival_size" rules={[...rules,{ validator: checkSurvival }]}>
                                 <InputNumber min={1} />
                             </Form.Item>
                         </Tooltip>
@@ -764,18 +803,16 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
                                 <InputNumber disabled />
                             </Form.Item>
                         </Tooltip>
-
                         {jobSettings.genUrl.map((genUrl) => {
                             const genFile = genUrl.split("/").pop();
                             return (
-                                <Form.Item label={genFile} name={"genFile_" + genFile} key={"genFile_" + genFile}>
-                                    <InputNumber min={formInitialValues["genFile_" + genFile]} onChange={onNumChange} />
+                                <Form.Item label={genFile} name={"genFile_" + genFile} key={"genFile_" + genFile} rules={[...rules, {validator: checkGenFile}]}>
+                                    <InputNumber min={formInitialValues["genFile_" + genFile]} onChange={onNumChange}/>
                                 </Form.Item>
                             );
                         })}
-
                         <Tooltip placement="topLeft" title={helpText.mutate}>
-                            <Form.Item label="Mutate from Existing" name="genFile_mutate">
+                            <Form.Item label="Mutate from Existing" name="genFile_mutate" rules={rules}>
                                 <InputNumber min={0} onChange={onNumChange} />
                             </Form.Item>
                         </Tooltip>
