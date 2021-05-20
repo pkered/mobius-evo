@@ -9,11 +9,12 @@ import { Row, Space, Button, Spin, Form, Col, Divider, Input, Checkbox, Table,
 import { Column, Scatter } from "@ant-design/charts";
 import { AuthContext } from "../../Contexts";
 import Iframe from "react-iframe";
-import { ReactComponent as Download } from "../../assets/download.svg";
+// import { ReactComponent as Download } from "../../assets/download.svg";
 import { ReactComponent as View } from "../../assets/view.svg";
 import { ResumeForm } from "./JobResults_resume.js";
 import Help from "./utils/Help";
 import { getS3Public } from "../../amplify-apis/userFiles";
+import { QuestionCircleOutlined } from '@ant-design/icons';
 
 import "./JobResults.css";
 
@@ -651,8 +652,10 @@ function JobResults() {
             ).catch((err) => console.log({ cancelJobError: err }));
         }
         return (
-            <Popconfirm placement="topRight" title="Cancel Search?" onConfirm={cancelJob} okText="Yes" cancelText="No">
-                <Button type="default">Cancel</Button>
+            <Popconfirm placement="topRight" title="Stop Process?" onConfirm={cancelJob}
+            icon={<QuestionCircleOutlined style={{ color: 'red' }}/>}
+            okText="Yes" cancelText="No">
+                <Button type="primary" danger>Stop Process</Button>
             </Popconfirm>
         );
     };
