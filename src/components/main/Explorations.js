@@ -56,6 +56,14 @@ function JobTable({ isDataLoadingState, jobDataState }) {
             },
         },
         {
+            title: "Last Modified",
+            dataIndex: "updatedAt",
+            key: "updatedAt",
+            ...sortProps,
+            defaultSortOrder: "descend",
+            render: (text) => (<Space>{new Date(text).toLocaleString()}</Space>)
+        },
+        {
             title: "Gen File(s)",
             dataIndex: "genUrl",
             key: "genFile",
@@ -207,7 +215,7 @@ function JobTable({ isDataLoadingState, jobDataState }) {
                 showQuickJumper: true,
                 showTotal: (total) => `${total} files`,
             }}
-            scroll={{ x: 1500 }} sticky
+            scroll={{ x: 1800 }} sticky
         />
     </>);
 }
