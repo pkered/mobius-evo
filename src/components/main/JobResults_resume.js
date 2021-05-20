@@ -8,6 +8,20 @@ import "./JobResults_resume.css";
 import Help from "./utils/Help";
 import helpJSON from "../../assets/help/help_text_json";
 
+const notify = (title, text, isWarn = false) => {
+    if (isWarn) {
+        notification.error({
+            message: title,
+            description: text,
+        });
+        return;
+    }
+    notification.open({
+        message: title,
+        description: text,
+    });
+};
+
 function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsState, replacedUrl, replaceEvalCheck }) {
     const [s3Files, setS3Files] = useState([]);
     const [uploadedFiles, setUploadedFiles] = useState([]);
@@ -17,19 +31,6 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
     const { jobResults, setJobResults } = jobResultsState;
     const [newFile, setnewFile] = useState(null);
 
-    const notify = (title, text, isWarn = false) => {
-        if (isWarn) {
-            notification.error({
-                message: title,
-                description: text,
-            });
-            return;
-        }
-        notification.open({
-            message: title,
-            description: text,
-        });
-    };
 
     const handleOk = async () => {
         if (!replaceEvalCheck) {
@@ -378,6 +379,7 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
     const [replacedUrl, setReplacedUrl] = useState(null);
     const [replaceEvalCheck, setReplacedEvalCheck] = useState(false);
     const [form] = Form.useForm();
+    const [maxInpVals, setMaxInpVals] = useState({});
     async function initParams(jobID, newJobSettings) {
         let startingGenID = jobResults.length;
         const allPromises = [];
@@ -468,6 +470,10 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
     }
 
     async function handleFinish() {
+        if (jobSettings.genUrl.length === 0) {
+            notify('Unable to Resume Job', 'Please add least one Gen File!', true);
+            return;
+        }
         const newJobSettings = { ...form.getFieldsValue() };
         newJobSettings.description = jobSettings.description;
         newJobSettings.genUrl = {};
@@ -520,6 +526,9 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
         jobSettings.survival_size = newJobSettings.survival_size;
         setJobSettings(jobSettings);
     }
+    function handleFinishFail() {
+        notify('Unable to Resume Job', 'Please check for Errors in form!', true);
+    }
     function onNewDesignChange(e) {
         setTimeout(() => {
             const newDesigns = Number(form.getFieldValue("newDesigns"));
@@ -546,7 +555,6 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
                 if (e !== null) {
                     const inpID = document.activeElement.id.split("ResumeJob_")[1];
                     formUpdate[inpID] = countDiff + Number(form.getFieldValue(inpID));
-                    document.activeElement.value = formUpdate[inpID];
                     countDiff = 0;
                 } else {
                     jobSettings.genUrl.forEach((genUrl) => {
@@ -572,6 +580,20 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
             formUpdate["genFile_random_generated"] = countDiff;
             form.setFieldsValue(formUpdate);
         }, 0);
+    }
+    function checkTournament(_, value) {
+        const survivalVal = form.getFieldValue('survival_size');
+        if (value > survivalVal) {
+            return Promise.resolve();
+        }
+        return Promise.reject(new Error('Tournament size must be larger than Survival size!'));
+    }
+    function checkSurvival(_, value) {
+        const tournamentVal = form.getFieldValue('tournament_size');
+        if (value < tournamentVal) {
+            return Promise.resolve();
+        }
+        return Promise.reject(new Error('Survival size must be smaller than Tournament size!'));
     }
     const formInitialValues = {
         max_designs: jobSettings.max_designs * 2,
@@ -726,6 +748,7 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
             <Form
                 name="ResumeJob"
                 onFinish={handleFinish}
+                onFinishFailed={handleFinishFail}
                 form={form}
                 labelCol={{ span: 6 }}
                 wrapperCol={{ span: 16 }}
@@ -754,13 +777,13 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
                         </Tooltip>
 
                         <Tooltip placement="topLeft" title={helpText.tournament_size}>
-                            <Form.Item label="Tournament Size" name="tournament_size">
+                            <Form.Item label="Tournament Size" name="tournament_size" rules={[{ validator: checkTournament }]}>
                                 <InputNumber min={1} />
                             </Form.Item>
                         </Tooltip>
 
                         <Tooltip placement="topLeft" title={helpText.survival_size}>
-                            <Form.Item label="Survival Size" name="survival_size">
+                            <Form.Item label="Survival Size" name="survival_size" rules={[{ validator: checkSurvival }]}>
                                 <InputNumber min={1} />
                             </Form.Item>
                         </Tooltip>

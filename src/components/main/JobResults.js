@@ -163,7 +163,6 @@ function FilterForm({ modelParamsState, jobResultsState, filteredJobResultsState
             }
             processedValues[vals[0]][vals[1]] = values[i];
         }
-        console.log(processedValues);
 
         jobResults.forEach((result) => {
             const params = JSON.parse(result.params);

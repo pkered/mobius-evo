@@ -8,7 +8,7 @@ import { uploadS3, listS3, getS3Url, downloadS3 } from "../../amplify-apis/userF
 import { UploadOutlined } from "@ant-design/icons";
 import { AuthContext } from "../../Contexts";
 import { Link } from "react-router-dom";
-import { Form, Input, InputNumber, Button, Tooltip, Table, Radio, Checkbox, Upload, message, Tag, Space, Spin, Row, Collapse } from "antd";
+import { Form, Input, InputNumber, Button, Tooltip, Table, Radio, Checkbox, Upload, message, Tag, Space, Spin, Row, Collapse, notification } from "antd";
 import Help from "./utils/Help";
 import helpJSON from "../../assets/help/help_text_json";
 import Auth from '@aws-amplify/auth';
@@ -23,6 +23,19 @@ const testDefault = {
     expiration: 86400,
     genFile_random_generated: 6,
     genFile_total_items: 6,
+};
+const notify = (title, text, isWarn = false) => {
+    if (isWarn) {
+        notification.error({
+            message: title,
+            description: text,
+        });
+        return;
+    }
+    notification.open({
+        message: title,
+        description: text,
+    });
 };
 
 function SettingsForm({ formValuesState }) {
@@ -354,6 +367,7 @@ function SettingsForm({ formValuesState }) {
         const jobID = uuidv4();
         const jobSettings = { ...formValues, ...form.getFieldsValue() };
         if (!jobSettings.genUrl || !jobSettings.evalUrl) {
+            notify('Unable to Start Job', 'Please select at least one Gen File and one Eval File!', true);
             return;
         }
         setIsSubmitting(true);
@@ -385,6 +399,9 @@ function SettingsForm({ formValuesState }) {
             setIsSubmitting(false);
             window.location.href = `/jobs/search-results#${QueryString.stringify({ id: jobID })}`;
         });
+    }
+    function handleFinishFail() {
+        notify('Unable to Start Job', 'Please check for Errors in form!', true);
     }
     //   const formInitialValues = {
     //     description: `New Job`,
@@ -422,7 +439,6 @@ function SettingsForm({ formValuesState }) {
                 if (e !== null) {
                     const inpID = document.activeElement.id.split("jobSettings_")[1];
                     formUpdate[inpID] = countDiff + Number(form.getFieldValue(inpID));
-                    document.activeElement.value = formUpdate[inpID];
                     countDiff = 0;
                 } else {
                     if (formValues.genKeys) {
@@ -450,6 +466,21 @@ function SettingsForm({ formValuesState }) {
             form.setFieldsValue(formUpdate);
         }, 0);
     }
+    function checkTournament(_, value) {
+        const survivalVal = form.getFieldValue('survival_size');
+        if (value > survivalVal) {
+            return Promise.resolve();
+        }
+        return Promise.reject(new Error('Tournament size must be larger than Survival size!'));
+    }
+    function checkSurvival(_, value) {
+        const tournamentVal = form.getFieldValue('tournament_size');
+        if (value < tournamentVal) {
+            return Promise.resolve();
+        }
+        return Promise.reject(new Error('Survival size must be smaller than Tournament size!'));
+    }
+
     const genExtra = (part) => <Help page="start_new_job_page" part={part}></Help>;
     let helpText = {};
     try {
@@ -470,6 +501,7 @@ function SettingsForm({ formValuesState }) {
             <Form
                 name="jobSettings"
                 onFinish={handleFinish}
+                onFinishFailed={handleFinishFail}
                 form={form}
                 labelCol={{ span: 6 }}
                 wrapperCol={{ span: 16 }}
@@ -498,13 +530,13 @@ function SettingsForm({ formValuesState }) {
                         </Tooltip>
 
                         <Tooltip placement="topLeft" title={helpText.tournament_size}>
-                            <Form.Item label="Tournament Size" name="tournament_size">
+                            <Form.Item label="Tournament Size" name="tournament_size" rules={[{ validator: checkTournament }]}>
                                 <InputNumber />
                             </Form.Item>
                         </Tooltip>
 
                         <Tooltip placement="topLeft" title={helpText.survival_size}>
-                            <Form.Item label="Survival Size" name="survival_size">
+                            <Form.Item label="Survival Size" name="survival_size" rules={[{ validator: checkSurvival }]}>
                                 <InputNumber />
                             </Form.Item>
                         </Tooltip>
