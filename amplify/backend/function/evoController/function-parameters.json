@@ -19,6 +19,14 @@
         "update",
         "delete"
       ]
+    },
+    "function": {
+      "evoGenerate": [
+        "read"
+      ],
+      "evoEvaluate": [
+        "read"
+      ]
     }
   },
   "lambdaLayers": [

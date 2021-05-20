@@ -473,9 +473,6 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
         jobSettings.population_size = newJobSettings.population_size;
         jobSettings.tournament_size = newJobSettings.tournament_size;
         jobSettings.survival_size = newJobSettings.survival_size;
-        API.put('evoControlHandler', '/callControl', {
-            body: JSON.stringify(jobSettings)
-        });
         API.graphql(
             graphqlOperation(updateJob, {
                 input: {

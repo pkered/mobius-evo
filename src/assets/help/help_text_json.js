@@ -27,6 +27,7 @@ const helpJSON = {
         result_page: {
             main: "result help",
             result_filter_form: "filter form",
+            result_progress_plot: "progress plot",
             result_score_plot: "score plot",
             result_mobius_viewer: "mobius viewer",
             result_result_table: "result table",
@@ -92,6 +93,10 @@ const helpJSON = {
             result_filter_form: {
                 title: "filter form",
                 text: `filter form...`,
+            },
+            result_progress_plot: {
+                title: "progress plot",
+                text: `progress plot...`,
             },
             result_score_plot: {
                 title: "score plot",

@@ -31,6 +31,10 @@
     "functionevoBackendArn": {
       "Type": "String",
       "Default": "functionevoBackendArn"
+    },
+    "functionevoBackendLayerArn": {
+      "Type": "String",
+      "Default": "functionevoBackendLayerArn"
     }
   },
   "Conditions": {
@@ -154,7 +158,7 @@
         },
         "Runtime": "nodejs14.x",
         "Layers": [
-          "arn:aws:lambda:us-east-1:114056409474:layer:evoBackendLayer-dev:1"
+          "arn:aws:lambda:us-east-1:114056409474:layer:evo_layer:5"
         ],
         "Timeout": "120",
         "MemorySize": 3008

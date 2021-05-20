@@ -4,8 +4,9 @@ import { generationsByJobId, getJob } from "../../graphql/queries";
 import { updateJob } from "../../graphql/mutations";
 import * as QueryString from "query-string";
 import { Link } from "react-router-dom";
-import { Row, Space, Button, Spin, Form, Col, Divider, Input, Checkbox, Table, Popconfirm, Tabs, Descriptions, Collapse, Alert, notification } from "antd";
-import { Column } from "@ant-design/charts";
+import { Row, Space, Button, Spin, Form, Col, Divider, Input, Checkbox, Table, 
+    Popconfirm, Tabs, Descriptions, Collapse, Alert, notification } from "antd";
+import { Column, Scatter } from "@ant-design/charts";
 import { AuthContext } from "../../Contexts";
 import Iframe from "react-iframe";
 import { ReactComponent as Download } from "../../assets/download.svg";
@@ -16,7 +17,7 @@ import { getS3Public } from "../../amplify-apis/userFiles";
 
 import "./JobResults.css";
 
-const MOBIUS_VIEWER_URL = 'https://design-automation.github.io/mobius-viewer-dev-0-7/';
+const MOBIUS_VIEWER_URL = "https://design-automation.github.io/mobius-viewer-dev-0-7/";
 const { TabPane } = Tabs;
 
 function paramsRegex(params) {
@@ -111,7 +112,7 @@ async function getData(jobID, userID, setJobSettings, setJobResults, setIsLoadin
                     // setIsLoading(true);
                     setJobResults([]);
                     getData(jobID, userID, setJobSettings, setJobResults, setIsLoading, callback);
-                }, 3000);
+                }, 5000);
             }
         })
         .catch((err) => {
@@ -311,10 +312,65 @@ function FilterForm({ modelParamsState, jobResultsState, filteredJobResultsState
     ) : null;
 }
 
-function ScorePlot({ jobResults, setModelText, setSelectedJobResult }) {
+function ProgressPlot({jobSettings, jobResults, setModelText, setSelectedJobResult }) {
     const plotData = JSON.parse(JSON.stringify(jobResults));
 
-    plotData.forEach((result) => (result.genFile = result.genUrl.split("/").pop() + " - " + (result.live ? "live" : "dead")));
+    let minY,
+        maxY = 0;
+    plotData.forEach((result) => {
+        if (result.score) {
+            if (!minY) {
+                minY = result.score;
+            }
+            minY = Math.min(minY, result.score);
+            maxY = Math.max(maxY, result.score);
+        }
+        result.genFile = result.genUrl.split("/").pop() + " - " + (result.live ? "live" : "dead");
+    });
+    const config = {
+        title: {
+            visible: true,
+            text: "Progress Plot",
+        },
+        description: {
+            visible: true,
+            text: "Score Progression over Generations",
+        },
+        data: plotData,
+        xField: "generation",
+        yField: "score",
+        shape: 'circle',
+        colorField: "genFile",
+        appendPadding: 10,
+        size: 4,
+    };
+    if (jobSettings.jobStatus === "completed") {
+        config.meta = {
+            score: {
+                min: Math.floor(minY),
+                max: Math.ceil(maxY),
+            },
+        };
+    }
+    return (
+        <Scatter {...config} />
+    );
+}
+
+function ScorePlot({jobSettings, jobResults, setModelText, setSelectedJobResult }) {
+    const plotData = JSON.parse(JSON.stringify(jobResults));
+    let minY,
+        maxY = 0;
+    plotData.forEach((result) => {
+        if (result.score) {
+            if (!minY) {
+                minY = result.score;
+            }
+            minY = Math.min(minY, result.score);
+            maxY = Math.max(maxY, result.score);
+        }
+        result.genFile = result.genUrl.split("/").pop() + " - " + (result.live ? "live" : "dead");
+    });
     const config = {
         title: {
             visible: true,
@@ -332,8 +388,15 @@ function ScorePlot({ jobResults, setModelText, setSelectedJobResult }) {
             start: 0,
             end: 1,
         },
-        responsive: true,
     };
+    if (jobSettings.jobStatus === "completed") {
+        config.meta = {
+            score: {
+                min: Math.floor(minY * 10) / 10,
+                max: Math.ceil(maxY * 10) / 10,
+            },
+        };
+    }
     return (
         <Column
             {...config}
@@ -345,14 +408,17 @@ function ScorePlot({ jobResults, setModelText, setSelectedJobResult }) {
                         return;
                     }
                     const data = tooltipData[0].data;
-                    getS3Public(data.owner + "/" + data.JobID + "/" + data.id + "_eval.gi", url => {
-                        document.getElementById("hiddenInput").value = url;
-                        document.getElementById("hiddenButton").click();
-                    }, () => {})
+                    getS3Public(
+                        data.owner + "/" + data.JobID + "/" + data.id + "_eval.gi",
+                        (url) => {
+                            document.getElementById("hiddenInput").value = url;
+                            document.getElementById("hiddenButton").click();
+                        },
+                        () => {}
+                    );
                     const modelText = assembleModelText(data);
                     setModelText(modelText);
-                    if (evt.data && evt.data.data ) {
-                        console.log('*', evt.data.data)
+                    if (evt.data && evt.data.data) {
                         setSelectedJobResult(evt.data.data);
                     }
                 });
@@ -463,15 +529,18 @@ function ResultTable({ jobResults, contextUrl, setModelText, setSelectedJobResul
             params: paramsString,
             score: entry.score,
             rowClass: entry.errorMessage ? "error-row" : "default-row",
-            genModel: '',
-            evalModel: '',
-            resultText: assembleModelText(entry)
+            genModel: "",
+            evalModel: "",
+            resultText: assembleModelText(entry),
         };
-        getS3Public(entry.owner + "/" + entry.JobID + "/" + entry.id,
-        data => {
-            tableEntry.genModel = data + '.gi';
-            tableEntry.evalModel = data + '_eval.gi';
-        }, () => {})
+        getS3Public(
+            entry.owner + "/" + entry.JobID + "/" + entry.id,
+            (data) => {
+                tableEntry.genModel = data + ".gi";
+                tableEntry.evalModel = data + "_eval.gi";
+            },
+            () => {}
+        );
 
         if (entry.errorMessage) {
             errorRows.push(entry.GenID);
@@ -564,8 +633,8 @@ function JobResults() {
             return;
         }
         notification.open({
-          message: title,
-          description: text,
+            message: title,
+            description: text,
         });
     };
 
@@ -600,8 +669,8 @@ function JobResults() {
         return urlString;
     }
     async function downloadSelectedModel(isGen = false) {
-        if (!selectedJobResult) { 
-            notify('Unable to Download!', 'No result was selected, unable to download gi model.', true)
+        if (!selectedJobResult) {
+            notify("Unable to Download!", "No result was selected, unable to download gi model.", true);
             return;
         }
         let url;
@@ -609,29 +678,35 @@ function JobResults() {
             if (selectedJobResult.genModel) {
                 url = selectedJobResult.genModel;
             } else {
-                getS3Public(selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + ".gi",
-                data => url = data, () => url = '')
+                getS3Public(
+                    selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + ".gi",
+                    (data) => (url = data),
+                    () => (url = "")
+                );
             }
         } else {
             if (selectedJobResult.evalModel) {
                 url = selectedJobResult.evalModel;
             } else {
-                getS3Public(selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + "_eval.gi",
-                data => url = data, () => url = '')
+                getS3Public(
+                    selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + "_eval.gi",
+                    (data) => (url = data),
+                    () => (url = "")
+                );
             }
         }
-        await fetch(url).then(t => {
-            return t.blob().then((b)=>{
+        await fetch(url).then((t) => {
+            return t.blob().then((b) => {
                 const a = document.getElementById("hiddenLink");
                 a.href = URL.createObjectURL(b);
-                a.setAttribute("download", selectedJobResult.id + (isGen? '_gen': '_eval') + '.gi');
+                a.setAttribute("download", selectedJobResult.id + (isGen ? "_gen" : "_eval") + ".gi");
                 a.click();
             });
-        })
+        });
     }
     async function openViewerInNewTab(isGen = false) {
-        if (!selectedJobResult) { 
-            notify('Unable to Download!', 'No result was selected, unable to download gi model.', true)
+        if (!selectedJobResult) {
+            notify("Unable to Download!", "No result was selected, unable to download gi model.", true);
             return;
         }
         let url;
@@ -639,21 +714,27 @@ function JobResults() {
             if (selectedJobResult.genModel) {
                 url = selectedJobResult.genModel;
             } else {
-                getS3Public(selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + ".gi",
-                data => url = data, () => url = '')
+                getS3Public(
+                    selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + ".gi",
+                    (data) => (url = data),
+                    () => (url = "")
+                );
             }
         } else {
             if (selectedJobResult.evalModel) {
                 url = selectedJobResult.evalModel;
             } else {
-                getS3Public(selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + "_eval.gi",
-                data => url = data, () => url = '')
+                getS3Public(
+                    selectedJobResult.owner + "/" + selectedJobResult.JobID + "/" + selectedJobResult.id + "_eval.gi",
+                    (data) => (url = data),
+                    () => (url = "")
+                );
             }
         }
         const a = document.getElementById("hiddenLink");
-        a.href = MOBIUS_VIEWER_URL + '?file=' + url;
+        a.href = MOBIUS_VIEWER_URL + "?file=" + url;
         a.setAttribute("download", null);
-        a.target = '_blank';
+        a.target = "_blank";
         a.click();
     }
 
@@ -709,7 +790,7 @@ function JobResults() {
                                 {!isLoading ? (
                                     <Space direction="vertical" size="large" style={{ width: "100%" }}>
                                         <ErrorList jobResults={jobResults} jobSettings={jobSettings}></ErrorList>
-                                        <Collapse defaultActiveKey={["2", "3"]}>
+                                        <Collapse defaultActiveKey={["3", "4"]}>
                                             <Collapse.Panel header="Filter Form" key="1" extra={genExtra("result_filter_form")}>
                                                 <FilterForm
                                                     modelParamsState={{ modelParams, setModelParams }}
@@ -718,20 +799,24 @@ function JobResults() {
                                                     setIsLoadingState={{ isLoading, setIsLoading }}
                                                 />
                                             </Collapse.Panel>
-                                            <Collapse.Panel header="Score Plot" key="2" extra={genExtra("result_score_plot")}>
-                                                <ScorePlot
+                                            <Collapse.Panel header="Progress Plot" key="2" extra={genExtra("progress_score_plot")}>
+                                                <ProgressPlot
+                                                    jobSettings={jobSettings}
                                                     jobResults={filteredJobResults ? filteredJobResults : jobResults}
                                                     setModelText={setModelText}
                                                     setSelectedJobResult={setSelectedJobResult}
                                                 />
                                             </Collapse.Panel>
-                                            <Collapse.Panel header="Mobius Viewer" key="3" extra={genExtra("result_mobius_viewer")}>
-                                                <Iframe
-                                                    url={MOBIUS_VIEWER_URL}
-                                                    width="100%"
-                                                    height="600px"
-                                                    id="mobius_viewer"
+                                            <Collapse.Panel header="Score Plot" key="3" extra={genExtra("result_score_plot")}>
+                                                <ScorePlot
+                                                    jobSettings={jobSettings}
+                                                    jobResults={filteredJobResults ? filteredJobResults : jobResults}
+                                                    setModelText={setModelText}
+                                                    setSelectedJobResult={setSelectedJobResult}
                                                 />
+                                            </Collapse.Panel>
+                                            <Collapse.Panel header="Mobius Viewer" key="4" extra={genExtra("result_mobius_viewer")}>
+                                                <Iframe url={MOBIUS_VIEWER_URL} width="100%" height="600px" id="mobius_viewer" />
                                                 <br></br>
                                                 <Space direction="horizontal" size="large" style={{ width: "100%" }} align="start">
                                                     <Input.TextArea className="textArea" value={modelText} autoSize={true}></Input.TextArea>
@@ -742,17 +827,21 @@ function JobResults() {
                                                             <Button
                                                                 onClick={() => {
                                                                     const val = document.getElementById("contextUrlInput").value;
+                                                                    document.getElementById("hiddenContextUrl").value = val;
                                                                     setContextUrl(val);
+                                                                    document.getElementById("hiddenButton").click();
                                                                 }}
                                                             >
                                                                 apply
                                                             </Button>
-                                                            <Input id="hiddenInput" className="hiddenElement"></Input>
+                                                            <input id="hiddenInput" className="hiddenElement"></input>
+                                                            <input id="hiddenContextUrl" className="hiddenElement"></input>
                                                             <Button
                                                                 id="hiddenButton"
                                                                 className="hiddenElement"
                                                                 onClick={() => {
                                                                     const val = document.getElementById("hiddenInput").value;
+                                                                    const contextUrl = document.getElementById("hiddenContextUrl").value;
                                                                     viewModel(val, [contextUrl]);
                                                                 }}
                                                             >
@@ -766,7 +855,7 @@ function JobResults() {
                                                     </Space>
                                                 </Space>
                                             </Collapse.Panel>
-                                            <Collapse.Panel header="Result Table" key="4" extra={genExtra("result_result_table")}>
+                                            <Collapse.Panel header="Result Table" key="5" extra={genExtra("result_result_table")}>
                                                 <ResultTable
                                                     jobResults={filteredJobResults ? filteredJobResults : jobResults}
                                                     contextUrl={contextUrl}
@@ -829,10 +918,9 @@ function JobResults() {
                     </Tabs>
                     <br />
                     <br />
-                    <a id='hiddenLink' className='hiddenElement'></a>
+                    <a id="hiddenLink" className="hiddenElement"></a>
                 </>
             ) : null}
-
         </Space>
     );
 }

@@ -3,7 +3,7 @@ import "./Landing.css";
 import { Auth } from "aws-amplify";
 import { onAuthUIStateChange } from "@aws-amplify/ui-components";
 import { AuthContext } from "../../Contexts";
-import { AmplifyAuthenticator, AmplifySignIn, AmplifySignUp } from "@aws-amplify/ui-react";
+import { AmplifyAuthenticator, AmplifySignIn } from "@aws-amplify/ui-react";
 import { Space } from "antd";
 import helpJSON from "../../assets/help/help_text_json";
 
@@ -44,7 +44,7 @@ function NotAuthenticated() {
               },
               {
                 type: "nickname",
-                label: "How should we address you???????",
+                label: "How should we address you?",
                 placeholder: "nickname",
                 required: true
               }
