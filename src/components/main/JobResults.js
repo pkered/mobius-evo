@@ -122,7 +122,7 @@ async function getData(jobID, userID, setJobSettings, setJobResults, setIsLoadin
 }
 function viewModel(url, contextURLs = null) {
     const iframe = document.getElementById("mobius_viewer").contentWindow;
-    let urls = [url];
+    let urls = [];
     if (contextURLs && Array.isArray(contextURLs)) {
         for (const contextUrl of contextURLs) {
             if (contextUrl && contextUrl !== "") {
@@ -130,6 +130,7 @@ function viewModel(url, contextURLs = null) {
             }
         }
     }
+    urls.push(url);
     iframe.postMessage(
         {
             messageType: "update",
