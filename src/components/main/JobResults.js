@@ -799,14 +799,14 @@ function JobResults() {
                                                     setIsLoadingState={{ isLoading, setIsLoading }}
                                                 />
                                             </Collapse.Panel>
-                                            {/* <Collapse.Panel header="Progress Plot" key="2" extra={genExtra("progress_score_plot")}>
+                                            <Collapse.Panel header="Progress Plot" key="2" extra={genExtra("progress_score_plot")}>
                                                 <ProgressPlot
                                                     jobSettings={jobSettings}
                                                     jobResults={filteredJobResults ? filteredJobResults : jobResults}
                                                     setModelText={setModelText}
                                                     setSelectedJobResult={setSelectedJobResult}
                                                 />
-                                            </Collapse.Panel> */}
+                                            </Collapse.Panel>
                                             <Collapse.Panel header="Score Plot" key="3" extra={genExtra("result_score_plot")}>
                                                 <ScorePlot
                                                     jobSettings={jobSettings}
