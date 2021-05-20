@@ -389,13 +389,11 @@ function ScorePlot({jobSettings, jobResults, setModelText, setSelectedJobResult 
             end: 1,
         },
     };
-    if (jobSettings.jobStatus === "completed") {
-        config.meta = {
-            score: {
-                min: Math.floor(minY * 10) / 10,
-                max: Math.ceil(maxY * 10) / 10,
-            },
-        };
+    if (minY && maxY) {
+        config.yAxis= {
+            min: Math.floor(minY),
+            max: Math.ceil(maxY)
+        }
     }
     return (
         <Column
