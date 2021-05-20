@@ -225,6 +225,17 @@ function Explorations() {
     const [isDataLoading, setIsDataLoading] = useState(true);
     const [dataView, setDataView] = useState("tree");
     const [jobData, setjobData] = useState([]);
+
+    const compareDescend = (a, b) => {
+        if (a > b) {
+            return -1;
+        } else if (a < b) {
+            return 1;
+        } else {
+            return 0;
+        }
+    };
+
     const refreshList = (cognitoPayloadSub, setjobData, setIsDataLoading) => {
         API.graphql(
             graphqlOperation(listJobs, {
@@ -237,14 +248,15 @@ function Explorations() {
         )
             .then((queriedResults) => {
                 const jobList = queriedResults.data.listJobs.items;
-                setjobData(jobList.map((data, index) => {
-                        return {
-                            key: index + 1,
-                            title: data.description,
-                            ...data,
-                            action: ''
-                        };
-                }));
+                const jobData = jobList.map((data, index) => {
+                    return {
+                        key: index + 1,
+                        title: data.description,
+                        ...data,
+                        action: ''
+                    };
+                });
+                setjobData(jobData.sort((a, b) => compareDescend(a.updatedAt, b.updatedAt)));
                 setIsDataLoading(false);
             })
             .catch((error) => console.log(error));

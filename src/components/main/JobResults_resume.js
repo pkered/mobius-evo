@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Form, Space, Button, Radio, InputNumber, Upload, message, Tag, Table, Modal, Row, Collapse, Tooltip } from "antd";
+import { Form, Space, Button, Radio, InputNumber, Upload, message, Tag, Table, Modal, Row, Collapse, Tooltip, notification } from "antd";
 import { uploadS3, listS3, getS3Url, downloadS3 } from "../../amplify-apis/userFiles";
 import { UploadOutlined } from "@ant-design/icons";
 import { API, graphqlOperation } from "aws-amplify";
@@ -16,6 +16,20 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
     const { jobSettings, setJobSettings } = jobSettingsState;
     const { jobResults, setJobResults } = jobResultsState;
     const [newFile, setnewFile] = useState(null);
+
+    const notify = (title, text, isWarn = false) => {
+        if (isWarn) {
+            notification.error({
+                message: title,
+                description: text,
+            });
+            return;
+        }
+        notification.open({
+            message: title,
+            description: text,
+        });
+    };
 
     const handleOk = async () => {
         if (!replaceEvalCheck) {
@@ -37,6 +51,10 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
         );
         let okCheck = false;
         if (!replacedUrl) {
+            if (jobSettings.genUrl.indexOf(newUrl) !== -1) {
+                notify('Unable to add gen file!', 'Job already contains Gen file to be added.')
+                return;
+            }
             jobSettings.genUrl.push(newUrl);
             okCheck = true;
         } else {
@@ -605,6 +623,7 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
             )
                 .then()
                 .catch((err) => console.log(err));
+            setJobSettings(null);
             setJobSettings(jobSettings);
         }
     };
