@@ -248,10 +248,9 @@ function FilterForm({ modelParamsState, jobResultsState, filteredJobResultsState
     //     }
     //   }
     // },[isLoading, isFiltering])
-    // useEffect(() => {
-    //     console.log('reset field')
-    //     form.resetFields()
-    // }, [form, initialValues]);
+    useEffect(() => {
+        form.resetFields()
+    }, [form, initialValues]);
 
     return !isLoading ? (
         <Form form={form} onFinish={handleFinish} initialValues={initialValues}>
