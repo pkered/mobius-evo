@@ -33,7 +33,7 @@ function HeaderComponent() {
           >
           <Link 
             to = "/" 
-          >Mobius-evo</Link>
+          >Mobius Evolver</Link>
         </h1>
         {cognitoPayload && menu}
       </nav>
