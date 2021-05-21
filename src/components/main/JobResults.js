@@ -770,7 +770,7 @@ function JobResults() {
             return genTableEntry;
         });
     }
-    const expandedSettings = ["max_designs", "population_size", "survival_size", "tournament_size", "expiration"];
+    const expandedSettings = ["max_designs", "population_size", "survival_size", "tournament_size"];
     return (
         <Space direction="vertical" size="large" style={{ width: "inherit" }}>
             <Row>
@@ -891,6 +891,10 @@ function JobResults() {
                                                     {jobSettings[dataKey]}
                                                 </Descriptions.Item>
                                             ))}
+                                            <Descriptions.Item label="expiration" key="expiration">
+                                                {String(Number(jobSettings.expiration) / 86400) + ' day(s)'}
+                                            </Descriptions.Item>
+
                                         </Descriptions>
                                     </Collapse.Panel>
                                     <Collapse.Panel header="Gen Details" key="2" extra={genExtra("settings_gen_details")}>
