@@ -467,7 +467,7 @@ function ResultTable({ jobResults, contextUrl, setModelText, setSelectedJobResul
             sorter: (a, b) => a.score - b.score,
         },
         {
-            title: "Model",
+            title: "Gen Model",
             dataIndex: "genModel",
             key: "genModel",
             width: 60,
@@ -490,7 +490,7 @@ function ResultTable({ jobResults, contextUrl, setModelText, setSelectedJobResul
             ),
         },
         {
-            title: "Eval",
+            title: "Eval Model",
             dataIndex: "evalModel",
             key: "evalModel",
             width: 60,
@@ -799,7 +799,7 @@ function JobResults() {
                                                     setIsLoadingState={{ isLoading, setIsLoading }}
                                                 />
                                             </Collapse.Panel>
-                                            <Collapse.Panel header="Progress Plot" key="2" extra={genExtra("progress_score_plot")}>
+                                            <Collapse.Panel header="Progress Plot" key="2" extra={genExtra("result_progress_plot")}>
                                                 <ProgressPlot
                                                     jobSettings={jobSettings}
                                                     jobResults={filteredJobResults ? filteredJobResults : jobResults}
