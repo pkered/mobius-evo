@@ -7,22 +7,36 @@ import { createJob, createGenEvalParam } from "../../graphql/mutations";
 import { uploadS3, listS3, getS3Url, downloadS3 } from "../../amplify-apis/userFiles";
 import { UploadOutlined } from "@ant-design/icons";
 import { AuthContext } from "../../Contexts";
-import { Link } from "react-router-dom";
-import { Form, Input, InputNumber, Button, Tooltip, Table, Radio, Checkbox, Upload, message, Tag, Space, Spin, Row, Collapse, notification } from "antd";
+import {
+    Form,
+    Input,
+    InputNumber,
+    Button,
+    Tooltip,
+    Table,
+    Radio,
+    Checkbox,
+    Upload,
+    message,
+    Tag,
+    Space,
+    Spin,
+    Row,
+    Collapse,
+    notification,
+} from "antd";
 import Help from "./utils/Help";
 import helpJSON from "../../assets/help/help_text_json";
-import Auth from '@aws-amplify/auth';
-import Lambda from 'aws-sdk/clients/lambda'; // npm install aws-sdk
 
 const testDefault = {
     description: `new test`,
-    max_designs: 12,
-    population_size: 3,
-    tournament_size: 3,
-    survival_size: 2,
-    expiration: 86400,
-    genFile_random_generated: 6,
-    genFile_total_items: 6,
+    max_designs: 100,
+    population_size: 20,
+    tournament_size: 5,
+    survival_size: 3,
+    expiration_days: 30,
+    genFile_random_generated: 40,
+    genFile_total_items: 40,
 };
 const notify = (title, text, isWarn = false) => {
     if (isWarn) {
@@ -107,7 +121,13 @@ function SettingsForm({ formValuesState }) {
                                     formValues.genUrl[genF] = s3Url;
                                     formValues.genKeys.push(genF);
                                     genElements.push(
-                                        <Form.Item label={genF} name={"genFile_" + genF} key={genF} initialValue={0} rules={[{required: true}, {validator: checkGenFile}]}>
+                                        <Form.Item
+                                            label={genF}
+                                            name={"genFile_" + genF}
+                                            key={genF}
+                                            initialValue={0}
+                                            rules={[{ required: true }, { validator: checkGenFile }]}
+                                        >
                                             <InputNumber min={0} onChange={onNumChange} />
                                         </Form.Item>
                                     );
@@ -367,9 +387,10 @@ function SettingsForm({ formValuesState }) {
         const jobID = uuidv4();
         const jobSettings = { ...formValues, ...form.getFieldsValue() };
         if (!jobSettings.genUrl || !jobSettings.evalUrl) {
-            notify('Unable to Start Job', 'Please select at least one Gen File and one Eval File!', true);
+            notify("Unable to Start Job", "Please select at least one Gen File and one Eval File!", true);
             return;
         }
+        jobSettings.expiration = jobSettings.expiration_days * 24 * 60 * 60;
         setIsSubmitting(true);
         await initParams(jobID, jobSettings);
         const jobParam = {
@@ -401,7 +422,7 @@ function SettingsForm({ formValuesState }) {
         });
     }
     function handleFinishFail() {
-        notify('Unable to Start Job', 'Please check for Errors in form!', true);
+        notify("Unable to Start Job", "Please check for Errors in form!", true);
     }
     //   const formInitialValues = {
     //     description: `New Job`,
@@ -468,34 +489,34 @@ function SettingsForm({ formValuesState }) {
         }, 0);
     }
     function checkTournament(_, value) {
-        const popVal = form.getFieldValue('population_size');
-        const survivalVal = form.getFieldValue('survival_size');
+        const popVal = form.getFieldValue("population_size");
+        const survivalVal = form.getFieldValue("survival_size");
         if (value > popVal * 2) {
-            return Promise.reject(new Error('Tournament size must not be larger than 2 * population_size!'));
+            return Promise.reject(new Error("Tournament size must not be larger than 2 * population_size!"));
         }
         if (value > survivalVal) {
             return Promise.resolve();
         }
-        return Promise.reject(new Error('Tournament size must be larger than Survival size!'));
+        return Promise.reject(new Error("Tournament size must be larger than Survival size!"));
     }
     function checkSurvival(_, value) {
-        const tournamentVal = form.getFieldValue('tournament_size');
+        const tournamentVal = form.getFieldValue("tournament_size");
         if (value < tournamentVal) {
             return Promise.resolve();
         }
-        return Promise.reject(new Error('Survival size must be smaller than Tournament size!'));
+        return Promise.reject(new Error("Survival size must be smaller than Tournament size!"));
     }
     function checkGenFile(_) {
         const formVal = form.getFieldsValue();
         const totalVal = Number(formVal.genFile_total_items);
         let totalCount = 0;
-        Object.keys(formVal).forEach(k => {
-            if (k.startsWith('genFile_') && k !== 'genFile_total_items' && k !== 'genFile_random_generated') {
+        Object.keys(formVal).forEach((k) => {
+            if (k.startsWith("genFile_") && k !== "genFile_total_items" && k !== "genFile_random_generated") {
                 totalCount += Number(formVal[k]);
             }
-        })
+        });
         if (totalVal < totalCount) {
-            return Promise.reject(new Error('Total number of genFile parameters cannot be higher than Total Starting Items'));
+            return Promise.reject(new Error("Total number of genFile parameters cannot be higher than Total Starting Items"));
         }
         return Promise.resolve();
     }
@@ -515,7 +536,7 @@ function SettingsForm({ formValuesState }) {
     //         );
     //     });
     // }
-    const rules = [{required: true}]
+    const rules = [{ required: true }];
     return (
         <Spin spinning={isSubmitting} tip="Starting Job...">
             <Form
@@ -564,8 +585,12 @@ function SettingsForm({ formValuesState }) {
                         </Tooltip>
 
                         <Tooltip placement="topLeft" title={helpText.expiration}>
-                            <Form.Item label="Expiration" name="expiration" rules={rules}>
-                                <InputNumber />
+                            <Form.Item label="Expiration" name="expiration_days" rules={rules}>
+                                <InputNumber 
+                                    formatter={value =>(value === '1')?`1 day`:`${value} days`}
+                                    parser={value => value.replace(/[^0-9.]/g, '')}
+                                    min={1}
+                                />
                             </Form.Item>
                         </Tooltip>
                     </Collapse.Panel>
@@ -660,7 +685,7 @@ function JobForm() {
     //         Payload: JSON.stringify(params),
     //     }).promise().then(()=> console.log('~~~~~~~~'));
     // })
-      
+
     return (
         <div className="jobForm-container">
             <Space direction="vertical" size="large" style={{ width: "inherit" }}>

@@ -467,7 +467,7 @@ function ResultTable({ jobResults, contextUrl, setModelText, setSelectedJobResul
             sorter: (a, b) => a.score - b.score,
         },
         {
-            title: "Model",
+            title: "Gen Model",
             dataIndex: "genModel",
             key: "genModel",
             width: 60,
@@ -490,7 +490,7 @@ function ResultTable({ jobResults, contextUrl, setModelText, setSelectedJobResul
             ),
         },
         {
-            title: "Eval",
+            title: "Eval Model",
             dataIndex: "evalModel",
             key: "evalModel",
             width: 60,
@@ -770,7 +770,7 @@ function JobResults() {
             return genTableEntry;
         });
     }
-    const expandedSettings = ["max_designs", "population_size", "survival_size", "tournament_size", "expiration"];
+    const expandedSettings = ["max_designs", "population_size", "survival_size", "tournament_size"];
     return (
         <Space direction="vertical" size="large" style={{ width: "inherit" }}>
             <Row>
@@ -799,7 +799,7 @@ function JobResults() {
                                                     setIsLoadingState={{ isLoading, setIsLoading }}
                                                 />
                                             </Collapse.Panel>
-                                            <Collapse.Panel header="Progress Plot" key="2" extra={genExtra("progress_score_plot")}>
+                                            <Collapse.Panel header="Progress Plot" key="2" extra={genExtra("result_progress_plot")}>
                                                 <ProgressPlot
                                                     jobSettings={jobSettings}
                                                     jobResults={filteredJobResults ? filteredJobResults : jobResults}
@@ -891,6 +891,10 @@ function JobResults() {
                                                     {jobSettings[dataKey]}
                                                 </Descriptions.Item>
                                             ))}
+                                            <Descriptions.Item label="expiration" key="expiration">
+                                                {String(Number(jobSettings.expiration) / 86400) + ' day(s)'}
+                                            </Descriptions.Item>
+
                                         </Descriptions>
                                     </Collapse.Panel>
                                     <Collapse.Panel header="Gen Details" key="2" extra={genExtra("settings_gen_details")}>
