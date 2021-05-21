@@ -16,13 +16,13 @@ import Lambda from 'aws-sdk/clients/lambda'; // npm install aws-sdk
 
 const testDefault = {
     description: `new test`,
-    max_designs: 12,
-    population_size: 3,
-    tournament_size: 3,
-    survival_size: 2,
-    expiration: 86400,
-    genFile_random_generated: 6,
-    genFile_total_items: 6,
+    max_designs: 100,
+    population_size: 20,
+    tournament_size: 5,
+    survival_size: 3,
+    expiration: 2592000,
+    genFile_random_generated: 40,
+    genFile_total_items: 40,
 };
 const notify = (title, text, isWarn = false) => {
     if (isWarn) {
