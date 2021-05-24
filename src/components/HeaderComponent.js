@@ -15,13 +15,10 @@ function HeaderComponent() {
       <Button
         id="explorations-btn"
         type="link"
-        className="nav-button"
+        className="nav-button nav-menu"
       >
         <Link to="/searches">
-          <Space>
-            <LineChartOutlined/>
             Search Space
-          </Space>
         </Link>
       </Button>
     );
