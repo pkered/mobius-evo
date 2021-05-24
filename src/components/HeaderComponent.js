@@ -5,6 +5,7 @@ import { Auth, nav } from 'aws-amplify';
 import { AuthContext } from '../Contexts';
 import { LineChartOutlined  } from '@ant-design/icons';
 import { Button, Space } from 'antd';
+import packageJson from '../../package.json';
 
 function HeaderComponent() {
   const cognitoPayload = useContext(AuthContext).cognitoPayload;
@@ -19,7 +20,7 @@ function HeaderComponent() {
         <Link to="/searches">
           <Space>
             <LineChartOutlined/>
-            Searches
+            Search Space
           </Space>
         </Link>
       </Button>
@@ -33,7 +34,7 @@ function HeaderComponent() {
           >
           <Link 
             to = "/" 
-          >Mobius Evolver</Link>
+          >Mobius Evolver (v {packageJson.version})</Link>
         </h1>
         {cognitoPayload && menu}
       </nav>
@@ -59,7 +60,6 @@ function HeaderComponent() {
       </div>
     );
   };
-
   return (
     <header>
       <NavButtons/>
