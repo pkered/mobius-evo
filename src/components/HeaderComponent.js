@@ -18,7 +18,7 @@ function HeaderComponent() {
         className="nav-button nav-menu"
       >
         <Link to="/searches">
-            Search Space
+            Search Spaces
         </Link>
       </Button>
     );
