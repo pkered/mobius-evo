@@ -669,7 +669,6 @@ function SettingsForm({currentStateManage}) {
 
 function JobForm() {
     const [currentState, setCurrentState] = useState(false);
-    console.log(currentState, setCurrentState)
     return (
         <div className="jobForm-container">
             <Space direction="vertical" size="large" style={{ width: "inherit" }}>
