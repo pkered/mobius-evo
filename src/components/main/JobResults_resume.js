@@ -470,7 +470,7 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
 
     async function handleFinish() {
         if (jobSettings.genUrl.length === 0) {
-            notify('Unable to Resume Job', 'Please add least one Gen File!', true);
+            notify('Unable to Resume Search', 'Please add least one Gen File!', true);
             return;
         }
         const newJobSettings = { ...form.getFieldsValue() };
@@ -526,7 +526,7 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
         setJobSettings(jobSettings);
     }
     function handleFinishFail() {
-        notify('Unable to Resume Job', 'Please check for Errors in form!', true);
+        notify('Unable to Resume Search', 'Please check for Errors in form!', true);
     }
     function onNewDesignChange(e) {
         setTimeout(() => {
@@ -754,7 +754,7 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
                 initialValues={formInitialValues}
             >
                 <Collapse defaultActiveKey={["1", "2", "3", "4"]}>
-                    <Collapse.Panel header="New Settings 1" key="1" extra={genExtra("resume_new_settings_1")}>
+                    <Collapse.Panel header="New Job Settings" key="1" extra={genExtra("resume_new_settings_1")}>
                         <Tooltip placement="topLeft" title={helpText.max_designs}>
                             <Form.Item label="New Max Designs" name="max_designs" rules={rules}>
                                 <InputNumber disabled />
@@ -785,19 +785,19 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
                             </Form.Item>
                         </Tooltip>
                     </Collapse.Panel>
-                    <Collapse.Panel header="Gen File Settings" key="2" extra={genExtra("resume_gen_file")}>
+                    <Collapse.Panel header="New Generative Settings" key="2" extra={genExtra("resume_gen_file")}>
                         <Button htmlType="button" onClick={() => showModalGen(null)}>
                             Add Gen File
                         </Button>
                         <Table dataSource={genTableData} columns={genTableColumns} rowKey="genUrl"></Table>
                     </Collapse.Panel>
-                    <Collapse.Panel header="Gen File Settings" key="3" extra={genExtra("resume_eval_file")}>
+                    <Collapse.Panel header="New Evaluative Settings" key="3" extra={genExtra("resume_eval_file")}>
                         <Button htmlType="button" onClick={() => showModalEval(null)}>
                             Add Eval File
                         </Button>
                         <Table dataSource={evalTableData} columns={evalTableColumns} rowKey="evalUrl"></Table>
                     </Collapse.Panel>
-                    <Collapse.Panel header="New Settings 2" key="4" extra={genExtra("resume_new_settings_2")}>
+                    <Collapse.Panel header="New Initialization Settings" key="4" extra={genExtra("resume_new_settings_2")}>
                         <Tooltip placement="topLeft" title={helpText.total_items}>
                             <Form.Item label="Total Starting Items" name="genFile_total_items">
                                 <InputNumber disabled />
@@ -827,7 +827,7 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
                 <br />
                 <Row justify="center">
                     <Button type="primary" htmlType="submit">
-                        Resume Job
+                        Resume Search
                     </Button>
                 </Row>
             </Form>

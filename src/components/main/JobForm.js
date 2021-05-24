@@ -418,14 +418,14 @@ function SettingsForm({ formValuesState }) {
             })
         ).then(() => {
             setIsSubmitting(false);
-            window.location.href = `/jobs/search-results#${QueryString.stringify({ id: jobID })}`;
+            window.location.href = `/searches/search-results#${QueryString.stringify({ id: jobID })}`;
         });
     }
     function handleFinishFail() {
         notify("Unable to Start Job", "Please check for Errors in form!", true);
     }
     //   const formInitialValues = {
-    //     description: `New Job`,
+    //     description: `New Search`,
     //     max_designs: 80,
     //     population_size: 20,
     //     tournament_size: 5,
@@ -553,7 +553,7 @@ function SettingsForm({ formValuesState }) {
                 initialValues={formInitialValues}
             >
                 <Collapse defaultActiveKey={["1", "2", "3", "4"]}>
-                    <Collapse.Panel header="Settings 1" key="1" extra={genExtra("settings_1")}>
+                    <Collapse.Panel header="Job Settings" key="1" extra={genExtra("settings_1")}>
                         <Tooltip placement="topLeft" title={helpText.description}>
                             <Form.Item label="Description" name="description">
                                 <Input />
@@ -594,7 +594,7 @@ function SettingsForm({ formValuesState }) {
                             </Form.Item>
                         </Tooltip> */}
                     </Collapse.Panel>
-                    <Collapse.Panel header="Gen File Settings" key="2" extra={genExtra("gen_file")}>
+                    <Collapse.Panel header="Generative Settings" key="2" extra={genExtra("gen_file")}>
                         <FileUpload uploadType={"Gen"} />
                         <Table
                             dataSource={genFiles}
@@ -610,7 +610,7 @@ function SettingsForm({ formValuesState }) {
                             }}
                         ></Table>
                     </Collapse.Panel>
-                    <Collapse.Panel header="Eval File Settings" key="3" extra={genExtra("eval_file")}>
+                    <Collapse.Panel header="Evaluative Settings" key="3" extra={genExtra("eval_file")}>
                         <FileUpload uploadType={"Eval"} />
                         <Table
                             dataSource={evalFiles}
@@ -626,7 +626,7 @@ function SettingsForm({ formValuesState }) {
                             }}
                         ></Table>
                     </Collapse.Panel>
-                    <Collapse.Panel header="Settings 2" key="4" extra={genExtra("settings_2")}>
+                    <Collapse.Panel header="Initialization Settings" key="4" extra={genExtra("settings_2")}>
                         <Tooltip placement="topLeft" title={helpText.total_items}>
                             <Form.Item label="Total Starting Items" name="genFile_total_items">
                                 <InputNumber disabled />
@@ -690,7 +690,7 @@ function JobForm() {
         <div className="jobForm-container">
             <Space direction="vertical" size="large" style={{ width: "inherit" }}>
                 <Space direction="horizontal" size="small" align="baseline">
-                    <h1>Start New Job</h1>
+                    <h1>Start New Search</h1>
                     <Help page="start_new_job_page" part="main"></Help>
                 </Space>
 

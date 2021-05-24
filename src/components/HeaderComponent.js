@@ -16,10 +16,10 @@ function HeaderComponent() {
         type="link"
         className="nav-button"
       >
-        <Link to="/jobs">
+        <Link to="/searches">
           <Space>
             <LineChartOutlined/>
-            Jobs
+            Searches
           </Space>
         </Link>
       </Button>
