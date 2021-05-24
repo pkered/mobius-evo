@@ -65,11 +65,11 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
                 okCheck = true;
             }
         }
-        let expiration = 86400;
-        if (jobSettings.expiration) {
-            expiration = jobSettings.expiration;
-        }
-        const expiration_time = Math.round(Date.now() / 1000) + expiration;
+        // let expiration = 86400;
+        // if (jobSettings.expiration) {
+        //     expiration = jobSettings.expiration;
+        // }
+        // const expiration_time = Math.round(Date.now() / 1000) + expiration;
 
         const allPromises = [];
         if (okCheck) {
@@ -87,7 +87,7 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
                                     JobID: result.JobID,
                                     GenID: result.GenID,
                                     live: false,
-                                    expirationTime: expiration_time,
+                                    expirationTime: null,
                                 },
                             })
                         )
@@ -148,11 +148,11 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
             () => {}
         );
         jobSettings.evalUrl = newUrl;
-        let expiration = 86400;
-        if (jobSettings.expiration) {
-            expiration = jobSettings.expiration;
-        }
-        const expiration_time = Math.round(Date.now() / 1000) + expiration;
+        // let expiration = 86400;
+        // if (jobSettings.expiration) {
+        //     expiration = jobSettings.expiration;
+        // }
+        // const expiration_time = Math.round(Date.now() / 1000) + expiration;
         const allPromises = [];
 
         setJobSettings(jobSettings);
@@ -169,7 +169,7 @@ function FileSelectionModal({ isModalVisibleState, jobSettingsState, jobResultsS
                                 JobID: result.JobID,
                                 GenID: result.GenID,
                                 live: false,
-                                expirationTime: expiration_time,
+                                expirationTime: null,
                             },
                         })
                     )
@@ -502,7 +502,7 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
                     id: jobSettings.id,
                     jobStatus: "inprogress",
                     run: true,
-                    expiration: newJobSettings.expiration,
+                    expiration: null,
                     description: jobSettings.description,
                     max_designs: newJobSettings.max_designs,
                     population_size: newJobSettings.population_size,

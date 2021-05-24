@@ -390,7 +390,7 @@ function SettingsForm({ formValuesState }) {
             notify("Unable to Start Job", "Please select at least one Gen File and one Eval File!", true);
             return;
         }
-        jobSettings.expiration = jobSettings.expiration_days * 24 * 60 * 60;
+        // jobSettings.expiration = jobSettings.expiration_days * 24 * 60 * 60;
         setIsSubmitting(true);
         await initParams(jobID, jobSettings);
         const jobParam = {
@@ -401,7 +401,7 @@ function SettingsForm({ formValuesState }) {
             run: true,
             evalUrl: jobSettings.evalUrl,
             genUrl: Object.values(jobSettings.genUrl),
-            expiration: jobSettings.expiration,
+            expiration: null,
             description: jobSettings.description,
             max_designs: jobSettings.max_designs,
             population_size: jobSettings.population_size,
@@ -584,7 +584,7 @@ function SettingsForm({ formValuesState }) {
                             </Form.Item>
                         </Tooltip>
 
-                        <Tooltip placement="topLeft" title={helpText.expiration}>
+                        {/* <Tooltip placement="topLeft" title={helpText.expiration}>
                             <Form.Item label="Expiration" name="expiration_days" rules={rules}>
                                 <InputNumber 
                                     formatter={value =>(value === '1')?`1 day`:`${value} days`}
@@ -592,7 +592,7 @@ function SettingsForm({ formValuesState }) {
                                     min={1}
                                 />
                             </Form.Item>
-                        </Tooltip>
+                        </Tooltip> */}
                     </Collapse.Panel>
                     <Collapse.Panel header="Gen File Settings" key="2" extra={genExtra("gen_file")}>
                         <FileUpload uploadType={"Gen"} />

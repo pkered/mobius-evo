@@ -891,9 +891,9 @@ function JobResults() {
                                                     {jobSettings[dataKey]}
                                                 </Descriptions.Item>
                                             ))}
-                                            <Descriptions.Item label="expiration" key="expiration">
+                                            {/* <Descriptions.Item label="expiration" key="expiration">
                                                 {String(Number(jobSettings.expiration) / 86400) + ' day(s)'}
-                                            </Descriptions.Item>
+                                            </Descriptions.Item> */}
 
                                         </Descriptions>
                                     </Collapse.Panel>
