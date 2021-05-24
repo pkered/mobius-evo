@@ -884,7 +884,7 @@ function JobResults() {
                         <TabPane tab="Settings" key="2">
                             <Space direction="vertical" size="large" style={{ width: "100%" }}>
                                 <Collapse defaultActiveKey={["1", "2"]}>
-                                    <Collapse.Panel header="Job Settings" key="1" extra={genExtra("settings_job_settings")}>
+                                    <Collapse.Panel header="Search Settings" key="1" extra={genExtra("settings_job_settings")}>
                                         <Descriptions
                                             bordered={true}
                                             size="small"
