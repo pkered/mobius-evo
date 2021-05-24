@@ -190,12 +190,12 @@ function JobTable({ isDataLoadingState, jobDataState }) {
     };
 
     function handleRowClick(rowData) {
-        window.location.href = `/jobs/search-results#${QueryString.stringify({ id: rowData.id })}`;
+        window.location.href = `/searches/search-results#${QueryString.stringify({ id: rowData.id })}`;
     }
     return ( <>
         <Space direction="horizontal" size="small" align='center'>
             <Button type="primary">
-                <Link to={`/new-job`}>Create New Job</Link>
+                <Link to={`/new-job`}>Create New Search</Link>
             </Button>
             <Help page='jobs_page' part='main'></Help>
         </Space>
