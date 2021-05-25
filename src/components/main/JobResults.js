@@ -4,8 +4,24 @@ import { generationsByJobId, getJob } from "../../graphql/queries";
 import { updateJob } from "../../graphql/mutations";
 import * as QueryString from "query-string";
 import { Link } from "react-router-dom";
-import { Row, Space, Button, Spin, Form, Col, Divider, Input, Checkbox, Table, 
-    Popconfirm, Tabs, Descriptions, Collapse, Alert, notification } from "antd";
+import {
+    Row,
+    Space,
+    Button,
+    Spin,
+    Form,
+    Col,
+    Divider,
+    Input,
+    Checkbox,
+    Table,
+    Popconfirm,
+    Tabs,
+    Descriptions,
+    Collapse,
+    Alert,
+    notification,
+} from "antd";
 import { Column, Scatter } from "@ant-design/charts";
 import { AuthContext } from "../../Contexts";
 import Iframe from "react-iframe";
@@ -14,7 +30,7 @@ import { ReactComponent as View } from "../../assets/view.svg";
 import { ResumeForm } from "./JobResults_resume.js";
 import Help from "./utils/Help";
 import { getS3Public } from "../../amplify-apis/userFiles";
-import { QuestionCircleOutlined } from '@ant-design/icons';
+import { QuestionCircleOutlined } from "@ant-design/icons";
 
 import "./JobResults.css";
 
@@ -249,7 +265,7 @@ function FilterForm({ modelParamsState, jobResultsState, filteredJobResultsState
     //   }
     // },[isLoading, isFiltering])
     useEffect(() => {
-        form.resetFields()
+        form.resetFields();
     }, [form, initialValues]);
 
     return !isLoading ? (
@@ -312,7 +328,7 @@ function FilterForm({ modelParamsState, jobResultsState, filteredJobResultsState
     ) : null;
 }
 
-function ProgressPlot({jobSettings, jobResults, setModelText, setSelectedJobResult }) {
+function ProgressPlot({ jobSettings, jobResults, setModelText, setSelectedJobResult }) {
     const plotData = JSON.parse(JSON.stringify(jobResults));
 
     let minY,
@@ -339,7 +355,7 @@ function ProgressPlot({jobSettings, jobResults, setModelText, setSelectedJobResu
         data: plotData,
         xField: "generation",
         yField: "score",
-        shape: 'circle',
+        shape: "circle",
         colorField: "genFile",
         appendPadding: 10,
         size: 4,
@@ -352,12 +368,10 @@ function ProgressPlot({jobSettings, jobResults, setModelText, setSelectedJobResu
             },
         };
     }
-    return (
-        <Scatter {...config} />
-    );
+    return <Scatter {...config} />;
 }
 
-function ScorePlot({jobSettings, jobResults, setModelText, setSelectedJobResult }) {
+function ScorePlot({ jobSettings, jobResults, setModelText, setSelectedJobResult }) {
     const plotData = JSON.parse(JSON.stringify(jobResults));
     let minY,
         maxY = 0;
@@ -390,10 +404,10 @@ function ScorePlot({jobSettings, jobResults, setModelText, setSelectedJobResult 
         },
     };
     if (minY && maxY) {
-        config.yAxis= {
+        config.yAxis = {
             min: Math.floor(minY),
-            max: Math.ceil(maxY)
-        }
+            max: Math.ceil(maxY),
+        };
     }
     return (
         <Column
@@ -470,14 +484,11 @@ function ResultTable({ jobResults, contextUrl, setModelText, setSelectedJobResul
             title: "Gen Model",
             dataIndex: "genModel",
             key: "genModel",
-            width: 60,
+            width: 100,
             fixed: "right",
+            align: "center",
             render: (genModel, allData) => (
                 <div>
-                    {/* <a href={modelData.model} target='_blank' download>
-                        <Download />
-                    </a>
-                    <br></br> */}
                     <View
                         onClick={() => {
                             document.getElementById("hiddenInput").value = genModel;
@@ -493,8 +504,9 @@ function ResultTable({ jobResults, contextUrl, setModelText, setSelectedJobResul
             title: "Eval Model",
             dataIndex: "evalModel",
             key: "evalModel",
-            width: 60,
+            width: 100,
             fixed: "right",
+            align: "center",
             render: (evalModel, allData) => (
                 <div>
                     <View
@@ -649,10 +661,17 @@ function JobResults() {
             ).catch((err) => console.log({ cancelJobError: err }));
         }
         return (
-            <Popconfirm placement="topRight" title="Stop Process?" onConfirm={cancelJob}
-            icon={<QuestionCircleOutlined style={{ color: 'red' }}/>}
-            okText="Yes" cancelText="No">
-                <Button type="primary" danger>Stop Process</Button>
+            <Popconfirm
+                placement="topRight"
+                title="Stop Process?"
+                onConfirm={cancelJob}
+                icon={<QuestionCircleOutlined style={{ color: "red" }} />}
+                okText="Yes"
+                cancelText="No"
+            >
+                <Button type="primary" danger>
+                    Stop Process
+                </Button>
             </Popconfirm>
         );
     };
@@ -773,20 +792,15 @@ function JobResults() {
     const expandedSettings = ["max_designs", "population_size", "survival_size", "tournament_size"];
     return (
         <Space direction="vertical" size="large" style={{ width: "inherit" }}>
-            <Row>
-                <h3>
-                    <Link to="/jobs">Jobs</Link> - {jobID}
-                </h3>
-            </Row>
+            <br></br>
+            <Spin spinning={isLoading}>
             {jobSettings ? (
                 <>
-                    <Space direction="horizontal" size="large" align="baseline">
-                        <h1>{jobSettings.description}</h1>
-                        <Help page="result_page" part="main"></Help>
-                    </Space>
+                    <Row>
+                        <h1>Search: {jobSettings.description}</h1>
+                    </Row>
                     <Tabs defaultActiveKey="1" size="large">
                         <TabPane tab="Results" key="1">
-                            <Spin spinning={isLoading}>
                                 {!isLoading ? (
                                     <Space direction="vertical" size="large" style={{ width: "100%" }}>
                                         <ErrorList jobResults={jobResults} jobSettings={jobSettings}></ErrorList>
@@ -866,12 +880,11 @@ function JobResults() {
                                         </Collapse>
                                     </Space>
                                 ) : null}
-                            </Spin>
                         </TabPane>
                         <TabPane tab="Settings" key="2">
                             <Space direction="vertical" size="large" style={{ width: "100%" }}>
                                 <Collapse defaultActiveKey={["1", "2"]}>
-                                    <Collapse.Panel header="Job Settings" key="1" extra={genExtra("settings_job_settings")}>
+                                    <Collapse.Panel header="Search Settings" key="1" extra={genExtra("settings_job_settings")}>
                                         <Descriptions
                                             bordered={true}
                                             size="small"
@@ -880,6 +893,15 @@ function JobResults() {
                                                 color: "rgba(0,0,0,0.5)",
                                             }}
                                         >
+                                            <Descriptions.Item label="ID" key="id">
+                                                {jobSettings.id}
+                                            </Descriptions.Item>
+                                            <Descriptions.Item label="description" key="description">
+                                                {jobSettings.description}
+                                            </Descriptions.Item>
+                                            <Descriptions.Item label="last_modified" key="updatedAt">
+                                                {new Date(jobSettings.updatedAt).toLocaleString()}
+                                            </Descriptions.Item>
                                             <Descriptions.Item label="genFile" key="genFile">
                                                 {getDisplayUrlString(jobSettings.genUrl, true)}
                                             </Descriptions.Item>
@@ -891,13 +913,12 @@ function JobResults() {
                                                     {jobSettings[dataKey]}
                                                 </Descriptions.Item>
                                             ))}
-                                            <Descriptions.Item label="expiration" key="expiration">
+                                            {/* <Descriptions.Item label="expiration" key="expiration">
                                                 {String(Number(jobSettings.expiration) / 86400) + ' day(s)'}
-                                            </Descriptions.Item>
-
+                                            </Descriptions.Item> */}
                                         </Descriptions>
                                     </Collapse.Panel>
-                                    <Collapse.Panel header="Gen Details" key="2" extra={genExtra("settings_gen_details")}>
+                                    <Collapse.Panel header="Generative Details" key="2" extra={genExtra("settings_gen_details")}>
                                         <Table dataSource={genTableData} columns={genTableColumns} rowKey="genUrl"></Table>
                                     </Collapse.Panel>
                                 </Collapse>
@@ -925,6 +946,7 @@ function JobResults() {
                     <a id="hiddenLink" className="hiddenElement"></a>
                 </>
             ) : null}
+        </Spin>
         </Space>
     );
 }

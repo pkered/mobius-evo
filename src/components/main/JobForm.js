@@ -24,6 +24,7 @@ import {
     Row,
     Collapse,
     notification,
+    Modal
 } from "antd";
 import Help from "./utils/Help";
 import helpJSON from "../../assets/help/help_text_json";
@@ -52,97 +53,73 @@ const notify = (title, text, isWarn = false) => {
     });
 };
 
-function SettingsForm({ formValuesState }) {
-    const { cognitoPayload } = useContext(AuthContext);
-    const [form] = Form.useForm();
-    const { formValues, setFormValues } = formValuesState;
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [genFile, setGenFile] = useState([]);
-    const [evalFile, setEvalFile] = useState(null);
-    const [genFiles, setGenFiles] = useState([]);
-    const [evalFiles, setEvalFiles] = useState([]);
+function FileSelectionModal({ isModalVisibleState, genFilesState, setEvalFile, replacedUrl, replaceEvalCheck }) {
+    const [s3Files, setS3Files] = useState([]);
     const [uploadedFiles, setUploadedFiles] = useState([]);
     const [isTableLoading, setIsTableLoading] = useState(true);
-    const [genElements, setGenElements] = useState([]);
+    const { genFiles, setGenFiles } = genFilesState;
+    const { isModalVisible, setIsModalVisible } = isModalVisibleState;
+    const [newFile, setnewFile] = useState(null);
+
+    const handleOk = async () => {
+        if (!replaceEvalCheck) {
+            handleGenOk();
+        } else {
+            handleEvalOk();
+        }
+    };
+    const handleGenOk = async () => {
+        if (!newFile) {
+            setIsModalVisible(false);
+            return;
+        }
+        let newUrl = "";
+        await getS3Url(
+            `files/gen/${newFile}`,
+            (s3Url) => (newUrl = s3Url),
+            () => {}
+        );
+        let okCheck = false;
+        if (!replacedUrl) {
+            if (genFiles.indexOf(newUrl) !== -1) {
+                notify('Unable to add gen file!', 'Job already contains Gen file to be added.')
+                return;
+            }
+            genFiles.push(newUrl);
+            okCheck = true;
+        } else {
+            const genIndex = genFiles.indexOf(replacedUrl);
+            if (genIndex !== -1) {
+                genFiles.splice(genIndex, 1, newUrl);
+                okCheck = true;
+            }
+        }
+        if (okCheck) {
+            setGenFiles(genFiles);
+        }
+        setIsModalVisible(false);
+    };
+    const handleEvalOk = async () => {
+        if (!newFile) {
+            setIsModalVisible(false);
+            return;
+        }
+        let newUrl = "";
+        await getS3Url(
+            `files/eval/${newFile}`,
+            (s3Url) => (newUrl = s3Url),
+            () => {}
+        );
+        setEvalFile(newUrl);
+        setIsModalVisible(false);
+    };
+
+    const handleCancel = () => {
+        setIsModalVisible(false);
+    };
+
     const onRadioCell = () => ({ style: { textAlign: "center" } });
-    const genColumns = [
-        {
-            title: "File",
-            dataIndex: "filename",
-            key: "filename",
-            sorter: true,
-            sortDirections: ["ascend", "descend"],
-        },
-        {
-            title: "Uploaded",
-            dataIndex: "lastModified",
-            key: "lastModified",
-            sorter: true,
-            sortDirections: ["ascend", "descend"],
-            defaultSortOrder: "descend",
-            render: (text, record, index) => (
-                <Space>
-                    {text.toLocaleString()}
-                    {record.tag ? (
-                        <Tag color="green" key={record.tag}>
-                            {record.tag.toUpperCase()}
-                        </Tag>
-                    ) : null}
-                </Space>
-            ),
-        },
-        {
-            title: "Select File",
-            key: "genfile",
-            onCell: onRadioCell,
-            width: "8em",
-            render: (text, record, index) => (
-                <Checkbox
-                    value={record.filename}
-                    checked={genFile.indexOf(record.filename) !== -1}
-                    onChange={async (event) => {
-                        const ind = genFile.indexOf(record.filename);
-                        let newGenFile;
-                        if (ind !== -1) {
-                            genFile.splice(ind, 1);
-                            newGenFile = [...genFile];
-                            setGenFile(newGenFile);
-                        } else {
-                            newGenFile = [...genFile, event.target.value];
-                            setGenFile(newGenFile);
-                        }
-                        formValues.genUrl = {};
-                        formValues.genKeys = [];
-                        const genElements = [];
-                        for (const genF of newGenFile) {
-                            await getS3Url(
-                                `files/gen/${genF}`,
-                                (s3Url) => {
-                                    formValues.genUrl[genF] = s3Url;
-                                    formValues.genKeys.push(genF);
-                                    genElements.push(
-                                        <Form.Item
-                                            label={genF}
-                                            name={"genFile_" + genF}
-                                            key={genF}
-                                            initialValue={0}
-                                            rules={[{ required: true }, { validator: checkGenFile }]}
-                                        >
-                                            <InputNumber min={0} onChange={onNumChange} />
-                                        </Form.Item>
-                                    );
-                                },
-                                () => {}
-                            );
-                        }
-                        setFormValues(formValues);
-                        setGenElements(genElements);
-                    }}
-                ></Checkbox>
-            ),
-        },
-    ];
-    const evalColumns = [
+    const columns = [
         {
             title: "File",
             dataIndex: "filename",
@@ -176,48 +153,49 @@ function SettingsForm({ formValuesState }) {
             render: (text, record, index) => (
                 <Radio
                     value={record.filename}
-                    checked={record.filename === evalFile}
-                    onChange={async (event) => {
-                        setEvalFile(event.target.value);
-                        await getS3Url(
-                            `files/eval/${event.target.value}`,
-                            (s3Url) => (formValues.evalUrl = s3Url),
-                            () => {}
-                        );
-                        setFormValues(formValues);
+                    checked={record.filename === newFile}
+                    onChange={(event) => {
+                        setnewFile(event.target.value);
                     }}
                 ></Radio>
             ),
         },
     ];
+
     const listS3files = () => {
         setIsTableLoading(true);
         const uploadedSet = new Set(uploadedFiles);
         let isSubscribed = true; // prevents memory leak on unmount
         const prepS3files = (files) => {
             if (isSubscribed) {
-                const fileList = files.map(({ key, lastModified }, index) => {
-                    return {
+                const fileList = [];
+                files.forEach(({ key, lastModified }, index) => {
+                    const fileUrlSplit = key.split("/");
+                    if (replaceEvalCheck && fileUrlSplit[fileUrlSplit.length - 2] === "gen") {
+                        return;
+                    } else if (!replaceEvalCheck && fileUrlSplit[fileUrlSplit.length - 2] === "eval") {
+                        return;
+                    }
+                    fileList.push({
                         key: index,
                         filename: key.split("/").pop(),
-                        fileType: key.split("/").slice(-2, -1)[0],
                         lastModified,
                         tag: uploadedSet.has(key.split("/").pop()) ? "new" : null,
-                    };
+                    });
                 });
-                fileList.sort((a, b) => b.lastModified - a.lastModified);
-                setGenFiles(fileList.filter((record) => record.fileType === "gen"));
-                setEvalFiles(fileList.filter((record) => record.fileType === "eval"));
+                fileList.sort((a, b) => b.lastModified - a.lastModified); // Default descending order
+                setS3Files([...fileList]);
+                setnewFile(null);
                 setIsTableLoading(false);
             }
         }; // changes state if still subscribed
         listS3(prepS3files, () => {});
         return () => (isSubscribed = false);
     };
-    useEffect(listS3files, [uploadedFiles]); // Updates when new files are uploaded
-    function FileUpload({ uploadType }) {
+    useEffect(listS3files, [uploadedFiles, isModalVisible]); // Updates when new files are uploaded
+    function FileUpload() {
         function handleUpload({ file, onSuccess, onError, onProgress }) {
-            uploadS3(`files/${uploadType.toLowerCase()}/${file.name}`, file, onSuccess, onError, onProgress);
+            uploadS3(`files/${file.name}`, file, onSuccess, onError, onProgress);
         }
         function handleChange(event) {
             if (event.file.status === "done") {
@@ -231,14 +209,14 @@ function SettingsForm({ formValuesState }) {
             <div className="upload-topbar">
                 <Upload accept=".js" multiple={true} customRequest={handleUpload} onChange={handleChange} showUploadList={false}>
                     <Button>
-                        <UploadOutlined /> Upload {uploadType} File
+                        <UploadOutlined /> Upload
                     </Button>
                 </Upload>
+                {/* <span>{uploadedFiles.length>0 ? `Uploaded: ${uploadedFiles.join(", ")}` : null}</span> */}
             </div>
         );
     }
-
-    const handleGenTableChange = (pagination, filters, sorter) => {
+    const handleTableChange = (pagination, filters, sorter) => {
         const compareAscend = (a, b) => {
             if (a < b) {
                 return -1;
@@ -258,52 +236,85 @@ function SettingsForm({ formValuesState }) {
             }
         };
         const [field, order] = [sorter.field, sorter.order];
-        const _genFiles = [...genFiles];
+        const _s3Files = [...s3Files];
         if (order === "ascend") {
-            _genFiles.sort((a, b) => compareAscend(a[field], b[field]));
+            _s3Files.sort((a, b) => compareAscend(a[field], b[field]));
         } else {
-            _genFiles.sort((a, b) => compareDescend(a[field], b[field]));
+            _s3Files.sort((a, b) => compareDescend(a[field], b[field]));
         }
-        setGenFiles(_genFiles);
+        setS3Files(_s3Files);
+    };
+    return (
+        <>
+            <Modal title="Select File" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
+                <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+                    <FileUpload />
+                    <Table
+                        dataSource={s3Files}
+                        columns={columns}
+                        loading={isTableLoading}
+                        onChange={handleTableChange}
+                        showSorterTooltip={false}
+                        pagination={{
+                            total: s3Files.length,
+                            showSizeChanger: true,
+                            showQuickJumper: true,
+                            showTotal: (total) => `${total} files`,
+                        }}
+                    ></Table>
+                </Space>
+            </Modal>
+        </>
+    );
+}
+
+function SettingsForm({currentStateManage}) {
+    const { cognitoPayload } = useContext(AuthContext);
+    const { currentState, setCurrentState } = currentStateManage;
+    const [form] = Form.useForm();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [genFiles, setGenFiles] = useState([]);
+    const [evalFile, setEvalFile] = useState(null);
+    
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [replacedUrl, setReplacedUrl] = useState(null);
+    const [replaceEvalCheck, setReplacedEvalCheck] = useState(false);
+
+    const showModalGen = (url) => {
+        setReplacedUrl(url);
+        setReplacedEvalCheck(false);
+        setIsModalVisible(true);
+    };
+    const showModalEval = () => {
+        setReplacedUrl("");
+        setReplacedEvalCheck(true);
+        setIsModalVisible(true);
     };
 
-    const handleEvalTableChange = (pagination, filters, sorter) => {
-        const compareAscend = (a, b) => {
-            if (a < b) {
-                return -1;
-            } else if (a > b) {
-                return 1;
-            } else {
-                return 0;
-            }
-        };
-        const compareDescend = (a, b) => {
-            if (a > b) {
-                return -1;
-            } else if (a < b) {
-                return 1;
-            } else {
-                return 0;
-            }
-        };
-        const [field, order] = [sorter.field, sorter.order];
-        const _evalFiles = [...evalFiles];
-        if (order === "ascend") {
-            _evalFiles.sort((a, b) => compareAscend(a[field], b[field]));
-        } else {
-            _evalFiles.sort((a, b) => compareDescend(a[field], b[field]));
+    const deleteGenFile = async (url) => {
+        const urlIndex = genFiles.indexOf(url);
+        if (urlIndex !== -1) {
+            genFiles.splice(urlIndex, 1);
+            setGenFiles(genFiles);
+            setCurrentState(!currentState)
         }
-        setEvalFiles(_evalFiles);
     };
+
 
     async function initParams(jobID, jobSettings) {
         let startingGenID = 0;
         const allPromises = [];
+        const genUrls = {}
+        const genKeys = jobSettings.genUrl.map( url => {
+            const key = url.split('/').pop();
+            genUrls[key] = url;
+            return key;
+        });
         for (let i = 0; i < jobSettings.genFile_random_generated; i++) {
-            const randomIndex = Math.floor(Math.random() * jobSettings.genKeys.length);
-            jobSettings["genFile_" + jobSettings.genKeys[randomIndex]] += 1;
+            const randomIndex = Math.floor(Math.random() * jobSettings.genUrl.length);
+            jobSettings["genFile_" + genKeys[randomIndex]] += 1;
         }
-        for (const genKey of jobSettings.genKeys) {
+        for (const genKey of genKeys) {
             let genFile;
             await downloadS3(
                 `files/gen/${genKey}`,
@@ -346,7 +357,7 @@ function SettingsForm({ formValuesState }) {
                     JobID: jobID.toString(),
                     GenID: startingGenID.toString(),
                     generation: 1,
-                    genUrl: jobSettings.genUrl[genKey],
+                    genUrl: genUrls[genKey],
                     evalUrl: jobSettings.evalUrl,
                     evalResult: null,
                     live: true,
@@ -385,13 +396,15 @@ function SettingsForm({ formValuesState }) {
 
     async function handleFinish() {
         const jobID = uuidv4();
-        const jobSettings = { ...formValues, ...form.getFieldsValue() };
-        if (!jobSettings.genUrl || !jobSettings.evalUrl) {
+        const jobSettings = { ...form.getFieldsValue() };
+        if (!genFiles || !evalFile) {
             notify("Unable to Start Job", "Please select at least one Gen File and one Eval File!", true);
             return;
         }
-        jobSettings.expiration = jobSettings.expiration_days * 24 * 60 * 60;
+        // jobSettings.expiration = jobSettings.expiration_days * 24 * 60 * 60;
         setIsSubmitting(true);
+        jobSettings.genUrl = genFiles;
+        jobSettings.evalUrl = evalFile;
         await initParams(jobID, jobSettings);
         const jobParam = {
             id: jobID,
@@ -400,8 +413,8 @@ function SettingsForm({ formValuesState }) {
             owner: cognitoPayload.sub,
             run: true,
             evalUrl: jobSettings.evalUrl,
-            genUrl: Object.values(jobSettings.genUrl),
-            expiration: jobSettings.expiration,
+            genUrl: jobSettings.genUrl,
+            expiration: null,
             description: jobSettings.description,
             max_designs: jobSettings.max_designs,
             population_size: jobSettings.population_size,
@@ -409,36 +422,19 @@ function SettingsForm({ formValuesState }) {
             survival_size: jobSettings.survival_size,
             errorMessage: null,
         };
-        // API.put('evoControlHandler', '/callControl', {
-        //     body: JSON.stringify(jobParam)
-        // });
+        console.log(jobParam)
         API.graphql(
             graphqlOperation(createJob, {
                 input: jobParam,
             })
         ).then(() => {
             setIsSubmitting(false);
-            window.location.href = `/jobs/search-results#${QueryString.stringify({ id: jobID })}`;
+            window.location.href = `/searches/search-results#${QueryString.stringify({ id: jobID })}`;
         });
     }
     function handleFinishFail() {
         notify("Unable to Start Job", "Please check for Errors in form!", true);
     }
-    //   const formInitialValues = {
-    //     description: `New Job`,
-    //     max_designs: 80,
-    //     population_size: 20,
-    //     tournament_size: 5,
-    //     survival_size: 2,
-    //     expiration: 86400,
-    //     genFile_random_generated: 40,
-    //     genFile_total_items: 40,
-    //   //   max_designs: 10,
-    //   //   population_size: 2,
-    //   //   tournament_size: 2,
-    //   //   survival_size: 1,
-    //   //   expiration: 600,
-    //   }
     const formInitialValues = testDefault;
 
     function onPopChange(e) {
@@ -448,42 +444,14 @@ function SettingsForm({ formValuesState }) {
         setTimeout(() => {
             const starting_population = Number(form.getFieldValue("population_size")) * 2;
             let totalCount = 0;
-            if (formValues.genKeys) {
-                formValues.genKeys.forEach((genFile) => {
-                    const inpID = "genFile_" + genFile;
-                    totalCount += Number(form.getFieldValue(inpID));
-                });
-            }
+            genFiles.forEach((genUrl) => {
+                const genFile = genUrl.split("/").pop();
+                const inpID = "genFile_" + genFile;
+                totalCount += Number(form.getFieldValue(inpID));
+            });
             let countDiff = starting_population - totalCount;
             const formUpdate = { genFile_total_items: starting_population };
-            if (countDiff < 0) {
-                countDiff = 0;
-                // if (e !== null) {
-                //     const inpID = document.activeElement.id.split("jobSettings_")[1];
-                //     formUpdate[inpID] = countDiff + Number(form.getFieldValue(inpID));
-                //     countDiff = 0;
-                // } else {
-                //     if (formValues.genKeys) {
-                //         formValues.genKeys.forEach((genFile) => {
-                //             if (countDiff >= 0) {
-                //                 return;
-                //             }
-                //             const inpID = "genFile_" + genFile;
-                //             const inpCount = Number(form.getFieldValue(inpID));
-                //             if (inpCount === 0) {
-                //                 return;
-                //             }
-                //             if (inpCount + countDiff >= 0) {
-                //                 formUpdate[inpID] = inpCount + countDiff;
-                //                 countDiff = 0;
-                //                 return;
-                //             }
-                //             formUpdate[inpID] = 0;
-                //             countDiff += inpCount;
-                //         });
-                //     }
-                // }
-            }
+            if (countDiff < 0) { countDiff = 0; }
             formUpdate["genFile_random_generated"] = countDiff;
             form.setFieldsValue(formUpdate);
         }, 0);
@@ -506,38 +474,91 @@ function SettingsForm({ formValuesState }) {
         }
         return Promise.reject(new Error("Survival size must be smaller than Tournament size!"));
     }
+
     function checkGenFile(_) {
         const formVal = form.getFieldsValue();
         const totalVal = Number(formVal.genFile_total_items);
         let totalCount = 0;
-        Object.keys(formVal).forEach((k) => {
-            if (k.startsWith("genFile_") && k !== "genFile_total_items" && k !== "genFile_random_generated") {
-                totalCount += Number(formVal[k]);
-            }
+        genFiles.forEach((genUrl) => {
+            const genFile = genUrl.split("/").pop();
+            const inpID = "genFile_" + genFile;
+            totalCount += Number(formVal[inpID]);
         });
         if (totalVal < totalCount) {
-            return Promise.reject(new Error("Total number of genFile parameters cannot be higher than Total Starting Items"));
+            return Promise.reject(new Error('Total number of genFile parameters cannot be higher than Total Starting Items'));
         }
         return Promise.resolve();
     }
+
 
     const genExtra = (part) => <Help page="start_new_job_page" part={part}></Help>;
     let helpText = {};
     try {
         helpText = helpJSON.hover.start_new_job_page;
     } catch (ex) {}
-    // if (formValues.genKeys) {
-    //     formValues.genKeys.forEach((genFile) => {
-    //         formInitialValues["genFile_" + genFile] = 0;
-    //         genElements.push(
-    //             <Form.Item label={genFile} name={"genFile_" + genFile} key={genFile}>
-    //                 <InputNumber min={0} onChange={onNumChange} />
-    //             </Form.Item>
-    //         );
-    //     });
-    // }
     const rules = [{ required: true }];
+
+    const genTableData = genFiles.map((genUrl) => {
+        const genFile = genUrl.split("/").pop();
+        const tableEntry = {
+            genUrl: genUrl,
+            genFile: genFile,
+            fileAction: genUrl,
+        };
+        return tableEntry;
+    });
+    const evalTableData = [];
+    if (evalFile) {
+        evalTableData.push({
+            evalUrl: evalFile,
+            evalFile: evalFile.split("/").pop(),
+            fileAction: evalFile,
+        });
+    }
+    const genTableColumns = [
+        {
+            title: "Gen File",
+            dataIndex: "genFile",
+            key: "genFile",
+            defaultSortOrder: "ascend",
+        },
+        {
+            title: "Action",
+            dataIndex: "fileAction",
+            key: "fileAction",
+            render: (url) => (
+                <>
+                    <Button type="text" htmlType="button" onClick={() => showModalGen(url)}>
+                        replace
+                    </Button>
+                    <br></br>
+                    <Button type="text" htmlType="button" onClick={() => deleteGenFile(url)}>
+                        delete
+                    </Button>
+                </>
+            ),
+        },
+    ];
+    const evalTableColumns = [
+        {
+            title: "Eval File",
+            dataIndex: "evalFile",
+            key: "evalFile",
+        },
+        {
+            title: "Action",
+            dataIndex: "fileAction",
+            key: "fileAction",
+            render: () => (
+                <Button type="text" htmlType="button" onClick={() => showModalEval()}>
+                    replace
+                </Button>
+            ),
+        },
+    ];
+
     return (
+        <>
         <Spin spinning={isSubmitting} tip="Starting Job...">
             <Form
                 name="jobSettings"
@@ -553,7 +574,7 @@ function SettingsForm({ formValuesState }) {
                 initialValues={formInitialValues}
             >
                 <Collapse defaultActiveKey={["1", "2", "3", "4"]}>
-                    <Collapse.Panel header="Settings 1" key="1" extra={genExtra("settings_1")}>
+                    <Collapse.Panel header="Search Settings" key="1" extra={genExtra("settings_1")}>
                         <Tooltip placement="topLeft" title={helpText.description}>
                             <Form.Item label="Description" name="description">
                                 <Input />
@@ -584,7 +605,7 @@ function SettingsForm({ formValuesState }) {
                             </Form.Item>
                         </Tooltip>
 
-                        <Tooltip placement="topLeft" title={helpText.expiration}>
+                        {/* <Tooltip placement="topLeft" title={helpText.expiration}>
                             <Form.Item label="Expiration" name="expiration_days" rules={rules}>
                                 <InputNumber 
                                     formatter={value =>(value === '1')?`1 day`:`${value} days`}
@@ -592,48 +613,30 @@ function SettingsForm({ formValuesState }) {
                                     min={1}
                                 />
                             </Form.Item>
-                        </Tooltip>
+                        </Tooltip> */}
                     </Collapse.Panel>
-                    <Collapse.Panel header="Gen File Settings" key="2" extra={genExtra("gen_file")}>
-                        <FileUpload uploadType={"Gen"} />
-                        <Table
-                            dataSource={genFiles}
-                            columns={genColumns}
-                            loading={isTableLoading}
-                            onChange={handleGenTableChange}
-                            showSorterTooltip={false}
-                            pagination={{
-                                total: genFiles.length,
-                                showSizeChanger: true,
-                                showQuickJumper: true,
-                                showTotal: (total) => `${total} files`,
-                            }}
-                        ></Table>
+                    <Collapse.Panel header="Generative Settings" key="2" extra={genExtra("gen_file")}>
+                        <Button htmlType="button" onClick={() => showModalGen(null)}>Add Gen File</Button>
+                        <Table dataSource={genTableData} columns={genTableColumns} rowKey="genUrl"></Table>
                     </Collapse.Panel>
-                    <Collapse.Panel header="Eval File Settings" key="3" extra={genExtra("eval_file")}>
-                        <FileUpload uploadType={"Eval"} />
-                        <Table
-                            dataSource={evalFiles}
-                            columns={evalColumns}
-                            loading={isTableLoading}
-                            onChange={handleEvalTableChange}
-                            showSorterTooltip={false}
-                            pagination={{
-                                total: evalFiles.length,
-                                showSizeChanger: true,
-                                showQuickJumper: true,
-                                showTotal: (total) => `${total} files`,
-                            }}
-                        ></Table>
+                    <Collapse.Panel header="Evaluative Settings" key="3" extra={genExtra("eval_file")}>
+                        <Button htmlType="button" onClick={() => showModalEval(null)}>Add Eval File</Button>
+                        <Table dataSource={evalTableData} columns={evalTableColumns} rowKey="evalUrl"></Table>
                     </Collapse.Panel>
-                    <Collapse.Panel header="Settings 2" key="4" extra={genExtra("settings_2")}>
+                    <Collapse.Panel header="Initialization Settings" key="4" extra={genExtra("settings_2")}>
                         <Tooltip placement="topLeft" title={helpText.total_items}>
                             <Form.Item label="Total Starting Items" name="genFile_total_items">
                                 <InputNumber disabled />
                             </Form.Item>
                         </Tooltip>
-
-                        {genElements}
+                        {genFiles.map((genUrl) => {
+                            const genFile = genUrl.split("/").pop();
+                            return (
+                                <Form.Item label={genFile} name={"genFile_" + genFile} key={"genFile_" + genFile} rules={[...rules, {validator: checkGenFile}]}>
+                                    <InputNumber min={0} onChange={onNumChange}/>
+                                </Form.Item>
+                            );
+                        })}
                         <Tooltip placement="topLeft" title={helpText.random_generated}>
                             <Form.Item label="Random Generated" name="genFile_random_generated">
                                 <InputNumber disabled />
@@ -652,50 +655,30 @@ function SettingsForm({ formValuesState }) {
                 <br></br>
             </Form>
         </Spin>
+        <FileSelectionModal
+            isModalVisibleState={{ isModalVisible, setIsModalVisible }}
+            genFilesState={{ genFiles, setGenFiles }}
+            setEvalFile={setEvalFile}
+            replacedUrl={replacedUrl}
+            replaceEvalCheck={replaceEvalCheck}
+        />
+
+        </>
     );
 }
 
 function JobForm() {
-    const [formValues, setFormValues] = useState({});
-
-    // Auth.currentCredentials().then(credentials => {
-    //     const params = {
-    //         "errorMessage": null,
-    //         "evalUrl": "https://mobius-evo-userfiles131353-dev.s3.amazonaws.com/protected/us-east-1%3A38251718-48f1-4886-80bf-1ccbc733da77/files/eval/eaEval_0_7.js",
-    //         "generation": 1,
-    //         "GenID": "0",
-    //         "genUrl": "https://mobius-evo-userfiles131353-dev.s3.amazonaws.com/protected/us-east-1%3A38251718-48f1-4886-80bf-1ccbc733da77/files/gen/eaGen_0_7_003.js",
-    //         "id": "1ddffb13-67d4-4d5a-ae0d-344528fe9a8112_3",
-    //         "JobID": "1ddffb13-67d4-4d5a-ae0d-344528fe9a8112",
-    //         "live": true,
-    //         "owner": "08ddd4db-71a5-43eb-8fc7-264901cb16dd",
-    //         "params": {
-    //           "ROTATE1": 97,
-    //           "ROTATE2": 156,
-    //           "HEIGHT_RATIO": 0.42
-    //         },
-    //         "updatedAt": "2021-05-05T07:05:41.770Z"
-    //       }
-    //     const lambda = new Lambda({
-    //         region: 'us-east-1',
-    //         credentials: Auth.essentialCredentials(credentials)
-    //     });
-    //     return lambda.invoke({
-    //         FunctionName: 'evoGenerate-dev',
-    //         Payload: JSON.stringify(params),
-    //     }).promise().then(()=> console.log('~~~~~~~~'));
-    // })
-
+    const [currentState, setCurrentState] = useState(false);
     return (
         <div className="jobForm-container">
             <Space direction="vertical" size="large" style={{ width: "inherit" }}>
                 <Space direction="horizontal" size="small" align="baseline">
-                    <h1>Start New Job</h1>
+                    <h1>Start New Search</h1>
                     <Help page="start_new_job_page" part="main"></Help>
                 </Space>
 
                 {/* <FileSelection nextStep={nextStep} formValuesState={{ formValues, setFormValues }} /> */}
-                <SettingsForm formValuesState={{ formValues, setFormValues }} />
+                <SettingsForm currentStateManage={{currentState, setCurrentState}}/>
                 {/* <FormToRender /> */}
             </Space>
         </div>

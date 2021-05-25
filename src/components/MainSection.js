@@ -30,8 +30,8 @@ function MainSection() {
         <Route path="/" exact component={ Landing }/>
         <PrivateRoute path="/user" component={ User }/>
         <PrivateRoute path="/new-job" component={ JobForm }/>
-        <PrivateRoute path="/jobs/search-results" component={ JobResults }/>
-        <PrivateRoute path="/jobs" component={ Explorations }/>
+        <PrivateRoute path="/searches/search-results" component={ JobResults }/>
+        <PrivateRoute path="/searches" component={ Explorations }/>
         <Route path="/404" component={ NotFound }/>
         <Redirect to="/404"/>
       </Switch>
