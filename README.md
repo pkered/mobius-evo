@@ -54,11 +54,11 @@ Installation is very straightforward. In your browser, make sure you are logged 
 2. Find your Mobius Evolver app in the Console.
 * In the search bar at the top of the AWS Console, type `Amplify` 
 * Click `AWS Amplify` link that pops up.
-* A page displaying all your apps opens up. Click on the `mobiusevo` app.
 
-![App Details](./amplify_console_04.jpg)
+![aws cognito](./amplify_console_deleteApp_02.png)
 
 3. Delete the app.
+* A page displaying all your apps opens up. Click on the `mobiusevo` app.
 * In the top right hand corner, click `Action` and select `Delete App`.
 * Follow the app deletion steps in AWS Console.
 
@@ -67,10 +67,10 @@ Installation is very straightforward. In your browser, make sure you are logged 
 4. Find your Cognito User Pool in the Console.
 * In the search bar at the top of the AWS Console, type `Cognito` 
 * Click the `Cognito` link that pops up.
-* Click `Mange User Pools`
-* Select the user pool for Mobius Evolver. It follows this format: `amplify_backend_manager_<app id>`
 
 ![aws cognito](./amplify_console_deleteApp_02.png)
 
 5. Delete the user pool.
+* Click `Mange User Pools`
+* Select the user pool for Mobius Evolver. It follows this format: `amplify_backend_manager_<app id>`
 * Click `Delete Pool` in the top right hand corner.
