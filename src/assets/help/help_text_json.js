@@ -31,7 +31,7 @@ const helpJSON = {
             result_score_plot: "score plot",
             result_mobius_viewer: "mobius viewer",
             result_result_table: "result table",
-            settings_job_settings: "job settings",
+            settings_job_settings: "Search Settings",
             settings_gen_details: "gen details",
             resume_new_settings_1: "...",
             resume_gen_file: "...",
@@ -111,8 +111,8 @@ const helpJSON = {
                 text: `result table...`,
             },
             settings_job_settings: {
-                title: "job settings",
-                text: `job settings...`,
+                title: "Search Settings",
+                text: `Search Settings...`,
             },
             settings_gen_details: {
                 title: "gen details",

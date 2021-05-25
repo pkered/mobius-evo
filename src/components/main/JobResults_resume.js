@@ -754,7 +754,7 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
                 initialValues={formInitialValues}
             >
                 <Collapse defaultActiveKey={["1", "2", "3", "4"]}>
-                    <Collapse.Panel header="New Job Settings" key="1" extra={genExtra("resume_new_settings_1")}>
+                    <Collapse.Panel header="New Search Settings" key="1" extra={genExtra("resume_new_settings_1")}>
                         <Tooltip placement="topLeft" title={helpText.max_designs}>
                             <Form.Item label="New Max Designs" name="max_designs" rules={rules}>
                                 <InputNumber disabled />
@@ -786,15 +786,11 @@ function ResumeForm({ jobID, jobSettingsState, jobResultsState, getData, setIsLo
                         </Tooltip>
                     </Collapse.Panel>
                     <Collapse.Panel header="New Generative Settings" key="2" extra={genExtra("resume_gen_file")}>
-                        <Button htmlType="button" onClick={() => showModalGen(null)}>
-                            Add Gen File
-                        </Button>
+                        <Button htmlType="button" onClick={() => showModalGen(null)}>Add Gen File</Button>
                         <Table dataSource={genTableData} columns={genTableColumns} rowKey="genUrl"></Table>
                     </Collapse.Panel>
                     <Collapse.Panel header="New Evaluative Settings" key="3" extra={genExtra("resume_eval_file")}>
-                        <Button htmlType="button" onClick={() => showModalEval(null)}>
-                            Add Eval File
-                        </Button>
+                        <Button htmlType="button" onClick={() => showModalEval(null)}>Add Eval File</Button>
                         <Table dataSource={evalTableData} columns={evalTableColumns} rowKey="evalUrl"></Table>
                     </Collapse.Panel>
                     <Collapse.Panel header="New Initialization Settings" key="4" extra={genExtra("resume_new_settings_2")}>
